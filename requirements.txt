@@ -1,0 +1,9 @@
+pytest
+xlrd
+scipy
+numpy
+matplotlib
+sanic
+aiofiles
+jinja2
+tqdm
