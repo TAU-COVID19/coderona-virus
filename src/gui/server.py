@@ -19,14 +19,14 @@ import multiprocessing as mp
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PARENT_DIR)
 
-from simulation.interventions import *
+from src.simulation.interventions import *
 
-from world.city_data import get_city_list_from_dem_xls
-from world.population_generation import PopulationLoader
-from simulation.simulation import Simulation
-from simulation.params import Params
-from seir import DiseaseState
-from logs import make_age_and_state_datas_to_plot
+from src.world.city_data import get_city_list_from_dem_xls
+from src.world.population_generation import PopulationLoader
+from src.simulation.simulation import Simulation
+from src.simulation.params import Params
+from src.seir import DiseaseState
+from src.logs import make_age_and_state_datas_to_plot
 
 def intervention_title(inter):
     if type(inter) != str:

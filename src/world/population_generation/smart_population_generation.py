@@ -3,13 +3,13 @@
 # The generation code itself lies in household_generation.py, this code
 # validates the output and wraps it to the needed format,
 
-from world.population_generation.household_generation import sim_houses
+from src.world.population_generation.household_generation import sim_houses
 
-from world.city_data import City
-from world import Person
-from world.environments import Household, NeighborhoodCommunity
-from simulation.params import Params
-from util import divide_weighted_array
+from src.world.city_data import City
+from src.world import Person
+from src.world.environments import Household, NeighborhoodCommunity
+from src.simulation.params import Params
+from src.util import divide_weighted_array
 import math
 import random
 

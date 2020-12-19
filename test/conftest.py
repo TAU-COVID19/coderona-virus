@@ -1,7 +1,7 @@
 import os
 import pytest
-from world.city_data import get_city_list_from_dem_xls
-from simulation.params import Params
+from src.world.city_data import get_city_list_from_dem_xls
+from src.simulation.params import Params
 
 
 @pytest.fixture
