@@ -4,11 +4,11 @@
 
 import xlrd
 import os
-from world.city_data.city import City
-from util import Distribution
+from src.world.city_data.city import City
+from src.util import Distribution
 
 # The path of the demographics file we wish to parse (relative to this file)
-DATA_FILE_PATH = "yossi_parameters_b.xlsx"
+DATA_FILE_PATH = "yossi_parameters_b.xls"
 
 # Meanings of columns in the xlsx file
 TOWN_SYMBOL_COLUMN = 0

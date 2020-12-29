@@ -2,20 +2,20 @@ import logging
 import numpy as np
 from datetime import date, timedelta
 
-from world.environments import EnvironmentalAttribute
-from simulation.interventions import *
-from seir import daysdelta
-from scenarios import *
-from seir import DiseaseState
-from simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
-from logs import make_age_and_state_datas_to_plot
-from simulation.params import Params
+from src.world.environments import EnvironmentalAttribute
+from src.simulation.interventions import *
+from src.seir import daysdelta
+from src.scenarios import *
+from src.seir import DiseaseState
+from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
+from src.logs import make_age_and_state_datas_to_plot
+from src.simulation.params import Params
 
-from run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
-import util.seed
+from src.run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
+import src.util.seed
 import os
 
-util.seed.set_random_seed()
+src.util.seed.set_random_seed()
 
 log = logging.getLogger(__name__)
 
