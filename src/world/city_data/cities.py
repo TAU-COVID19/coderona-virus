@@ -7,9 +7,6 @@ import os
 from src.world.city_data.city import City
 from src.util import Distribution
 
-# The path of the demographics file we wish to parse (relative to this file)
-DATA_FILE_PATH = "yossi_parameters_b.xls"
-
 # Meanings of columns in the xlsx file
 TOWN_SYMBOL_COLUMN = 0
 HEBREW_NAME_COLUMN = 1
@@ -123,14 +120,16 @@ def city_from_csv_line(line, nafa_col_values):
         workplace_city_distribution=None
     )
 
-def get_city_list_from_dem_xls():
+def get_city_list_from_dem_xls(file_path: object) -> object:
     """
     Parses the xlsx file (saved in the hardcoded DATA_FILE_PATH path),
     constructs and returns a list of the cities it describes.
     :return: A list of the City objects it generated,
     with workplace_city_distribution-s not yet initialized
     """
-    full_path = os.path.join(os.path.dirname(__file__), DATA_FILE_PATH)
+
+    full_path = os.path.join(os.path.dirname(__file__), file_path)
+    print(full_path)
     sheet = xlrd.open_workbook(full_path, 'r').sheet_by_index(0)
     assert sheet.cell(0, TOWN_SYMBOL_COLUMN).value == 'ids', 'Wrong file! %0'
     assert sheet.cell(2, TOWN_SYMBOL_COLUMN).value == 'town symbol', 'Wrong file!'

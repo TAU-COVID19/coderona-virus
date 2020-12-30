@@ -1,4 +1,5 @@
 import os
+import json
 import pytest
 from src.world.city_data import get_city_list_from_dem_xls
 from src.simulation.params import Params
@@ -6,13 +7,22 @@ from src.simulation.params import Params
 
 @pytest.fixture
 def cities():
-    cities = get_city_list_from_dem_xls()
+    file_path = os.path.dirname(__file__) + "\\..\\src\\config.json"
+    with open(file_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+
+    cities = get_city_list_from_dem_xls(citiesDataPath)
     return cities
 
 
 @pytest.fixture
 def params_path():
-    return os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src', 'simulation', 'params.json')
+    file_path = os.path.dirname(__file__) + "\\..\\src\\config.json"
+    with open(file_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        ParamsDataPath = ConfigData['ParamsFilePath']
+    return os.path.dirname(os.path.dirname(__file__))+"\\Assets\\"+ParamsDataPath
 
 
 @pytest.fixture

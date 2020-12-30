@@ -17,15 +17,16 @@ class PopulationLoader(object):
     """
     An object which wraps the generation and caching of World objects.
     """
-    __slots__ = ('city_smart_scale_to_world', 'output_dir', 'verbosity', 'with_caching', 'added_description')
+    __slots__ = ('m_all_cities','city_smart_scale_to_world', 'output_dir', 'verbosity', 'with_caching', 'added_description')
 
-    def __init__(self, added_description="", with_caching=True, output_dir=OUTPUT_DIR_PATH, verbosity=False):
+    def __init__(self,filePath, added_description="", with_caching=True, output_dir=OUTPUT_DIR_PATH, verbosity=False):
         """
         :param added_description: A string to concatenate to the end of saved filenames.
         :param with_caching: Should the loader read from files and use internal caching to lower run times
         :param output_dir: The directory of the loaded/saved serialized files
         :param verbosity: Should the world-generation algorithm print debug info
         """
+        self.m_all_cities = get_city_list_from_dem_xls(filePath)
         self.city_smart_scale_to_world = {}
         self.output_dir = output_dir
         self.verbosity = verbosity
@@ -128,8 +129,8 @@ class PopulationLoader(object):
         :return: The requested city
         (throws an exception if there was none/multiple matches)
         """
-        all_cities = get_city_list_from_dem_xls()
-        possible_cities = [c for c in all_cities if c.get_name() == city_name.lower()]
+        #m_all_cities = get_city_list_from_dem_xls()
+        possible_cities = [c for c in self.m_all_cities if c.get_name() == city_name.lower()]
         if len(possible_cities) == 0:
             raise Exception("Found no city named '%s'" % city_name)
         if len(possible_cities) > 2:
@@ -143,12 +144,12 @@ class PopulationLoader(object):
         :param scale: The scale by which we will multiply the city
         :return: A list of all corresponding City objects
         """
-        all_cities = get_city_list_from_dem_xls()
-        all_cities = [city for city in all_cities if city.population * scale > MIN_CITY_SIZE]
+        #all_cities = get_city_list_from_dem_xls()
+        m_all_cities = [city for city in self.m_all_cities if city.population * scale > MIN_CITY_SIZE]
         log.info("Generating %d cities with a total population of %d" %
-                 (len(all_cities), sum(city.population for city in all_cities)))
-        make_city_work_destination_distributions(all_cities)
-        return all_cities
+                 (len(m_all_cities), sum(city.population for city in m_all_cities)))
+        make_city_work_destination_distributions(m_all_cities)
+        return m_all_cities
 
     def get_world(self, city_name='all', scale=1.0, is_smart=True):
         """

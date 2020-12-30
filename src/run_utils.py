@@ -1,3 +1,4 @@
+import json
 import math
 import multiprocessing as mp
 import os
@@ -171,11 +172,21 @@ class SimpleJob(RunningJob):
         :param verbosity: bool, if it's True then additional output logs will be printed to the screen
         """
         seed.set_random_seed()
-        Params.load_from(os.path.join(os.path.dirname(__file__), 'simulation', 'params.json'), override=True)
+        config_path = os.path.dirname(__file__)+"\\config.json"
+        with open(config_path) as json_data_file:
+            ConfigData = json.load(json_data_file)
+            citiesDataPath = ConfigData['CitiesFilePath']
+            paramsDataPath = ConfigData['ParamsFilePath']
+
+        Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
         for param, val in self.params_to_change.items():
             Params.loader()[param] = val
         DiseaseState.init_infectiousness_list()
+
+        citiesDataPath  = citiesDataPath
+
         population_loader = PopulationLoader(
+            citiesDataPath,
             added_description=Params.loader().description(),
             with_caching=with_population_caching
         )
@@ -348,10 +359,16 @@ def create_city_and_serialize(city_name, scale, params_to_change):
     :param params_to_change: dict of params to change, in Params object
     :return: World object
     """
-    Params.load_from(os.path.join(os.path.dirname(__file__), 'simulation', 'params.json'), override=True)
+    config_path = os.path.dirname(__file__) + "\\config.json"
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+        paramsDataPath = ConfigData['ParamsFilePath']
+
+    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
     for param, val in params_to_change.items():
         Params.loader()[param] = val
-    population_loader = PopulationLoader(
+    population_loader = PopulationLoader(citiesDataPath,
         added_description=Params.loader().description()
     )
     population_loader.get_world(city_name=city_name, scale=scale)
