@@ -1,4 +1,5 @@
 import logging
+import json
 import numpy as np
 from datetime import date, timedelta
 
@@ -241,7 +242,6 @@ def main():
     """
     # sets the logging output to be at debug level, meaning more output than a regular run
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
     # all interventions to activate, all the uncommented line will be added as a different simulation run
     # the keys are the names of the run, and the values are the list of active interventions in the run
     interventions_modes = {
@@ -291,7 +291,14 @@ def main():
     # city_name, scale = 'all', 0.01 # This means loading 1% of the entire country
     # city_name, scale = 'all', 0.1 # This means loading the entire country
     print("Running all simulations...")
-    Params.load_from(os.path.join(os.path.dirname(__file__), 'simulation', 'params.json'))
+    config_path = os.path.dirname(__file__) + "\\config.json"
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+        paramsDataPath = ConfigData['ParamsFilePath']
+
+    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
+
     # we build a list of the jobs to run:
     # each job can be run as a different process, and the population generation will be done once
     # if caching option is on
