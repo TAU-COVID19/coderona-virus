@@ -1,4 +1,4 @@
-{
+
     "person": {
         "base_infectiousness": 0.1,
         "individual_infectiousness_gamma_shape": 0.25,
