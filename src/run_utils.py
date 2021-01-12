@@ -9,15 +9,15 @@ import copy
 
 from tqdm import tqdm
 
-from src.util import seed
-from src.logs import *
-from src.simulation.params import Params
-from src.world.population_generation import PopulationLoader
-from src.simulation.simulation import Simulation
-from src.simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams
-from src.seir import DiseaseState
+from util import seed
+from logs import *
+from simulation.params import Params
+from world.population_generation import PopulationLoader
+from simulation.simulation import Simulation
+from simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams
+from seir import DiseaseState
 
-INITIAL_DATE = date(year=2020, month=4, day=20)
+INITIAL_DATE = date(year=2020, month=2, day=27)
 
 
 class Task:

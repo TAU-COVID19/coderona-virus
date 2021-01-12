@@ -1,5 +1,5 @@
-from src.logs.stats import Statistics, DayStatistics
-from src.logs.stats import \
+from logs.stats import Statistics, DayStatistics
+from logs.stats import \
     make_age_and_state_datas_to_plot, \
     make_infections_age_datas_to_plot,\
     make_infections_infector_state_datas_to_plot, \

@@ -3,10 +3,10 @@
 # smart_population_generation.py
 
 import warnings
-from src.world.city_data import City
-from src.world import Person
-from src.world.environments import Household, NeighborhoodCommunity
-from src.simulation.params import Params
+from world.city_data import City
+from world import Person
+from world.environments import Household, NeighborhoodCommunity
+from simulation.params import Params
 
 def generate_household_in_city(city):
     """

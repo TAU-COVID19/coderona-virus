@@ -4,13 +4,13 @@
 import random as _random
 from collections import namedtuple
 
-from src.world.city_data import City
-from src.world.environments import CityCommunity, School, Workplace
-from src.world.population_generation.smart_population_generation import generate_all_households_and_communities_of_city_smart
-from src.world.population_generation.naive_population_generation import generate_all_households_and_communities_of_city_naive
-from src.simulation.params import Params
-from src.util import divide_array
-from src.world.world import World
+from world.city_data import City
+from world.environments import CityCommunity, School, Workplace
+from world.population_generation.smart_population_generation import generate_all_households_and_communities_of_city_smart
+from world.population_generation.naive_population_generation import generate_all_households_and_communities_of_city_naive
+from simulation.params import Params
+from util import divide_array
+from world.world import World
 
 # A 'cookbook' for environments of people in a certain age group
 CrossEnvironmentData = namedtuple(

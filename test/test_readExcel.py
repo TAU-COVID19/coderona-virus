@@ -2,8 +2,8 @@ import pytest
 import json
 import os
 
-from src.world.population_generation import population_loader
-from src.world.city_data import get_city_list_from_dem_xls
+from world.population_generation import population_loader
+from world.city_data import get_city_list_from_dem_xls
 
 
 def test_Init_haifa():

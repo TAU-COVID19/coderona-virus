@@ -1,5 +1,5 @@
 from enum import Enum
-from src.simulation.params import Params
+from simulation.params import Params
 
 
 class InfectiousnessFactors(object):

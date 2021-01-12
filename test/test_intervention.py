@@ -2,10 +2,10 @@ from datetime import timedelta
 import os
 import pytest
 
-from src.run_utils import SimpleJob, run, INITIAL_DATE
-from src.simulation.interventions import *
-from src.simulation.initial_infection_params import SmartInitialInfectionParams
-from src.logs import Statistics
+from run_utils import SimpleJob, run, INITIAL_DATE
+from simulation.interventions import *
+from simulation.initial_infection_params import SmartInitialInfectionParams
+from logs import Statistics
 
 
 @pytest.fixture(params=[False, True])

@@ -1,9 +1,10 @@
 import os
-from src.simulation.simulation import Simulation
-from src.simulation.event import DiseaseStateChangeEffect
-from src.seir import DiseaseState
 from collections import namedtuple
-from src.world import World
+
+from simulation.simulation import Simulation
+from simulation.event import DiseaseStateChangeEffect
+from seir import DiseaseState
+from world import World
 
 
 InfectionAndSeirData = namedtuple("InfectionAndSeirData", ["person_id", "infection_date", "seir_times"])

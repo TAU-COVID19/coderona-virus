@@ -1,9 +1,10 @@
+import inspect
 import random
 import itertools
 from datetime import date, timedelta
 
-from src.seir import DiseaseState
-from src.simulation.event import (
+from seir import DiseaseState
+from simulation.event import (
     Event,
     DayEvent,
     AddRoutineChangeEffect,
@@ -17,9 +18,8 @@ from src.simulation.event import (
     EmptyTrigger,
     OrTrigger
 )
-from src.world import Person, World
-import inspect
-from src.simulation.params import Params
+from world import Person, World
+from simulation.params import Params
 
 
 def workplace_closure_routine(person: Person):
@@ -357,13 +357,15 @@ class SymptomaticIsolationIntervention(Intervention):
                     DiseaseState.SYMPTOMATICINFECTIOUS
                 )
                 person._init_event(*states)
+                entry_moment = Event()
                 add_trigger = AndTrigger(
-                    AfterTrigger(person.state_to_events[states]),
+                    AfterTrigger(entry_moment),
                     TimeRangeTrigger(self.start_date, self.end_date)
                 )
                 add_event = Event(
                     add_trigger, add_effect
                 )
+                entry_moment.hook(add_event)
                 day_event = DayEvent(self.start_date)  # Wasteful in memory!
                 day_event.hook(add_event)
                 ret.append(day_event)
@@ -373,11 +375,11 @@ class SymptomaticIsolationIntervention(Intervention):
                         states,
                         Event(
                             EmptyTrigger(),
-                            DelayedEffect(add_event, delay_time)
+                            DelayedEffect(entry_moment, delay_time)
                         )
                     )
                 else:
-                    person.hook_on_change(states, add_event)
+                    person.hook_on_change(states, entry_moment)
 
                 remove_effect = RemoveRoutineChangeEffect(
                     person=person, routine_change_key='quarantine'
@@ -455,13 +457,15 @@ class HouseholdIsolationIntervention(Intervention):
                     DiseaseState.SYMPTOMATICINFECTIOUS
                 )
                 person._init_event(*states)
+                entry_moment = Event()
                 add_trigger = AndTrigger(
-                    AfterTrigger(person.state_to_events[states]),
+                    AfterTrigger(entry_moment),
                     TimeRangeTrigger(self.start_date, self.end_date)
                 )
                 add_event = Event(
                     add_trigger, add_effect
                 )
+                entry_moment.hook(add_event)
                 day_event = DayEvent(self.start_date)  # Wasteful in memory!
                 day_event.hook(add_event)
                 ret.append(day_event)
@@ -471,11 +475,11 @@ class HouseholdIsolationIntervention(Intervention):
                         states,
                         Event(
                             EmptyTrigger(),
-                            DelayedEffect(add_event, delay_time)
+                            DelayedEffect(entry_moment, delay_time)
                         )
                     )
                 else:
-                    person.hook_on_change(states, add_event)
+                    person.hook_on_change(states, entry_moment)
 
                 remove_effect = RemoveRoutineChangeEnvironmentEffect(
                     environment=household_environment, routine_change_key='household_isolation'

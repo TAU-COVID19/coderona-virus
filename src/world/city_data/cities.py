@@ -4,8 +4,9 @@
 
 import xlrd
 import os
-from src.world.city_data.city import City
-from src.util import Distribution
+
+from world.city_data.city import City
+from util import Distribution
 
 # Meanings of columns in the xlsx file
 TOWN_SYMBOL_COLUMN = 0
