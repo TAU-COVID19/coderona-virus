@@ -22,8 +22,8 @@
 # 'how many people live and work within the nafa' refer to the same thing -
 # so in that case we only use the latter.
 
-from src.world.city_data.city import City
-from src.util import DiscreteDistribution
+from world.city_data.city import City
+from util import DiscreteDistribution
 
 def make_city_work_destination_distributions(city_list):
     """

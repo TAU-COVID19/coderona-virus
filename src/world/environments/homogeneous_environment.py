@@ -1,8 +1,8 @@
 import random
 
-from src.world.environments.environment import Environment
+from world.environments.environment import Environment
 from math import exp
-from src.util import Distribution
+from util import Distribution
 
 
 class HomogeneousEnvironment(Environment):

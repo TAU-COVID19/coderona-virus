@@ -1,22 +1,23 @@
 import logging
 import json
 import numpy as np
+import os
 from datetime import date, timedelta
 
-from src.world.environments import EnvironmentalAttribute
-from src.simulation.interventions import *
-from src.seir import daysdelta
-from src.scenarios import *
-from src.seir import DiseaseState
-from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
-from src.logs import make_age_and_state_datas_to_plot
-from src.simulation.params import Params
+from world.environments import EnvironmentalAttribute
+from simulation.interventions import *
+from seir import daysdelta
+from scenarios import *
+from seir import DiseaseState
+from simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
+from logs import make_age_and_state_datas_to_plot
+from simulation.params import Params
 
-from src.run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
-import src.util.seed
-import os
+from run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
+import util.seed
 
-src.util.seed.set_random_seed()
+
+util.seed.set_random_seed()
 
 log = logging.getLogger(__name__)
 
@@ -209,8 +210,8 @@ city_cerfew = [
 ]
 
 
-def generate_scenario_name(city_name, scenario, base_inf, initial_num_infected, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
-    return f"{city_name}_{scenario}_baseinf_{base_inf}_init_{initial_num_infected}_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}"
+def generate_scenario_name(city_name, scenario, initial_num_infected, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
+    return f"{city_name}_{scenario}_init_{initial_num_infected}_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}"
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
     current_probs = Params.loader()['disease_parameters']['symptomatic_given_infected_per_age']
@@ -225,8 +226,14 @@ def get_datas_to_plot():
             DiseaseState.CRITICAL,
             DiseaseState.ASYMPTOMATICINFECTIOUS
         ],
+        "critical" : [
+            DiseaseState.CRITICAL
+        ],
         "susceptible": [
             DiseaseState.SUSCEPTIBLE
+        ],
+        "deceased": [
+            DiseaseState.DECEASED
         ]
     }
     return {'amit_graph': make_age_and_state_datas_to_plot(
@@ -242,6 +249,7 @@ def main():
     """
     # sets the logging output to be at debug level, meaning more output than a regular run
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
     # all interventions to activate, all the uncommented line will be added as a different simulation run
     # the keys are the names of the run, and the values are the list of active interventions in the run
     interventions_modes = {
@@ -277,10 +285,28 @@ def main():
         # "scenario_262": scenario_262_interventions,
         # "scenario_272": scenario_272_interventions,
         # "scenario_282": scenario_282_interventions,
-        "scenario_36": scenario_36_interventions,
+        #"scenario_36": scenario_36_interventions,
         # "scenario_39": scenario_39_interventions,
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions
+        #"reality1" : scenario_reality1
+        #"check" : scenario_check
+        #"reality2" : scenario_reality2
+        #"reality3": scenario_reality3
+        #"reality4": scenario_reality4
+        #"no_interventions": no_interventions
+        #"not_relaxing_interventions": not_relaxing_interventions
+        #"grant_time1" : grant_time1,
+        #"grant_time2" : grant_time2
+        #"paper_1" : paper_1
+        #"paper_2" : paper_2
+        #"paper_3" : paper_3
+        #"paper_4" : paper_4
+        #"paper_5": paper_5
+        #"paper_6": paper_6
+        #"paper_7": paper_7
+        "paper_8": paper_8
+        #"paper_2_comp_9": paper_2_comp_9
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -302,29 +328,28 @@ def main():
     # we build a list of the jobs to run:
     # each job can be run as a different process, and the population generation will be done once
     # if caching option is on
+
     jobs = []
-    for initial_num_infected in [1500]:
-        for city_name, scale in [("Bene Beraq",1)]:
-            for compliance in [0.9]:
-                for ci_delay in [1]:
-                    for hi_delay in [1]:
-                        for base_infectiousness in [0.1]:
+    for initial_num_infected in [25, 100, 250, 500]:
+        for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:
+            for compliance in [0.8]:
+                for ci_delay in [4]:
+                    for hi_delay in [4]:
                             for symptomatic_probs_scale in [1]:
                                 for scenario_name, intervention_scheme in scenarios.items():
                                     params_to_change= {
-                                        ('person', 'base_infectiousness'): base_infectiousness,
                                         ('disease_parameters', 'symptomatic_given_infected_per_age'): get_rescaled_symptomatic_probs(symptomatic_probs_scale)
                                     }
                                     full_scenario_name = generate_scenario_name(city_name,
                                                                                 scenario_name,
-                                                                                base_infectiousness,
                                                                                 initial_num_infected,
                                                                                 compliance,
                                                                                 ci_delay,
                                                                                 hi_delay,
                                                                                 symptomatic_probs_scale)
+#                                    full_scenario_name = "res"
                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                    days=30,
+                                                                    days=180,
                                                                     city_name=city_name,
                                                                     scale=scale,
                                                                     infection_params=NaiveInitialInfectionParams(initial_num_infected),
@@ -332,7 +357,7 @@ def main():
                                                                     params_to_change=params_to_change,
                                                                     interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                     datas_to_plot=datas_to_plot),
-                                                          num_repetitions=10))
+                                                          num_repetitions=50))
 
     # add job to make r to base infectiousness graph:
     # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
@@ -340,7 +365,7 @@ def main():
     #                                            interventions=ci_sde,num_repetitions=3)]
 
     # this start the run of the jobs
-    run(jobs, multi_processed=False, with_population_caching=False)
+    run(jobs, multi_processed=True, with_population_caching=False)
 
 
 if __name__ == "__main__":

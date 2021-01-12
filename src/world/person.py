@@ -1,17 +1,17 @@
 import numpy as _np
 from copy import copy
+from collections import namedtuple
 
-from src.simulation.event import (
+from simulation.event import (
     Event,
     DayEvent,
     EmptyTrigger,
     DiseaseStateChangeEffect
 )
-from src.seir import DiseaseState
-from src.seir import sample_seir_times
-from src.simulation.params import Params
-from collections import namedtuple
-from src.world.infection_data import InfectionData
+from seir import DiseaseState
+from seir import sample_seir_times
+from simulation.params import Params
+from world.infection_data import InfectionData
 
 
 RedactedPerson = namedtuple("RedactedPerson", ("age", "disease_state"))

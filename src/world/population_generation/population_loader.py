@@ -1,10 +1,10 @@
 import os
 import pickle
 import logging
-from src.world.population_generation import generate_city, generate_entire_country
-from src.world.city_data import get_city_list_from_dem_xls
-from src.world.population_generation.yomemut import make_city_work_destination_distributions
-from src.simulation.params import Params
+from world.population_generation import generate_city, generate_entire_country
+from world.city_data import get_city_list_from_dem_xls
+from world.population_generation.yomemut import make_city_work_destination_distributions
+from simulation.params import Params
 
 log = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ class PopulationLoader(object):
         :return: The requested city
         (throws an exception if there was none/multiple matches)
         """
-        #m_all_cities = get_city_list_from_dem_xls()
+        
         possible_cities = [c for c in self.m_all_cities if c.get_name() == city_name.lower()]
         if len(possible_cities) == 0:
             raise Exception("Found no city named '%s'" % city_name)
@@ -144,7 +144,7 @@ class PopulationLoader(object):
         :param scale: The scale by which we will multiply the city
         :return: A list of all corresponding City objects
         """
-        #all_cities = get_city_list_from_dem_xls()
+
         m_all_cities = [city for city in self.m_all_cities if city.population * scale > MIN_CITY_SIZE]
         log.info("Generating %d cities with a total population of %d" %
                  (len(m_all_cities), sum(city.population for city in m_all_cities)))

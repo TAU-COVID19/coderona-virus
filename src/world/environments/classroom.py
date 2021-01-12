@@ -1,4 +1,4 @@
-from src.world.environments.homogeneous_environment import HomogeneousEnvironment
+from world.environments.homogeneous_environment import HomogeneousEnvironment
 
 class Classroom(HomogeneousEnvironment):
     __slots__ = ('_city', '_age_segment', '_city_env', '_intervention_state')

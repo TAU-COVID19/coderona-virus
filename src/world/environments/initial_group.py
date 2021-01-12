@@ -1,4 +1,4 @@
-from src.world.environments.environment import Environment
+from world.environments.environment import Environment
 
 
 class InitialGroup(Environment):

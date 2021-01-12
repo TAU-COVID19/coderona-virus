@@ -1,9 +1,9 @@
 import os
 import json
 
-from src.simulation.params import Params
-from src.world.population_generation import population_loader
-from src.world.population_generation import generate_city
+from simulation.params import Params
+from world.population_generation import population_loader
+from world.population_generation import generate_city
 
 
 def test_CityGeneration():

@@ -1,4 +1,4 @@
-from src.world.environments.homogeneous_environment import HomogeneousEnvironment
+from world.environments.homogeneous_environment import HomogeneousEnvironment
 
 
 class Workplace(HomogeneousEnvironment):
