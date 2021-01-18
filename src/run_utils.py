@@ -359,7 +359,7 @@ def create_city_and_serialize(city_name, scale, params_to_change):
     :param params_to_change: dict of params to change, in Params object
     :return: World object
     """
-    config_path = os.path.dirname(__file__) + "\\config.json"
+    config_path = os.path.dirname(__file__) + "/config.json"
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']

@@ -129,7 +129,7 @@ def get_city_list_from_dem_xls(file_path: object) -> object:
     with workplace_city_distribution-s not yet initialized
     """
 
-    full_path = os.path.dirname(__file__)+"\\"+file_path
+    full_path = os.path.dirname(__file__)+"/"+file_path
     sheet = xlrd.open_workbook(full_path, 'r').sheet_by_index(0)
     assert sheet.cell(0, TOWN_SYMBOL_COLUMN).value == 'ids', 'Wrong file! %0'
     assert sheet.cell(2, TOWN_SYMBOL_COLUMN).value == 'town symbol', 'Wrong file!'
