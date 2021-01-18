@@ -359,7 +359,7 @@ def create_city_and_serialize(city_name, scale, params_to_change):
     :param params_to_change: dict of params to change, in Params object
     :return: World object
     """
-    config_path = os.path.dirname(__file__) + "\\config.json"
+    config_path = os.path.dirname(__file__) + "/config.json"
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
@@ -439,7 +439,8 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     cpus_to_use = int(math.floor(mp.cpu_count() * 0.9))
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
-
+    else:
+        cpus_to_use = min(8, cpus_to_use)
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
     finalizers = [job.finalize for job in jobs]
     if cpus_to_use == 1:

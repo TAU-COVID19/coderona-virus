@@ -384,7 +384,7 @@ class Event(_Hookable):
         :param effect: Effect object, if None - EmptyEffect
         """
         super().__init__()
-        assert trigger or effect, 'Why do you need meaningless event'
+        # assert trigger or effect, 'Why do you need meaningless event'
         if trigger is None:
             trigger = EmptyTrigger()
         if effect is None:
