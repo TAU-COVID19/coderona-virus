@@ -298,14 +298,14 @@ def main():
         #"not_relaxing_interventions": not_relaxing_interventions
         #"grant_time1" : grant_time1,
         #"grant_time2" : grant_time2
-        #"paper_1" : paper_1
+        "paper_1" : paper_1
         #"paper_2" : paper_2
         #"paper_3" : paper_3
         #"paper_4" : paper_4
         #"paper_5": paper_5
         #"paper_6": paper_6
         #"paper_7": paper_7
-        "paper_8": paper_8
+        #"paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
     }
 
