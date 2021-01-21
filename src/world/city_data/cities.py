@@ -123,7 +123,7 @@ def city_from_csv_line(line, nafa_col_values):
 
 def get_city_list_from_dem_xls(file_path: object) -> object:
     """
-    Parses the xlsx file (saved in the hardcoded DATA_FILE_PATH path),
+    Parses the xls file (saved in /Assets/),
     constructs and returns a list of the cities it describes.
     :return: A list of the City objects it generated,
     with workplace_city_distribution-s not yet initialized
