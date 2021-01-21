@@ -1,5 +1,5 @@
 {
   "CitiesFilePath": "../../../Assets/CitiesData.xls",
-  "ParamsFilePath": "../Assets/Params.json",
+  "ParamsFilePath": "../Assets/params.json",
   "CPU_percent": "0.6"
 }
