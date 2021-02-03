@@ -317,7 +317,7 @@ def main():
     # city_name, scale = 'all', 0.01 # This means loading 1% of the entire country
     # city_name, scale = 'all', 0.1 # This means loading the entire country
     print("Running all simulations...")
-    config_path = os.path.dirname(__file__) + "/config.json"
+    config_path = os.path.join(os.path.dirname(__file__) ,"config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']

@@ -172,7 +172,7 @@ class SimpleJob(RunningJob):
         :param verbosity: bool, if it's True then additional output logs will be printed to the screen
         """
         seed.set_random_seed()
-        config_path = os.path.dirname(__file__)+"\\config.json"
+        config_path = os.path.join(os.path.dirname(__file__),"config.json")
         with open(config_path) as json_data_file:
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
