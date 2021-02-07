@@ -1,4 +1,7 @@
 import numpy as _np
+import json
+import random
+import os
 from copy import copy
 from collections import namedtuple
 
@@ -46,6 +49,14 @@ class Person(object):
     num_people_so_far = 0
 
     def __init__(self, age, environments=None):
+        config_path = os.path.join(os.path.dirname(__file__) ,"..","config.json")
+        with open(config_path) as json_data_file:
+            ConfigData = json.load(json_data_file)
+        R0 = float(ConfigData['R0_percent'])
+        StartAsRecovered = False
+        if random.random() < R0:
+            StartAsRecovered = True
+
         self._changed = True
         if not environments:
             environments = []
@@ -61,7 +72,7 @@ class Person(object):
                 params['individual_infectiousness_gamma_scale']
             ), 1)
         self._disease_state = DiseaseState.SUSCEPTIBLE
-        self.is_susceptible = True
+        self.is_susceptible = not StartAsRecovered
         self.is_dead = False
         self.is_infectious = False
         self.is_infected = False
@@ -76,7 +87,10 @@ class Person(object):
         self.routine_changes = {}
         self._infection_data = None
         self._num_infections = 0
-        self.last_state = None
+        if StartAsRecovered:
+            self.last_state = DiseaseState.IMMUNE
+        else:
+            self.last_state = None
         Person.num_people_so_far += 1
 
     def _init_event(self, old_state, new_state):

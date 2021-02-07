@@ -188,7 +188,8 @@ class SimpleJob(RunningJob):
         population_loader = PopulationLoader(
             citiesDataPath,
             added_description=Params.loader().description(),
-            with_caching=with_population_caching
+            with_caching=with_population_caching,
+            verbosity=verbosity
         )
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
         sim = Simulation(world, self.initial_date, self.interventions,
