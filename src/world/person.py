@@ -71,11 +71,17 @@ class Person(object):
                 params['individual_infectiousness_gamma_shape'],
                 params['individual_infectiousness_gamma_scale']
             ), 1)
-        self._disease_state = DiseaseState.SUSCEPTIBLE
-        self.is_susceptible = not StartAsRecovered
+        if StartAsRecovered:
+            self._disease_state = DiseaseState.IMMUNE
+            self.is_susceptible = False
+            self.is_infected = True
+        else:
+            self._disease_state = DiseaseState.SUSCEPTIBLE
+            self.is_susceptible = True
+            self.is_infected = False
         self.is_dead = False
         self.is_infectious = False
-        self.is_infected = False
+        
         self._id = Person.num_people_so_far
         # hold all the events that are triggered by some disease state(s) change(s), like isolation when symptomatic
         self.state_to_events = {}
@@ -88,7 +94,7 @@ class Person(object):
         self._infection_data = None
         self._num_infections = 0
         if StartAsRecovered:
-            self.last_state = DiseaseState.IMMUNE
+            self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
         else:
             self.last_state = None
         Person.num_people_so_far += 1

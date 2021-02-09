@@ -9,6 +9,7 @@ from simulation.event import DayEvent
 from logs import Statistics, DayStatistics
 from world import Person
 from world.environments import InitialGroup
+from seir import DiseaseState
 
 log = logging.getLogger(__name__)
 
@@ -174,10 +175,14 @@ class Simulation(object):
         assert self.initial_infection_doc is None
         self.initial_infection_doc = infection_doc
 
+        #remove the immune people from the list of people who infect others 
         if city_name is not None:
-            population = [p for p in self._world.all_people() if p.get_city_name() == city_name]
+            tmpPopulation = [p for p in self._world.all_people() if p.get_city_name() == city_name]
+            population = [p for p in tmpPopulation if  p.get_disease_state() != DiseaseState.IMMUNE]
         else:
-            population = self._world.all_people()
+            tmpPopulation = self._world.all_people()
+            population = [p for p in tmpPopulation if  p.get_disease_state() != DiseaseState.IMMUNE]
+        
         assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
 
         people_to_infect = _random.sample(population, num_infected)
