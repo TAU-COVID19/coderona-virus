@@ -1,10 +1,10 @@
 import os
 import pickle
 import logging
-from world.population_generation import generate_city, generate_entire_country
-from world.city_data import get_city_list_from_dem_xls
-from world.population_generation.yomemut import make_city_work_destination_distributions
-from simulation.params import Params
+from src.world.population_generation import generate_city, generate_entire_country
+from src.world.city_data import get_city_list_from_dem_xls
+from src.world.population_generation.yomemut import make_city_work_destination_distributions
+from src.simulation.params import Params
 
 log = logging.getLogger(__name__)
 

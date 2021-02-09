@@ -1,4 +1,4 @@
-from simulation.mock_simulation import InitialStateSimulation
+from src.simulation.mock_simulation import InitialStateSimulation
 
 
 class InitialInfectionParams(object):

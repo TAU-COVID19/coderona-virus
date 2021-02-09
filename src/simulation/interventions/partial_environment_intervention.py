@@ -2,11 +2,11 @@ from typing import Tuple
 from datetime import date, timedelta
 import random
 from collections import namedtuple
-from simulation.interventions.intervention import Intervention, make_routine_change_events
-from simulation.event import DayEvent, ChangeEnvInterventionStateEffect
-from world.environments import CityCommunity, SchoolInterventionState
-from world import World
-from simulation.params import Params
+from src.simulation.interventions.intervention import Intervention, make_routine_change_events
+from src.simulation.event import DayEvent, ChangeEnvInterventionStateEffect
+from src.world.environments import CityCommunity, SchoolInterventionState
+from src.world import World
+from src.simulation.params import Params
 
 def no_school_routine(person):
     params = Params.loader()["interventions_routines"]["school_closure"]

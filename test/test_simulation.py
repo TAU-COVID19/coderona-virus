@@ -1,10 +1,10 @@
 import pytest
 import os
 
-from seir import DiseaseState
-from simulation.initial_infection_params import NaiveInitialInfectionParams
-from run_utils import SimpleJob, run
-from logs import Statistics
+from src.seir import DiseaseState
+from src.simulation.initial_infection_params import NaiveInitialInfectionParams
+from src.run_utils import SimpleJob, run
+from src.logs import Statistics
 
 
 def test_simple_simulation_single():
