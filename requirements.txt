@@ -7,6 +7,3 @@ sanic
 aiofiles
 jinja2
 tqdm
-json
-random
-os
