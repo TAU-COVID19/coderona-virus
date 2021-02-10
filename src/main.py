@@ -320,7 +320,6 @@ def main():
     config_path = os.path.dirname(__file__) + "/config.json"
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
         paramsDataPath = ConfigData['ParamsFilePath']
 
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
