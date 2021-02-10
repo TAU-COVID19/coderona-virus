@@ -285,7 +285,7 @@ def main():
         # "scenario_262": scenario_262_interventions,
         # "scenario_272": scenario_272_interventions,
         # "scenario_282": scenario_282_interventions,
-        #"scenario_36": scenario_36_interventions,
+        # "scenario_36": scenario_36_interventions,
         # "scenario_39": scenario_39_interventions,
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions
@@ -365,7 +365,7 @@ def main():
     #                                            interventions=ci_sde,num_repetitions=3)]
 
     # this start the run of the jobs
-    run(jobs, multi_processed=True, with_population_caching=False)
+    run(jobs, multi_processed=True, with_population_caching=False,verbosity=False)
 
 
 if __name__ == "__main__":

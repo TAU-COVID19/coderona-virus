@@ -49,10 +49,8 @@ class Person(object):
     num_people_so_far = 0
 
     def __init__(self, age, environments=None):
-        config_path = os.path.join(os.path.dirname(__file__) ,"..","config.json")
-        with open(config_path) as json_data_file:
-            ConfigData = json.load(json_data_file)
-        R0 = float(ConfigData['R0_percent'])
+        params = Params.loader()['population']
+        R0 = params["R0_percent"]
         StartAsRecovered = False
         if random.random() < R0:
             StartAsRecovered = True
