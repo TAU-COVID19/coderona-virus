@@ -68,9 +68,9 @@ class Distribution(object):
             return _random.randint(*segment)
         return _random.uniform(*segment)
 
-    def mean(self):
+    def mean(self): # never used!
         """
-        :return: The mean value of this
+        :return: The mean value of this distribution
         """
         return sum(
-            [self.probs[i] * (self.segments[i][0] + self.segments[i][1]) / 2. for i in range(len(self.segments))])
+            [self.segment_distribution.probs[i] * (self.segments[i][0] + self.segments[i][1]) / 2.0 for i in range(len(self.segments))])
