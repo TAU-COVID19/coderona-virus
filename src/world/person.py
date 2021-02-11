@@ -76,9 +76,9 @@ class Person(object):
         #else:
         self._disease_state = DiseaseState.SUSCEPTIBLE
         self.is_susceptible = True
-        self.is_infected = False
         self.is_dead = False
         self.is_infectious = False
+        self.is_infected = False
         
         self._id = Person.num_people_so_far
         # hold all the events that are triggered by some disease state(s) change(s), like isolation when symptomatic
@@ -91,10 +91,10 @@ class Person(object):
         self.routine_changes = {}
         self._infection_data = None
         self._num_infections = 0
-        if StartAsRecovered:
-            self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
-        else:
-            self.last_state = None
+        #if StartAsRecovered:
+        #    self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
+        #else:
+        self.last_state = None
         Person.num_people_so_far += 1
 
     def _init_event(self, old_state, new_state):
