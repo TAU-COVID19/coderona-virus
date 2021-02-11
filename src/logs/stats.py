@@ -12,13 +12,13 @@ from itertools import cycle
 from datetime import timedelta
 from itertools import combinations
 
-from simulation.interventions import *
-from world import InfectionData
-from logs.summary import make_summary_by_age_table, TableFormat
-from simulation.params import Params
-from seir import DiseaseState
-from world import RedactedPersonAndEnv
-from logs.r0_data import calculate_r0_data
+from src.simulation.interventions import *
+from src.world import InfectionData
+from src.logs.summary import make_summary_by_age_table, TableFormat
+from src.simulation.params import Params
+from src.seir import DiseaseState
+from src.world import RedactedPersonAndEnv
+from src.logs.r0_data import calculate_r0_data
 
 
 logging.getLogger('matplotlib.font_manager').disabled = True

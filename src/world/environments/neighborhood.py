@@ -1,4 +1,4 @@
-from world.environments.homogeneous_environment import HomogeneousEnvironment
+from src.world.environments.homogeneous_environment import HomogeneousEnvironment
 
 
 class NeighborhoodCommunity(HomogeneousEnvironment):

@@ -1,5 +1,5 @@
-from simulation.interventions.partial_environment_intervention import SchoolClosureIntervention, SchoolIsolationIntervention, AttributeAndPeriodData
-from simulation.interventions.intervention import \
+from src.simulation.interventions.partial_environment_intervention import SchoolClosureIntervention, SchoolIsolationIntervention, AttributeAndPeriodData
+from src.simulation.interventions.intervention import \
     SocialDistancingIntervention, \
     ElderlyQuarantineIntervention, \
     SymptomaticIsolationIntervention, \

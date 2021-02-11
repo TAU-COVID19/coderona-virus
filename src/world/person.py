@@ -5,16 +5,16 @@ import os
 from copy import copy
 from collections import namedtuple
 
-from simulation.event import (
+from src.simulation.event import (
     Event,
     DayEvent,
     EmptyTrigger,
     DiseaseStateChangeEffect
 )
-from seir import DiseaseState
-from seir import sample_seir_times
-from simulation.params import Params
-from world.infection_data import InfectionData
+from src.seir import DiseaseState
+from src.seir import sample_seir_times
+from src.simulation.params import Params
+from src.world.infection_data import InfectionData
 
 
 RedactedPerson = namedtuple("RedactedPerson", ("age", "disease_state"))

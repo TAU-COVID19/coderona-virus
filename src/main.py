@@ -3,21 +3,23 @@ import json
 import numpy as np
 import os
 from datetime import date, timedelta
+import sys
 
-from world.environments import EnvironmentalAttribute
-from simulation.interventions import *
-from seir import daysdelta
-from scenarios import *
-from seir import DiseaseState
-from simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
-from logs import make_age_and_state_datas_to_plot
-from simulation.params import Params
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
-import util.seed
+from src.world.environments import EnvironmentalAttribute
+from src.simulation.interventions import *
+from src.seir import daysdelta
+from src.scenarios import *
+from src.seir import DiseaseState
+from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
+from src.logs import make_age_and_state_datas_to_plot
+from src.simulation.params import Params
 
+from src.run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
+import src.util.seed as seed
 
-util.seed.set_random_seed()
+seed.set_random_seed()
 
 log = logging.getLogger(__name__)
 
@@ -320,7 +322,6 @@ def main():
     config_path = os.path.join(os.path.dirname(__file__) ,"config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
         paramsDataPath = ConfigData['ParamsFilePath']
 
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)

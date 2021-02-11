@@ -3,8 +3,8 @@ import random
 import itertools
 from datetime import date, timedelta
 
-from seir import DiseaseState
-from simulation.event import (
+from src.seir import DiseaseState
+from src.simulation.event import (
     Event,
     DayEvent,
     AddRoutineChangeEffect,
@@ -18,8 +18,8 @@ from simulation.event import (
     EmptyTrigger,
     OrTrigger
 )
-from world import Person, World
-from simulation.params import Params
+from src.world import Person, World
+from src.simulation.params import Params
 
 
 def workplace_closure_routine(person: Person):

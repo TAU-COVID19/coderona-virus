@@ -1,9 +1,9 @@
 import os
 import logging
 
-from seir import DiseaseState
-from run_utils import SimpleJob, run
-from logs import Statistics
+from src.seir import DiseaseState
+from src.run_utils import SimpleJob, run
+from src.logs import Statistics
 
 def test_R0Big():
     """

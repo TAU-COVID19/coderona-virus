@@ -1,7 +1,7 @@
 from collections import defaultdict
 import random
 
-from world.environments.homogeneous_environment import HomogeneousEnvironment
+from src.world.environments.homogeneous_environment import HomogeneousEnvironment
 
 
 class CityCommunity(HomogeneousEnvironment):

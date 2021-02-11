@@ -3,9 +3,9 @@ from scipy.stats import gamma
 from datetime import timedelta
 import warnings
 
-from seir.disease_state import DiseaseState
-from util import Distribution
-from simulation.params import Params
+from src.seir.disease_state import DiseaseState
+from src.util import Distribution
+from src.simulation.params import Params
 
 
 
