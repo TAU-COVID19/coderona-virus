@@ -7,7 +7,7 @@ from src.world.city_data import get_city_list_from_dem_xls
 
 
 def test_Init_haifa():
-    file_path = os.path.dirname(__file__)+"\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__)+"/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']

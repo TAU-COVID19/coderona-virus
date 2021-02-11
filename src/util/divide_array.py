@@ -18,10 +18,10 @@ def divide_array(arr, max_segment_size):
     num_segments_of_smaller_size = num_segments - num_segments_of_larger_size
     t = 0
     ret = []
-    for i in range(num_segments_of_smaller_size):
+    for _ in range(num_segments_of_smaller_size):
         ret.append(arr[t:t+base_segment_size])
         t += base_segment_size
-    for i in range(num_segments_of_larger_size):
+    for _ in range(num_segments_of_larger_size):
         ret.append(arr[t:t+base_segment_size+1])
         t += base_segment_size + 1
     assert t == len(arr)

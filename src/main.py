@@ -8,7 +8,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from src.world.environments import EnvironmentalAttribute
-from src.simulation.interventions import *
+#from src.simulation.interventions import *
 from src.seir import daysdelta
 from src.scenarios import *
 from src.seir import DiseaseState
@@ -23,6 +23,7 @@ seed.set_random_seed()
 
 log = logging.getLogger(__name__)
 
+"""
 # examples of initializing different interventions
 
 # case isolation - isolating to quarantine mode every person that develops symptoms
@@ -32,6 +33,8 @@ ci_intervention = SymptomaticIsolationIntervention(
     compliance=0.7,
     delay=0
 )
+
+
 
 # house isolation - isolate the entire house when one of them develops symptoms
 # here it's configures for 14 days from symptoms
@@ -210,6 +213,7 @@ city_cerfew = [
     jerusalem_intervention,
     tlv_intervention
 ]
+"""
 
 
 def generate_scenario_name(city_name, scenario, initial_num_infected, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
@@ -252,6 +256,7 @@ def main():
     # sets the logging output to be at debug level, meaning more output than a regular run
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
+    """
     # all interventions to activate, all the uncommented line will be added as a different simulation run
     # the keys are the names of the run, and the values are the list of active interventions in the run
     interventions_modes = {
@@ -274,7 +279,7 @@ def main():
         # 'PC': pc,
         # 'CI_HQ_SD': ci_hq_sd,
     }
-
+    """
     scenarios = {
         # "scenario_1": scenario_1_interventions,
         # "scenario_21": scenario_21_interventions,

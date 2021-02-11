@@ -1,6 +1,5 @@
 import random
 import numpy as np
-import scipy
 
 CONSTANT_SEED = None  # None means 'do not fix a seed'
 
@@ -14,5 +13,4 @@ def set_random_seed():
     if CONSTANT_SEED is not None:
         random.seed(CONSTANT_SEED)
         np.random.seed(CONSTANT_SEED)
-        scipy.random.seed(CONSTANT_SEED)
 
