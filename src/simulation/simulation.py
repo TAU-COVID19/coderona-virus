@@ -8,6 +8,7 @@ from copy import deepcopy
 from simulation.event import DayEvent
 from logs import Statistics, DayStatistics
 from world import Person
+
 from world.environments import InitialGroup
 
 log = logging.getLogger(__name__)

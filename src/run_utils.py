@@ -446,15 +446,15 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     cpus_to_use = int(math.floor(mp.cpu_count() * percent))
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
-    else:
+    #else:
         #only in papar_8 run slow
-        run_slow = False
-        for i in range(len(jobs)-1):
-            if jobs[i].scenario_name =="paper_8":
-                run_slow = True
-                break
-        if run_slow:
-            cpus_to_use=1 
+        #run_slow = False
+        #for i in range(len(jobs)-1):
+            #if jobs[i].scenario_name =="paper_8":
+                #run_slow = True
+                #break
+        #if run_slow:
+            #cpus_to_use=1 
         
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
     finalizers = [job.finalize for job in jobs]
