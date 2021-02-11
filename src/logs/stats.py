@@ -1,6 +1,8 @@
 import os
 from functools import lru_cache
 import pickle
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import warnings
