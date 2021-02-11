@@ -1,8 +1,8 @@
 from datetime import date, timedelta
-from simulation.interventions import *
-from run_utils import INITIAL_DATE
-from seir import daysdelta
-from world.environments.environment import EnvironmentalAttribute
+from src.simulation.interventions import *
+from src.run_utils import INITIAL_DATE
+from src.seir import daysdelta
+from src.world.environments.environment import EnvironmentalAttribute
 
 #first scenarios
 def scenario_1_interventions(compliance, ci_delay, hi_delay):

@@ -5,10 +5,11 @@ from collections import Counter
 from datetime import timedelta
 from copy import deepcopy
 
-from simulation.event import DayEvent
-from logs import Statistics, DayStatistics
-from world import Person
-from world.environments import InitialGroup
+from src.simulation.event import DayEvent
+from src.logs import Statistics, DayStatistics
+from src.world import Person
+from src.world.environments import InitialGroup
+
 
 log = logging.getLogger(__name__)
 

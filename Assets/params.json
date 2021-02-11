@@ -5,6 +5,7 @@
         "individual_infectiousness_gamma_scale": 4
     },
     "population": {
+        "R0_percent": 0.0,
         "household_avg_daily_contacts": 3.316470479739545,
         "community_avg_daily_contacts": 2.5,
         "city_avg_daily_contacts": 0.59,

@@ -1,17 +1,20 @@
 import numpy as _np
+import json
+import random
+import os
 from copy import copy
 from collections import namedtuple
 
-from simulation.event import (
+from src.simulation.event import (
     Event,
     DayEvent,
     EmptyTrigger,
     DiseaseStateChangeEffect
 )
-from seir import DiseaseState
-from seir import sample_seir_times
-from simulation.params import Params
-from world.infection_data import InfectionData
+from src.seir import DiseaseState
+from src.seir import sample_seir_times
+from src.simulation.params import Params
+from src.world.infection_data import InfectionData
 
 
 RedactedPerson = namedtuple("RedactedPerson", ("age", "disease_state"))
@@ -46,6 +49,12 @@ class Person(object):
     num_people_so_far = 0
 
     def __init__(self, age, environments=None):
+        params = Params.loader()['population']
+        R0 = params["R0_percent"]
+        StartAsRecovered = False
+        #if random.random() < R0:
+        #   StartAsRecovered = True
+
         self._changed = True
         if not environments:
             environments = []
@@ -60,11 +69,17 @@ class Person(object):
                 params['individual_infectiousness_gamma_shape'],
                 params['individual_infectiousness_gamma_scale']
             ), 1)
+        #if StartAsRecovered:
+        #   self._disease_state = DiseaseState.IMMUNE
+        #   self.is_susceptible = False
+        #   self.is_infected = True
+        #else:
         self._disease_state = DiseaseState.SUSCEPTIBLE
         self.is_susceptible = True
         self.is_dead = False
         self.is_infectious = False
         self.is_infected = False
+        
         self._id = Person.num_people_so_far
         # hold all the events that are triggered by some disease state(s) change(s), like isolation when symptomatic
         self.state_to_events = {}
@@ -76,6 +91,9 @@ class Person(object):
         self.routine_changes = {}
         self._infection_data = None
         self._num_infections = 0
+        #if StartAsRecovered:
+        #    self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
+        #else:
         self.last_state = None
         Person.num_people_so_far += 1
 

@@ -3,18 +3,21 @@ import json
 import numpy as np
 import os
 from datetime import date, timedelta
+import sys
 
-from world.environments import EnvironmentalAttribute
-#from simulation.interventions import *
-from seir import daysdelta
-from scenarios import *
-from seir import DiseaseState
-from simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
-from logs import make_age_and_state_datas_to_plot
-from simulation.params import Params
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
-import util.seed as seed
+from src.world.environments import EnvironmentalAttribute
+#from src.simulation.interventions import *
+from src.seir import daysdelta
+from src.scenarios import *
+from src.seir import DiseaseState
+from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams
+from src.logs import make_age_and_state_datas_to_plot
+from src.simulation.params import Params
+
+from src.run_utils import RepeatJob, SimpleJob, run, INITIAL_DATE
+import src.util.seed as seed
 
 seed.set_random_seed()
 
@@ -289,7 +292,7 @@ def main():
         # "scenario_262": scenario_262_interventions,
         # "scenario_272": scenario_272_interventions,
         # "scenario_282": scenario_282_interventions,
-        #"scenario_36": scenario_36_interventions,
+        # "scenario_36": scenario_36_interventions,
         # "scenario_39": scenario_39_interventions,
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions
@@ -302,8 +305,8 @@ def main():
         #"not_relaxing_interventions": not_relaxing_interventions
         #"grant_time1" : grant_time1,
         #"grant_time2" : grant_time2
-        "paper_1" : paper_1
-        #"paper_2" : paper_2
+        #"paper_1" : paper_1
+        "paper_2" : paper_2
         #"paper_3" : paper_3
         #"paper_4" : paper_4
         #"paper_5": paper_5
@@ -321,7 +324,7 @@ def main():
     # city_name, scale = 'all', 0.01 # This means loading 1% of the entire country
     # city_name, scale = 'all', 0.1 # This means loading the entire country
     print("Running all simulations...")
-    config_path = os.path.dirname(__file__) + "/config.json"
+    config_path = os.path.join(os.path.dirname(__file__) ,"config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
@@ -368,7 +371,7 @@ def main():
     #                                            interventions=ci_sde,num_repetitions=3)]
 
     # this start the run of the jobs
-    run(jobs, multi_processed=True, with_population_caching=False)
+    run(jobs, multi_processed=True, with_population_caching=False,verbosity=False)
 
 
 if __name__ == "__main__":
