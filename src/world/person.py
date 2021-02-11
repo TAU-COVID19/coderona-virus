@@ -52,8 +52,8 @@ class Person(object):
         params = Params.loader()['population']
         R0 = params["R0_percent"]
         StartAsRecovered = False
-        if random.random() < R0:
-            StartAsRecovered = True
+        #if random.random() < R0:
+        #   StartAsRecovered = True
 
         self._changed = True
         if not environments:
@@ -69,14 +69,14 @@ class Person(object):
                 params['individual_infectiousness_gamma_shape'],
                 params['individual_infectiousness_gamma_scale']
             ), 1)
-        if StartAsRecovered:
-            self._disease_state = DiseaseState.IMMUNE
-            self.is_susceptible = False
-            self.is_infected = True
-        else:
-            self._disease_state = DiseaseState.SUSCEPTIBLE
-            self.is_susceptible = True
-            self.is_infected = False
+        #if StartAsRecovered:
+        #   self._disease_state = DiseaseState.IMMUNE
+        #   self.is_susceptible = False
+        #   self.is_infected = True
+        #else:
+        self._disease_state = DiseaseState.SUSCEPTIBLE
+        self.is_susceptible = True
+        self.is_infected = False
         self.is_dead = False
         self.is_infectious = False
         
