@@ -1,12 +1,12 @@
 import os
 import json
 import pytest
-from world import person
-from seir import DiseaseState
+from src.world import person
+from src.seir import DiseaseState
 
 #Test the amount of the  created Immune
 def test_createInfectedPersons():
-    config_path = os.path.dirname(__file__)+"\\..\\src\\config.json"
+    config_path = os.path.dirname(__file__)+"/../src/config.json"
     Expeced  = -1
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
