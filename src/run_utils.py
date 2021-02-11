@@ -172,7 +172,7 @@ class SimpleJob(RunningJob):
         :param verbosity: bool, if it's True then additional output logs will be printed to the screen
         """
         seed.set_random_seed()
-        config_path = os.path.dirname(__file__)+"/config.json"
+        config_path = os.path.join(os.path.dirname(__file__),"config.json")
         with open(config_path) as json_data_file:
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
@@ -188,7 +188,8 @@ class SimpleJob(RunningJob):
         population_loader = PopulationLoader(
             citiesDataPath,
             added_description=Params.loader().description(),
-            with_caching=with_population_caching
+            with_caching=with_population_caching,
+            verbosity=verbosity
         )
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
         sim = Simulation(world, self.initial_date, self.interventions,
@@ -445,15 +446,15 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     cpus_to_use = int(math.floor(mp.cpu_count() * percent))
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
-    else:
+    #else:
         #only in papar_8 run slow
-        run_slow = False
-        for i in range(len(jobs)-1):
-            if jobs[i].scenario_name =="paper_8":
-                run_slow = True
-                break
-        if run_slow:
-            cpus_to_use=1 
+        #run_slow = False
+        #for i in range(len(jobs)-1):
+            #if jobs[i].scenario_name =="paper_8":
+                #run_slow = True
+                #break
+        #if run_slow:
+            #cpus_to_use=1 
         
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
     finalizers = [job.finalize for job in jobs]

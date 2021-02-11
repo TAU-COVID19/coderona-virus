@@ -10,6 +10,7 @@ from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup
 
+
 log = logging.getLogger(__name__)
 
 

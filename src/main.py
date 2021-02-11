@@ -287,7 +287,7 @@ def main():
         # "scenario_262": scenario_262_interventions,
         # "scenario_272": scenario_272_interventions,
         # "scenario_282": scenario_282_interventions,
-        #"scenario_36": scenario_36_interventions,
+        # "scenario_36": scenario_36_interventions,
         # "scenario_39": scenario_39_interventions,
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions
@@ -300,8 +300,8 @@ def main():
         #"not_relaxing_interventions": not_relaxing_interventions
         #"grant_time1" : grant_time1,
         #"grant_time2" : grant_time2
-        "paper_1" : paper_1
-        #"paper_2" : paper_2
+        #"paper_1" : paper_1
+        "paper_2" : paper_2
         #"paper_3" : paper_3
         #"paper_4" : paper_4
         #"paper_5": paper_5
@@ -319,7 +319,7 @@ def main():
     # city_name, scale = 'all', 0.01 # This means loading 1% of the entire country
     # city_name, scale = 'all', 0.1 # This means loading the entire country
     print("Running all simulations...")
-    config_path = os.path.dirname(__file__) + "/config.json"
+    config_path = os.path.join(os.path.dirname(__file__) ,"config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
@@ -366,7 +366,7 @@ def main():
     #                                            interventions=ci_sde,num_repetitions=3)]
 
     # this start the run of the jobs
-    run(jobs, multi_processed=True, with_population_caching=False)
+    run(jobs, multi_processed=True, with_population_caching=False,verbosity=False)
 
 
 if __name__ == "__main__":
