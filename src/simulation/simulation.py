@@ -218,12 +218,7 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
-    def run_simulation(
-        self,
-        num_days,
-        name,
-        datas_to_plot=None
-    ):
+    def run_simulation(self, num_days, name, datas_to_plot=None):
         """
         This main loop of the simulation.
         It advances the simulation day by day and saves,
