@@ -164,7 +164,7 @@ class Simulation(object):
     def infect_random_set(self, num_infected, infection_doc, city_name=None):
         """
         Infect a uniformly random initial set,
-        so that the disease an spread during the simulation.
+        so that the disease can spread during the simulation.
         :param num_infected: int number of infected to make
         :param infection_doc: str to doc the infection data
         (written to the inputs.txt file)
