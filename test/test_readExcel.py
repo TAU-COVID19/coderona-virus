@@ -28,7 +28,7 @@ def test_Init_haifaParms():
 
 
 def test_Init_SmallTown():
-    file_path = os.path.dirname(__file__)+"\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__)+"/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
@@ -38,7 +38,7 @@ def test_Init_SmallTown():
 
 
 def test_Init_TownNotExist():
-    file_path = os.path.dirname(__file__)+"\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__)+"/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
@@ -49,7 +49,7 @@ def test_Init_TownNotExist():
 
 def test_GetCities():
     #There are only 198 cities that we know all the needed data
-    file_path = os.path.dirname(__file__) + "\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__) + "/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
