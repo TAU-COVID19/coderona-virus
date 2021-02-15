@@ -17,7 +17,7 @@ def test_Init_haifa():
 
 
 def test_Init_haifaParms():
-    file_path = os.path.dirname(__file__)+"\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__)+"/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
