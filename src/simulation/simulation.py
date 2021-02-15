@@ -36,15 +36,8 @@ class Simulation(object):
         'num_days_to_run'
     )
 
-    def __init__(
-        self,
-        world,
-        initial_date,
-        interventions=None,
-        stop_early=None,
-        verbosity=False,
-        outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')
-    ):
+    def __init__(self, world, initial_date, interventions=None, stop_early=None, verbosity=False,
+                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')):
         """
         :param world: The World object that this simulation will run on
         :param initial_date: The starting date for the simulation
