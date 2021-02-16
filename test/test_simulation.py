@@ -67,3 +67,23 @@ def test_param_change_base_infectiousness(params):
         True
     )[-1]
     assert total_infected == 10
+
+def test_param_change_immune_parm(params):
+    """
+    Tests that when when we immune most od the population at the start of the disease
+    they stay Immune and not deased while the simulation
+    :param params: application params
+    :return: True if the amount of people that are immune to the diease increased while the simulation
+    """
+    params_to_change = {('person', 'base_infectiousness'): 0.9}
+    job = SimpleJob("test_base_infectiousness_0", 'kefar yona', 1.0,
+                    infection_params=NaiveInitialInfectionParams(10,per_to_Immune= 0.9),
+                    params_to_change=params_to_change)
+    outdir = run([job], verbosity=True, multi_processed=False, with_population_caching=False)
+    results = Statistics.load(os.path.join(outdir, 'test_base_infectiousness_0', 'statistics.pkl'))
+    total_immuned = results.sum_days_data(
+        lambda person: person.disease_state == DiseaseState.IMMUNE,
+        True
+    )[-1]
+    assert 0.89 * 23061 <= total_immuned 
+
