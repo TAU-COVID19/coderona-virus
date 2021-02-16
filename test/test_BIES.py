@@ -1,5 +1,4 @@
 import os
-import logging
 
 from src.seir import DiseaseState
 from src.run_utils import SimpleJob, run

@@ -1,6 +1,5 @@
 import os
 import json
-import pytest
 from src.world import person
 from src.seir import DiseaseState
 
