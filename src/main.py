@@ -365,7 +365,7 @@ def main():
                                                                         params_to_change=params_to_change,
                                                                         interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                         datas_to_plot=datas_to_plot),
-                                                            num_repetitions=3))
+                                                            num_repetitions=50))
 
     # add job to make r to base infectiousness graph:
     # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
