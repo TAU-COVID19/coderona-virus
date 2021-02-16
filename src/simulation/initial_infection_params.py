@@ -18,13 +18,14 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
     Infect num_to_infect random people in city_name_to_infect
     or in the entire country if city_name_to_infect is not given
     """
-    def __init__(self, num_to_infect, city_name_to_infect=None):
+    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None):
         super(NaiveInitialInfectionParams, self).__init__()
         self.num_to_infect = num_to_infect
         self.city_name_to_infect = city_name_to_infect
+        self.per_to_Immune = per_to_Immune
 
     def infect_simulation(self, sim, outdir):
-        sim.infect_random_set(self.num_to_infect, str(self), self.city_name_to_infect)
+        sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
 
     def __str__(self):
         if self.city_name_to_infect is None:

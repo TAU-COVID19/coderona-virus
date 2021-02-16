@@ -7,7 +7,7 @@ from src.simulation.params import Params
 
 @pytest.fixture
 def cities():
-    file_path = os.path.dirname(__file__) + "\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__) + "/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
@@ -18,11 +18,11 @@ def cities():
 
 @pytest.fixture
 def params_path():
-    file_path = os.path.dirname(__file__) + "\\..\\src\\config.json"
+    file_path = os.path.dirname(__file__) + "/../src/config.json"
     with open(file_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         ParamsDataPath = ConfigData['ParamsFilePath']
-    return os.path.dirname(os.path.dirname(__file__))+"\\Assets\\"+ParamsDataPath
+    return os.path.dirname(os.path.dirname(__file__))+"/Assets/"+ParamsDataPath
 
 
 @pytest.fixture
