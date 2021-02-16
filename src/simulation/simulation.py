@@ -161,7 +161,7 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, city_name=None):
+    def infect_random_set(self, num_infected, infection_doc, per_to_immune =0.0, city_name=None):
         """
         Infect a uniformly random initial set,
         so that the disease an spread during the simulation.
@@ -180,11 +180,17 @@ class Simulation(object):
         else:
             population = self._world.all_people()
         assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
-
-        people_to_infect = _random.sample(population, num_infected)
+        
+        num_immuned = int(round(len(population)*per_to_immune))
+        Selected_persons = _random.sample(population, num_infected + num_immuned)
+        people_to_infect = Selected_persons[:num_infected]
+        people_to_immune = Selected_persons[num_infected:]
         for person in people_to_infect:
             assert isinstance(person, Person), type(person)
             self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
+        for person in people_to_immune:
+            assert isinstance(person, Person), type(person)
+            self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
 
     def first_people_are_done(self):
         """

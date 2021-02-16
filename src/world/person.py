@@ -319,6 +319,23 @@ class Person(object):
         else:
             states_and_times = sample_seir_times(self)
         return self.gen_and_register_events_from_seir_times(date, states_and_times)
+    
+    def immune_and_get_events(
+        self,
+        date,
+        seir_times=None
+    ):
+        """
+        Immune this person, create and register the events of his state changes.
+        :param date: data of reciving the injuction
+        :param seir_times: The state changes of this person (what they are and how long they last).
+        If this is None, it is sampled with the distribution defined in params.json.
+        :return: infection events
+        """
+        assert self._disease_state == DiseaseState.SUSCEPTIBLE
+        self.set_disease_state(DiseaseState.IMMUNE)
+        return []
+
 
     def add_routine_change(self, key, value):
         if key in self.routine_changes:
