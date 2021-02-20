@@ -36,15 +36,8 @@ class Simulation(object):
         'num_days_to_run'
     )
 
-    def __init__(
-        self,
-        world,
-        initial_date,
-        interventions=None,
-        stop_early=None,
-        verbosity=False,
-        outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')
-    ):
+    def __init__(self, world, initial_date, interventions=None, stop_early=None, verbosity=False,
+                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')):
         """
         :param world: The World object that this simulation will run on
         :param initial_date: The starting date for the simulation
@@ -164,7 +157,7 @@ class Simulation(object):
     def infect_random_set(self, num_infected, infection_doc, per_to_immune =0.0, city_name=None):
         """
         Infect a uniformly random initial set,
-        so that the disease an spread during the simulation.
+        so that the disease can spread during the simulation.
         :param num_infected: int number of infected to make
         :param infection_doc: str to doc the infection data
         (written to the inputs.txt file)
@@ -224,12 +217,7 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
-    def run_simulation(
-        self,
-        num_days,
-        name,
-        datas_to_plot=None
-    ):
+    def run_simulation(self, num_days, name, datas_to_plot=None):
         """
         This main loop of the simulation.
         It advances the simulation day by day and saves,
