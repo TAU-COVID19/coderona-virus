@@ -154,7 +154,7 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, per_to_immune =0.0, city_name=None):
+    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
@@ -167,6 +167,8 @@ class Simulation(object):
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
         self.initial_infection_doc = infection_doc
+        if per_to_immune is None:
+            per_to_immune = 0.0
 
         if city_name is not None:
             population = [p for p in self._world.all_people() if p.get_city_name() == city_name]
