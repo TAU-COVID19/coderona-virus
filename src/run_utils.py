@@ -1,6 +1,8 @@
 import json
+from logging import shutdown
 import math
 import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
 import os
 import sys
 import time
@@ -375,7 +377,7 @@ def create_city_and_serialize(city_name, scale, params_to_change):
     population_loader.get_world(city_name=city_name, scale=scale)
 
 
-def generate_all_cities_for_jobs(jobs, cpus_to_use):
+def generate_all_cities_for_jobs(jobs, process_executor=None):
     """
     Generate all the population needed before the jobs starts to run, and serialize it. That way,
     The multi processed runs don't try to generate the population at the same time, and can use the cashed results.
@@ -396,24 +398,17 @@ def generate_all_cities_for_jobs(jobs, cpus_to_use):
         for params_to_change in appearing_cities_to_params[(city_name, scale)]
     ]
     print("Generating all cities...")
-    if cpus_to_use == 1:
+    if process_executor is None:
         for city_name, scale in appearing_cities:
             create_city_and_serialize(city_name, scale, Params.loader())
         for city_name, scale, params_to_change in appearing_cities_and_params:
             create_city_and_serialize(city_name, scale, params_to_change)
     else:
-        ctx = mp.get_context("spawn")
-        pool = ctx.Pool(cpus_to_use)
         futures = []
-
         for city_name, scale, params_to_change in appearing_cities_and_params:
-            futures.append(pool.apply_async(
-                create_city_and_serialize, args=(city_name, scale, params_to_change)
-            ))
-        pool.close()
-        pool.join()
+            futures.append(process_executor.submit(create_city_and_serialize, city_name, scale, params_to_change))
         for future in futures:
-            future.get()
+            future.result()
     print("Done generating cities.")
 
 
@@ -473,13 +468,12 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             finalizer(outdir)
             prog_bar.update()
     else:
+        executor = ProcessPoolExecutor(cpus_to_use)
         if with_population_caching:
-            generate_all_cities_for_jobs(jobs, cpus_to_use)
+            generate_all_cities_for_jobs(jobs, executor)
         print('running a pool of {} threads parallelly'.format(cpus_to_use))
         sys.stdout.flush()
         prog_bar = tqdm(total=sum(len(task_set) + 1 for task_set in tasks_sets))
-        ctx = mp.get_context("spawn")
-        pool = ctx.Pool(cpus_to_use)
 
         finalize_futures = []
 
@@ -488,30 +482,24 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
                 prog_bar.update()
                 task.is_done = True
                 if all(t.is_done for t in task_set):
-                    finalize_futures.append(pool.apply_async(
-                        finalizer, args=(outdir,),
-                        callback=lambda _: prog_bar.update()
-                    ))
-
+                    future = executor.submit(finalizer, outdir)
+                    future.add_done_callback(lambda _: prog_bar.update())
+                    finalize_futures.append(future)
             return callback
 
         futures = []
         for task_set, finalizer in zip(tasks_sets, finalizers):
             for task in task_set:
-                futures.append(pool.apply_async(
-                    task.func,
-                    args=(*task.params, with_population_caching, verbosity),
-                    callback=get_callback(finalizer, task_set, task)
-                ))
+                future = executor.submit(task.func, *task.params, with_population_caching, verbosity)
+                future.add_done_callback(get_callback(finalizer, task_set, task))
+                futures.append(future)
         for future in futures:
-            future.wait()
-            future.get()
-        pool.close()
-        pool.join()
+            future.result()
         for future in finalize_futures:
-            future.get()
+            future.result()
+        executor.shutdown()
     sys.stderr.flush()
-    print('end')
+    print('End of simulation')
     return outdir
 
 
