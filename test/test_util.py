@@ -1,3 +1,4 @@
+import pytest
 from random import randint
 from src.util.divide_array import divide_array, divide_weighted_array
 

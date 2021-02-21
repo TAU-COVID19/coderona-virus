@@ -56,7 +56,10 @@ class Params(object):
         """
         :return: str description of the changed of this params, to distinguish different params objects
         """
-        return "".join("_" + "_".join(key) + "_" + str(val) for key, val in self._changes.items())
+        if self._changes:
+            return "".join("_" + "_".join(key) + "_" + str(val) for key, val in self._changes.items())
+        else:
+            return ""
 
     @classmethod
     def loader(cls):

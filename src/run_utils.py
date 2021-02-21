@@ -1,6 +1,7 @@
 import json
 import math
 import multiprocessing as mp
+from joblib import Parallel,delayed
 import os
 import sys
 import time
@@ -367,11 +368,20 @@ def create_city_and_serialize(city_name, scale, params_to_change):
         paramsDataPath = ConfigData['ParamsFilePath']
 
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
-    for param, val in params_to_change.items():
-        Params.loader()[param] = val
-    population_loader = PopulationLoader(citiesDataPath,
-        added_description=Params.loader().description()
-    )
+    
+    #Check if dictionary is empty
+    if not params_to_change:
+        for param, val in params_to_change.items():
+            Params.loader()[param] = val
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description=Params.loader().description(),
+            with_caching= False
+        )
+    else:
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description="",
+            with_caching= False
+        )
     population_loader.get_world(city_name=city_name, scale=scale)
 
 
@@ -402,18 +412,8 @@ def generate_all_cities_for_jobs(jobs, cpus_to_use):
         for city_name, scale, params_to_change in appearing_cities_and_params:
             create_city_and_serialize(city_name, scale, params_to_change)
     else:
-        ctx = mp.get_context("spawn")
-        pool = ctx.Pool(cpus_to_use)
-        futures = []
 
-        for city_name, scale, params_to_change in appearing_cities_and_params:
-            futures.append(pool.apply_async(
-                create_city_and_serialize, args=(city_name, scale, params_to_change)
-            ))
-        pool.close()
-        pool.join()
-        for future in futures:
-            future.get()
+        Parallel(n_jobs=cpus_to_use,verbose=True)(delayed(create_city_and_serialize)(city_name, scale, params_to_change) for city_name, scale, params_to_change in appearing_cities_and_params)
     print("Done generating cities.")
 
 
@@ -446,15 +446,6 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     cpus_to_use = int(math.floor(mp.cpu_count() * percent))
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
-    #else:
-        #only in papar_8 run slow
-        #run_slow = False
-        #for i in range(len(jobs)-1):
-            #if jobs[i].scenario_name =="paper_8":
-                #run_slow = True
-                #break
-        #if run_slow:
-            #cpus_to_use=1 
         
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
     finalizers = [job.finalize for job in jobs]
@@ -478,8 +469,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
         print('running a pool of {} threads parallelly'.format(cpus_to_use))
         sys.stdout.flush()
         prog_bar = tqdm(total=sum(len(task_set) + 1 for task_set in tasks_sets))
-        ctx = mp.get_context("spawn")
-        pool = ctx.Pool(cpus_to_use)
+      
 
         finalize_futures = []
 
@@ -497,19 +487,12 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
         futures = []
         for task_set, finalizer in zip(tasks_sets, finalizers):
+            Parallel(n_jobs=cpus_to_use)(delayed(task.func)(*task.params, with_population_caching, verbosity) for task in task_set)
             for task in task_set:
-                futures.append(pool.apply_async(
-                    task.func,
-                    args=(*task.params, with_population_caching, verbosity),
-                    callback=get_callback(finalizer, task_set, task)
-                ))
-        for future in futures:
-            future.wait()
-            future.get()
-        pool.close()
-        pool.join()
-        for future in finalize_futures:
-            future.get()
+                #prog_bar.update()
+                task.is_done = True
+            finalizer(outdir)
+            #prog_bar.update()
     sys.stderr.flush()
     print('end')
     return outdir

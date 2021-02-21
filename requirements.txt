@@ -7,3 +7,4 @@ sanic
 aiofiles
 jinja2
 tqdm
+joblib

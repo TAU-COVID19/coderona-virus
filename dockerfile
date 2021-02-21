@@ -12,5 +12,5 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3.8
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip
 RUN pip3 install -r /home/requirements.txt
 #running the python program
-CMD ["python3","home/src/main.py"]
+CMD ["python3","home/src/main.py","&"]
 
