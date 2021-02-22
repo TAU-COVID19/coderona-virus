@@ -413,7 +413,7 @@ def generate_all_cities_for_jobs(jobs, cpus_to_use):
             create_city_and_serialize(city_name, scale, params_to_change)
     else:
 
-        Parallel(n_jobs=cpus_to_use,verbose=True)(delayed(create_city_and_serialize)(city_name, scale, params_to_change) for city_name, scale, params_to_change in appearing_cities_and_params)
+        Parallel(n_jobs=int(math.floor(cpus_to_use/2)),verbose=True)(delayed(create_city_and_serialize)(city_name, scale, params_to_change) for city_name, scale, params_to_change in appearing_cities_and_params)
     print("Done generating cities.")
 
 
@@ -487,7 +487,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
         futures = []
         for task_set, finalizer in zip(tasks_sets, finalizers):
-            Parallel(n_jobs=cpus_to_use)(delayed(task.func)(*task.params, with_population_caching, verbosity) for task in task_set)
+            Parallel(n_jobs=int(math.floor(cpus_to_use/2)))(delayed(task.func)(*task.params, with_population_caching, verbosity) for task in task_set)
             for task in task_set:
                 #prog_bar.update()
                 task.is_done = True
