@@ -17,6 +17,14 @@ from src.world.population_generation import PopulationLoader
 from src.simulation.simulation import Simulation
 from src.simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams
 from src.seir import DiseaseState
+from src.debuggers import *
+from pdb import set_trace as trace
+import time
+import pdb, traceback, sys
+#        traceback.print_exc()
+#        _, _, tb = sys.exc_info()
+#
+#        pdb.post_mortem(tb)
 
 INITIAL_DATE = date(year=2020, month=2, day=27)
 
@@ -38,7 +46,13 @@ class Task:
         self.params = params
         self.is_done = False
 
+    def __str__(self):
+        return str(self.func) + '\n' + '\n'.join([str(rr) for rr in self.params]) + '\n' + str(self.is_done)
 
+    def __repr__(self):
+        return str(self)
+
+    
 class RunningJob(object):
     """
     A job creates tasks in order run the simulation(s) and then process the outputs.
@@ -114,6 +128,11 @@ class SimpleJob(RunningJob):
     A subclass that implements a job of a single task, that runs the simulation once.
     """
 
+    def __str__(self):
+        return '\n'.join([f'{k}:{v}' for k,v in self.__dict__items()])
+    def __repr__(self):
+        return str(self)
+    
     def __init__(self, scenario_name, city_name, scale, infection_params=SmartInitialInfectionParams(100, 50),
                  days=250, city_name_to_infect=None, initial_date=INITIAL_DATE,
                  params_to_change=None, datas_to_plot=None, interventions=None):
@@ -163,41 +182,60 @@ class SimpleJob(RunningJob):
     def finalize(self, outdir):
         pass
 
-    def create_and_run_simulation(self, outdir, stop_early, with_population_caching=True, verbosity=False):
-        """
-        The main function that handles the run of the simulation by the task.
-        It updated the params changes, loads or creates the population, initializes the simulation and runs it.
+    # bug
+    def create_and_run_simulation(self,
+                                  outdir,
+                                  stop_early,
+                                  with_population_caching=True,
+                                  verbosity=False):
+        """The main function that handles the run of the simulation by the
+        task.  It updated the params changes, loads or creates the
+        population, initializes the simulation and runs it.
+
         :param outdir: the output directory for the task
-        :param stop_early: only relevant to R computation, see Simulation doc
-        :param with_population_caching: bool, if False generates the population, else - tries to use the cache and save time.
-        :param verbosity: bool, if it's True then additional output logs will be printed to the screen
+
+        :param stop_early: only relevant to R computation, see
+        Simulation doc
+
+        :param with_population_caching: bool, if False generates the
+        population, else - tries to use the cache and save time.
+
+        :param verbosity: bool, if it's True then additional output
+        logs will be printed to the screen
+
         """
+        
+        check(desc=208)
         seed.set_random_seed()
         config_path = os.path.join(os.path.dirname(__file__),"config.json")
         with open(config_path) as json_data_file:
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
             paramsDataPath = ConfigData['ParamsFilePath']
-
+        check(desc=215)
         Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
         for param, val in self.params_to_change.items():
             Params.loader()[param] = val
         DiseaseState.init_infectiousness_list()
-
+        
         citiesDataPath  = citiesDataPath
-
+        check(desc=223)
         population_loader = PopulationLoader(
             citiesDataPath,
             added_description=Params.loader().description(),
             with_caching=with_population_caching,
             verbosity=verbosity
         )
+        check(desc=230)
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
+        check(desc=232)
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
-        self.infection_params.infect_simulation(sim, outdir)
+        check(desc=235)
+        self.infection_params.infect_simulation(sim, outdir) # bug
+        check(desc=237)
         sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot)
-
+        
 
 class RepeatJob(RunningJob):
     """
@@ -412,8 +450,9 @@ def generate_all_cities_for_jobs(jobs, cpus_to_use):
         for city_name, scale, params_to_change in appearing_cities_and_params:
             create_city_and_serialize(city_name, scale, params_to_change)
     else:
-
+        print('Joblib 415')
         Parallel(n_jobs=int(math.floor(cpus_to_use/2)),verbose=True)(delayed(create_city_and_serialize)(city_name, scale, params_to_change) for city_name, scale, params_to_change in appearing_cities_and_params)
+        print('Finished joblib 415')
     print("Done generating cities.")
 
 
@@ -435,7 +474,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     This func handles the user's run of the given simulation jobs.
     The run of the jobs can be multi processed, with each simulation as a unique process, and can use cached population
     to save time.
-    """
+    """        
     config_path = os.path.dirname(__file__) + "/config.json"
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
@@ -487,7 +526,17 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
         futures = []
         for task_set, finalizer in zip(tasks_sets, finalizers):
-            Parallel(n_jobs=int(math.floor(cpus_to_use/2)))(delayed(task.func)(*task.params, with_population_caching, verbosity) for task in task_set)
+            print('Joblib 491')
+            n_jobs = cpus_to_use#int(math.floor(cpus_to_use/2))
+            print('\n\n\n', n_jobs, get_mem(), '\n\n\n\n')
+            #task = task_set[0]
+            print(len(task_set), get_mem())
+            #trace() ## Here pdb set_trace
+            Parallel(n_jobs=n_jobs)(delayed(rapper)(task,
+                                                    with_population_caching,
+                                                    verbosity) for
+                                    task in
+                                    task_set)
             for task in task_set:
                 #prog_bar.update()
                 task.is_done = True
@@ -497,6 +546,8 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     print('end')
     return outdir
 
+def rapper(task, with_population_caching, verbosity):
+    task.func(*task.params, with_population_caching, verbosity)
 
 def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_range,
                                       interventions=None, num_repetitions=7, num_rs=0):

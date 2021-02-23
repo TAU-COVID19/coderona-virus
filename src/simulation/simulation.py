@@ -9,6 +9,7 @@ from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup
+from debuggers import *
 
 
 log = logging.getLogger(__name__)
@@ -71,23 +72,26 @@ class Simulation(object):
         self._world.sign_all_people_up_to_environments()
         for intervention in interventions:
             self.stats.add_intervention(intervention)
-
+        check(desc='Sim 75')
         # attributes relevant for computing R data
         self.stop_early = stop_early
         self.last_day_to_record_r = None
         self.num_r_days = None
+        check(desc='Sim 80')
         if self.stop_early is not None:
             name_stop, self.num_r_days = self.stop_early
             self.last_day_to_record_r = initial_date + timedelta(days=self.num_r_days)
             assert name_stop == "r", "Other premature stops are not yet supported"
         self.first_infectious_people = set()
-
+        check(desc='Sim 85')
         self.initial_infection_doc = None
         self.num_days_to_run = None
 
         # save all the events that create the interventions behavior on the simulation
         for inter in self.interventions:
+            check(desc='Sim 92')
             self.register_events(inter.generate_events(self._world))
+        print('Initialized Simulation', get_mem())
 
     def simulate_day(self):
         """
@@ -240,26 +244,31 @@ class Simulation(object):
         :param datas_to_plot: Indicates what sort of data we wish to plot
         and save at the end of the simulation.
         """
+        print('Sim', 244, get_mem())
         assert self.num_days_to_run is None
         self.num_days_to_run = num_days
         if datas_to_plot is None:
             datas_to_plot = dict()
         log.info("Starting simulation " + name)
+        print('Sim', 250, get_mem())
         for day in range(num_days):
             self.simulate_day()
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
                 break
+        print('Sim', 257, get_mem())
         self.stats.mark_ending(self._world.all_people())
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():
             self.stats.plot_daily_sum(name, data_to_plot)
+        print('Sim', 263, get_mem())    
         self.stats.write_summary_file('summary')
         self.stats.write_summary_file('summary_long', shortened=False)
         if self.stats._r0_data:
             self.stats.plot_r0_data('r0_data_' + name)
+        print('Sim', 268, get_mem())    
         self.stats.write_params()
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()
