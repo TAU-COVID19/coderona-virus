@@ -40,16 +40,6 @@ class Task:
         self.is_done = False
 
 
-class Finalizer(Task):
-    """
-    subclass of Task used to check if finalizers for jobs are finished 
-    """
-    def __init__(self, func):
-        super(Finalizer, self).__init__(func, None)
-
-    def done(self):
-        self.is_done = True
-
 class RunningJob(object):
     """
     A job creates tasks in order run the simulation(s) and then process the outputs.
@@ -461,7 +451,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             #cpus_to_use=1 
         
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
-    finalizers = [Finalizer(job.finalize) for job in jobs]
+    finalizers = [job.finalize for job in jobs]
     if cpus_to_use == 1:
         prog_bar = tqdm(total=sum(len(task_set) + 1 for task_set in tasks_sets))
         for task_set, finalizer in zip(tasks_sets, finalizers):
@@ -491,9 +481,8 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
                 prog_bar.update()
                 task.is_done = True
                 if all(t.is_done for t in task_set):
-                    future = executor.submit(finalizer.func, outdir)
+                    future = executor.submit(finalizer, outdir)
                     future.add_done_callback(lambda _: prog_bar.update())
-                    future.add_done_callback(finalizer.done)
                     finalize_futures.append(future)
             return callback
 
@@ -503,13 +492,10 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
                 future = executor.submit(task.func, *task.params, with_population_caching, verbosity)
                 future.add_done_callback(get_callback(finalizer, task_set, task))
                 futures.append(future)
-        for future in futures:
-            future.result()
-        for future in finalize_futures:
-            future.result()
-        while any(not f.is_done for f in finalizers):
-            # waiting for all callbacks to finish
-            time.sleep(1)
+        while any(f.running() for f in futures):
+            time.sleep(10)
+        while any(f.running() for f in finalize_futures):
+            time.sleep(3)
         executor.shutdown()
     sys.stderr.flush()
     print('End of simulation')
