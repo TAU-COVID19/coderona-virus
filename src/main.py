@@ -94,9 +94,9 @@ def main():
 
     # choosing the city and the scale of the run:
     # the city name and scale determine the city and the size proportion to take (use 'all' for entire country)
-    # city_name, scale = 'holon', 1
+    # city_name, scale = 'holon', 1 # This means loading 100% of Holon
     # city_name, scale = 'all', 0.01 # This means loading 1% of the entire country
-    # city_name, scale = 'all', 0.1 # This means loading the entire country
+    # city_name, scale = 'all', 0.1 # This means loading 10% of the entire country
     print("Running all simulations...")
     config_path = os.path.join(os.path.dirname(__file__) ,"config.json")
     with open(config_path) as json_data_file:
@@ -106,7 +106,8 @@ def main():
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
 
     # we build a list of the jobs to run:
-    # each job can be run as a different process, and the population generation will be done once
+    # each job can be run as a different process, 
+    # and the population generation will be done once
     # if caching option is on
 
     jobs = []
