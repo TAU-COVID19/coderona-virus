@@ -70,7 +70,7 @@ def test_param_change_base_infectiousness(params):
 
 def test_param_change_immune_parm(params):
     """
-    Tests that when when we immune most od the population at the start of the disease
+    Tests that when when we immune most of the population at the start of the disease
     they stay Immune and not deased while the simulation
     :param params: application params
     :return: True if the amount of people that are immune to the diease increased while the simulation
