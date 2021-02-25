@@ -110,13 +110,15 @@ class Simulation(object):
         changed_population = [
             person for person in self._world.all_people() if person._changed
         ]
+        check(desc='Sim 113')
 
         for individual in changed_population:
             individual.register_to_daily_environments()
 
         for env in self._world.all_environments:
             self.register_events(env.propagate_infection(self._date))
-
+        check(desc='Sim 120')
+                    
         changed_population = [
             person for person in self._world.all_people() if person._changed
         ]
@@ -132,6 +134,8 @@ class Simulation(object):
             self._date,
             changed_population
         )
+        check(desc='Sim 137')
+
         self.stats.add_daily_data(daily_data)
         for person in changed_population:
             person.save_state()
@@ -139,6 +143,7 @@ class Simulation(object):
         if self.last_day_to_record_r is not None and self._date <= self.last_day_to_record_r:
             for person in changed_population:
                 if person.is_infected:
+                    check(desc='Sim 146')
                     self.first_infectious_people.add(person)
         self._date += timedelta(days=1)
 
@@ -149,7 +154,9 @@ class Simulation(object):
         :param date: datetime Date
         """
         if date not in self._events:
+            check(desc='Sim 157')
             self._events[date] = DayEvent(date)
+        check(desc='Sim 159')
         self._events[date].hook(event)
 
     def register_events(self, event_list):
@@ -161,6 +168,7 @@ class Simulation(object):
         if not isinstance(event_list, list):
             event_list = [event_list]
         for event in event_list:
+            check(desc='Sim 169')
             assert isinstance(event, DayEvent), \
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
@@ -244,7 +252,7 @@ class Simulation(object):
         :param datas_to_plot: Indicates what sort of data we wish to plot
         and save at the end of the simulation.
         """
-        print('Sim', 244, get_mem())
+        check(desc='Sim 252')
         assert self.num_days_to_run is None
         self.num_days_to_run = num_days
         if datas_to_plot is None:
@@ -257,18 +265,18 @@ class Simulation(object):
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
                 break
-        print('Sim', 257, get_mem())
+        check(desc='Sim 265')
         self.stats.mark_ending(self._world.all_people())
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():
             self.stats.plot_daily_sum(name, data_to_plot)
-        print('Sim', 263, get_mem())    
+        check(desc='Sim 271')
         self.stats.write_summary_file('summary')
         self.stats.write_summary_file('summary_long', shortened=False)
         if self.stats._r0_data:
             self.stats.plot_r0_data('r0_data_' + name)
-        print('Sim', 268, get_mem())    
+        check(desc='Sim 276')
         self.stats.write_params()
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()

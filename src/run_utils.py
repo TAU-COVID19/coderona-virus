@@ -234,6 +234,7 @@ class SimpleJob(RunningJob):
         check(desc=235)
         self.infection_params.infect_simulation(sim, outdir) # bug
         check(desc=237)
+        print('runini')
         sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot)
         
 
