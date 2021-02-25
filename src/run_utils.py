@@ -468,7 +468,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             finalizer(outdir)
             prog_bar.update()
     else:
-        executor = ProcessPoolExecutor(cpus_to_use)
+        executor = ProcessPoolExecutor(cpus_to_use, mp_context=mp.get_context('spawn'))
         if with_population_caching:
             generate_all_cities_for_jobs(jobs, executor)
         print('running a pool of {} threads parallelly'.format(cpus_to_use))
