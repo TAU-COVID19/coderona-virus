@@ -464,7 +464,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
                     verbosity=verbosity
                 )
                 prog_bar.update()
-            finalizer.func(outdir)
+            finalizer(outdir)
             prog_bar.update()
     else:
         executor = ProcessPoolExecutor(cpus_to_use, mp_context=mp.get_context('spawn'))
