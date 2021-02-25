@@ -42,7 +42,7 @@ class Task:
 
 class Finalizer(Task):
     """
-    subclass of Task used to run finalizers of sets of tasks 
+    subclass of Task used to check if finalizers for jobs are finished 
     """
     def __init__(self, func):
         super(Finalizer, self).__init__(func, None)
