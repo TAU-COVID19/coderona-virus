@@ -6,29 +6,39 @@ from src.simulation.params import Params
 
 
 @pytest.fixture
-def cities():
-    file_path = os.path.dirname(__file__) + "/../src/config.json"
-    with open(file_path) as json_data_file:
+def config_path():
+    return os.path.join(os.path.dirname(__file__), "..", "src", "config.json")
+
+@pytest.fixture
+def cities_path(config_path):
+    with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
+    return citiesDataPath
 
-    cities = get_city_list_from_dem_xls(citiesDataPath)
+@pytest.fixture
+def cities(cities_path):
+    cities = get_city_list_from_dem_xls(cities_path)
     return cities
 
 
 @pytest.fixture
-def params_path():
-    file_path = os.path.dirname(__file__) + "/../src/config.json"
-    with open(file_path) as json_data_file:
+def params_path(config_path):
+    with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         ParamsDataPath = ConfigData['ParamsFilePath']
-    return os.path.dirname(os.path.dirname(__file__))+"/Assets/"+ParamsDataPath
+    return os.path.join(os.path.dirname(__file__), ParamsDataPath)
 
 
 @pytest.fixture
 def params(params_path):
     Params.load_from(params_path)
     return Params.loader()
+
+
+@pytest.fixture
+def R0_percent(params):
+    return float(params["population"]["R0_percent"])
 
 
 def pytest_addoption(parser):

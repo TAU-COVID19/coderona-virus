@@ -6,53 +6,33 @@ from src.world.population_generation import population_loader
 from src.world.city_data import get_city_list_from_dem_xls
 
 
-def test_Init_haifa():
-    file_path = os.path.dirname(__file__)+"/../src/config.json"
-    with open(file_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
-    pop = population_loader.PopulationLoader(citiesDataPath)
+def test_Init_haifa(cities_path):
+    pop = population_loader.PopulationLoader(cities_path)
     City1 = pop.get_city_by_name('Haifa')
     assert City1 is not None
 
 
-def test_Init_haifaParms():
-    file_path = os.path.dirname(__file__)+"/../src/config.json"
-    with open(file_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
-    pop = population_loader.PopulationLoader(citiesDataPath)
+def test_Init_haifaParms(cities_path):
+    pop = population_loader.PopulationLoader(cities_path)
     City1 = pop.get_city_by_name('Haifa')
     assert City1.region == 3
     assert City1.nafa == 31
 
 
-def test_Init_SmallTown():
-    file_path = os.path.dirname(__file__)+"/../src/config.json"
-    with open(file_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
+def test_Init_SmallTown(cities_path):
     with pytest.raises(Exception):
-        pop = population_loader.PopulationLoader(citiesDataPath)
+        pop = population_loader.PopulationLoader(cities_path)
         City1 = pop.get_city_by_name('Roah Midbar')
 
 
-def test_Init_TownNotExist():
-    file_path = os.path.dirname(__file__)+"/../src/config.json"
-    with open(file_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
+def test_Init_TownNotExist(cities_path):
     with pytest.raises(Exception):
-        pop = population_loader.PopulationLoader(citiesDataPath)
+        pop = population_loader.PopulationLoader(cities_path)
         City1 = pop.get_city_by_name('lala')
 
 
-def test_GetCities():
+def test_GetCities(cities_path):
     #There are only 198 cities that we know all the needed data
-    file_path = os.path.dirname(__file__) + "/../src/config.json"
-    with open(file_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
-    lst  = get_city_list_from_dem_xls(citiesDataPath)
+    lst  = get_city_list_from_dem_xls(cities_path)
     assert len(lst) == 198
 
