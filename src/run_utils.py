@@ -507,7 +507,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             future.result()
         for future in finalize_futures:
             future.result()
-        while any(not f.is_done() for f in finalizers):
+        while any(not f.is_done for f in finalizers):
             # waiting for all callbacks to finish
             time.sleep(1)
         executor.shutdown()
