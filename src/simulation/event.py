@@ -1,4 +1,5 @@
 import datetime
+from memory_profiler import profile
 
 class Trigger:
     """
@@ -377,6 +378,7 @@ class Event(_Hookable):
     """
     __slots__ = ('trigger', 'effect', 'is_applied')
 
+    @profile
     def __init__(self, trigger=None, effect=None):
         """
         initialize the event

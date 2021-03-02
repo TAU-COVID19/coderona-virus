@@ -49,8 +49,8 @@ class Person(object):
     num_people_so_far = 0
 
     def __init__(self, age, environments=None):
-        params = Params.loader()['population']
-        R0 = params["R0_percent"]
+        # params = Params.loader()['population']
+        # R0 = params["R0_percent"]
         StartAsRecovered = False
         #if random.random() < R0:
         #   StartAsRecovered = True
