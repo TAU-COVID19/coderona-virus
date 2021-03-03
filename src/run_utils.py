@@ -486,13 +486,13 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
                         finalize_futures.append(future)
                 return callback
 
-            futures = []
+            task_futures = []
             for task_set, finalizer in zip(tasks_sets, finalizers):
                 for task in task_set:
                     future = executor.submit(task.func, *task.params, with_population_caching, verbosity)
                     future.add_done_callback(get_callback(finalizer, task_set, task))
-                    futures.append(future)
-            while any(f.running() for f in futures):
+                    task_futures.append(future)
+            while any(f.running() for f in task_futures):
                 time.sleep(10)
             while any(f.running() for f in finalize_futures):
                 time.sleep(3)
