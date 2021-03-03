@@ -496,6 +496,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             time.sleep(10)
         while any(f.running() for f in finalize_futures):
             time.sleep(3)
+        time.sleep(20)
         executor.shutdown()
     sys.stderr.flush()
     print('End of simulation')
