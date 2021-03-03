@@ -407,8 +407,8 @@ def generate_all_cities_for_jobs(jobs, process_executor=None):
         futures = []
         for city_name, scale, params_to_change in appearing_cities_and_params:
             futures.append(process_executor.submit(create_city_and_serialize, city_name, scale, params_to_change))
-        for future in futures:
-            future.result()
+        while any(f.running() for f in futures):
+            time.sleep(5)
     print("Done generating cities.")
 
 
