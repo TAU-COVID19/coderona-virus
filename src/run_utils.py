@@ -467,37 +467,35 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             finalizer(outdir)
             prog_bar.update()
     else:
-        executor = ProcessPoolExecutor(cpus_to_use, mp_context=mp.get_context('spawn'))
-        if with_population_caching:
-            generate_all_cities_for_jobs(jobs, executor)
-        print('running a pool of {} processes parallelly'.format(cpus_to_use))
-        sys.stdout.flush()
-        prog_bar = tqdm(total=sum(len(task_set) + 1 for task_set in tasks_sets))
+        with ProcessPoolExecutor(cpus_to_use, mp_context=mp.get_context('spawn')) as executor:
+            if with_population_caching:
+                generate_all_cities_for_jobs(jobs, executor)
+            print('running a pool of {} processes parallelly'.format(cpus_to_use))
+            sys.stdout.flush()
+            prog_bar = tqdm(total=sum(len(task_set) + 1 for task_set in tasks_sets))
 
-        finalize_futures = []
+            finalize_futures = []
 
-        def get_callback(finalizer, task_set, task):
-            def callback(_):
-                prog_bar.update()
-                task.is_done = True
-                if all(t.is_done for t in task_set):
-                    future = executor.submit(finalizer, outdir)
-                    future.add_done_callback(lambda _: prog_bar.update())
-                    finalize_futures.append(future)
-            return callback
+            def get_callback(finalizer, task_set, task):
+                def callback(_):
+                    prog_bar.update()
+                    task.is_done = True
+                    if all(t.is_done for t in task_set):
+                        future = executor.submit(finalizer, outdir)
+                        future.add_done_callback(lambda _: prog_bar.update())
+                        finalize_futures.append(future)
+                return callback
 
-        futures = []
-        for task_set, finalizer in zip(tasks_sets, finalizers):
-            for task in task_set:
-                future = executor.submit(task.func, *task.params, with_population_caching, verbosity)
-                future.add_done_callback(get_callback(finalizer, task_set, task))
-                futures.append(future)
-        while any(f.running() for f in futures):
-            time.sleep(10)
-        while any(f.running() for f in finalize_futures):
-            time.sleep(3)
-        time.sleep(20)
-        executor.shutdown()
+            futures = []
+            for task_set, finalizer in zip(tasks_sets, finalizers):
+                for task in task_set:
+                    future = executor.submit(task.func, *task.params, with_population_caching, verbosity)
+                    future.add_done_callback(get_callback(finalizer, task_set, task))
+                    futures.append(future)
+            while any(f.running() for f in futures):
+                time.sleep(10)
+            while any(f.running() for f in finalize_futures):
+                time.sleep(3)
     sys.stderr.flush()
     print('End of simulation')
     return outdir
