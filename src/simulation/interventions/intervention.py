@@ -118,9 +118,11 @@ def city_curfew_routine(person: Person, city_name):
     return routine
 
 
-def make_routine_change_events(person, start_date, end_date, key, routine_generator, args=None):
+# def make_routine_change_events(person, start_date, end_date, key, routine_generator, args=None):
+def make_routine_change_events(parmsList:list):
     """
     Create events that make routine change that will be active during the given time range
+    each elements in parmList is a toupe with the following attributes
     :param person: Person to be affected by new routine changes
     :param start_date: datetime.date date when the change will be added
     :param end_date: datetime.date date when the change will be removed
@@ -129,24 +131,49 @@ def make_routine_change_events(person, start_date, end_date, key, routine_genera
     :param args: extra args for the routine_generator, like age
     :return: list of new events
     """
-    if args is None:
-        new_routine = routine_generator(person)
-    else:
-        new_routine = routine_generator(person, args)
-    ret = [DayEvent(
-        date=start_date,
-        effect=AddRoutineChangeEffect(
-            person=person,
-            routine_change_key=key,
-            routine_change_val=new_routine
+    # #Dror Change from params to list of params accordingly
+    # if args is None:
+    #     new_routine = routine_generator(person)
+    # else:
+    #     new_routine = routine_generator(person, args)
+    # #Dror generate two events for all the people
+    # ret = [DayEvent(
+    #     date=start_date,
+    #     effect=AddRoutineChangeEffect(
+    #         person=person,
+    #         routine_change_key=key,
+    #         routine_change_val=new_routine
+    #     )
+    # ), DayEvent(
+    #     date=end_date,
+    #     effect=RemoveRoutineChangeEffect(
+    #         person=person,
+    #         routine_change_key=key,
+    #     )
+    # )]
+    ret = []
+    if len(parmsList) == 0:
+        return []
+    AddEffectParms = []
+    RemoveEffectParms = []
+    for elemnt in ParamsList:
+        if elemnt["args"] is None:
+            new_routine = elemnt["routine_generator"](elemnt["person"])
+        else:
+            new_routine = elemnt["routine_generator"](elemnt["person"],elemnt["args"])
+        AddEffectParms.append(
+            {"effect": AddRoutineChangeEffect(
+                person=elemnt["person"],
+                routine_change_key = elemnt["key"],
+                routine_change_val = new_routine)})
+        RemoveEffectParms.append(
+            {"effect": RemoveRoutineChangeEffect(
+                person=elemnt["person"],
+                routine_change_key = elemnt["key"]
+            )}
         )
-    ), DayEvent(
-        date=end_date,
-        effect=RemoveRoutineChangeEffect(
-            person=person,
-            routine_change_key=key,
-        )
-    )]
+    ret=[DayEvent(elemnt["start_date"],AddEffectParms),
+        DayEvent(elemnt["end_date"],RemoveEffectParms)]
     return ret
 
 class Intervention(object):
@@ -230,20 +257,34 @@ class TimedIntervention(Intervention):
         :param world: World object
         :return: list of Event objects
         """
+        #Dror make one event for all the persons
         new_events = []
+        ParamsList = []
         for person in world.all_people():
             if self._condition(person):
                 if random.random() < self.compliance:
-                    curr_events = make_routine_change_events(
-                        person,
-                        self.start_date,
-                        self.end_date,
-                        self._key,
-                        self._routine_generator,
-                        self._args
-                    )
-                    for event in curr_events:
-                        new_events.append(event)
+                    #old version
+                    # curr_events = make_routine_change_events(
+                    #     person,
+                    #     self.start_date,
+                    #     self.end_date,
+                    #     self._key,
+                    #     self._routine_generator,
+                    #     self._args
+                    # )
+                    # for event in curr_events:
+                    #     new_events.append(event)
+                    ParamsList.append(
+                        {"person":person,
+                        "start_date":self.start_date,
+                        "end_date":self.end_date,
+                        "key":self.key,
+                        "routine_generator":self._routine_generator,
+                        "args": self.args})
+        if len(ParamsList)==0
+            return  []
+        new_events = make_routine_change_events(ParamsList)
+
         return new_events
 
 
@@ -344,6 +385,8 @@ class SymptomaticIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
+        #Dror change trigger one for all persons 
+        #Dror Change to one effect for all the persons
         ret = []
         for person in world.all_people():
             if random.random() < self.compliance:
@@ -443,6 +486,7 @@ class HouseholdIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
+        #Dror change to one effect for all the peoples 
         ret = []
         for person in world.all_people():
             if random.random() < self.compliance:

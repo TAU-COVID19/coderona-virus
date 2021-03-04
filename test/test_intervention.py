@@ -98,3 +98,32 @@ def test_school_isolation_intervention_simulation():
     results = Statistics.load(os.path.join(outdir, scenario_name, 'statistics.pkl'))
     summary = results.get_summary_data_for_age_group((4, 12))
     assert summary["Total infected in school"] + summary["Total infected in initial_group"] == summary["Total infected"]
+
+def test_SymptomaticIsolationIntervention_Genarete_events():
+    #pretesting
+    paramsDataPath = os.path.join("..","Assets","params.json")
+    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
+
+    my_intervention = SymptomaticIsolationIntervention(compliance = 1, start_date = INITIAL_DATE,duration  = daysdelta(40))
+    assert my_intervention is not None
+
+    persons_arr = list(map(Person, [10,20,30]))
+    assert len(persons_arr) == 3
+    env_arr = []
+    small_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+    
+    #test
+    lst =  [my_intervention.generate_events(small_world)][0]
+    
+    #Assert results 
+    assert lst is not None
+    assert len(lst) == 3
+    for i in range(3):
+        assert isinstance(lst[i],DayEvent)
+    for person in persons_arr:
+        assert len(list(person.state_to_events.keys())) == (1+4)
+        

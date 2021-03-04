@@ -1,5 +1,4 @@
 import datetime
-from memory_profiler import profile
 
 class Trigger:
     """
@@ -202,6 +201,7 @@ class DiseaseStateChangeEffect:
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
+        #Dror Change apply function that will be good for mulitple persons 
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +
@@ -237,6 +237,7 @@ class DelayedEffect:
         register self.event to happen in delay_time days
         :param simulation: Simulation object
         """
+        #Dror Change apply function that will be good for mulitple persons 
         target_day = simulation._date + self._delay_time
         simulation.register_event_on_day(self._event, target_day)
 
@@ -258,6 +259,7 @@ class AddRoutineChangeEffect:
         self.routine_change_val = routine_change_val
 
     def apply(self, simulation):
+        #Dror Change apply function that will be good for mulitple persons 
         self._person.add_routine_change(self.routine_change_key, self.routine_change_val)
 
 
@@ -316,6 +318,7 @@ class RemoveRoutineChangeEffect:
         self.routine_change_key = routine_change_key
 
     def apply(self, simulation):
+        #Dror Change apply function that will be good for mulitple persons 
         self._person.remove_routine_change(self.routine_change_key)
 
 
@@ -376,23 +379,31 @@ class Event(_Hookable):
     Each event object has its trigger and effect. The trigger, hold the "if X" logic, and the effect if the "do Y".
     Also, each Event can have hooks, which are other events that need to be applied afterwards.
     """
-    __slots__ = ('trigger', 'effect', 'is_applied')
+    __slots__ = ('trigger', 'EffectList', 'is_applied')
 
-    @profile
-    def __init__(self, trigger=None, effect=None):
-        """
-        initialize the event
-        :param trigger: Trigger object, if None - EmptyTrigger will be used
-        :param effect: Effect object, if None - EmptyEffect
-        """
+    # def __init__(self, trigger=None, effect=None):
+    #     """
+    #     initialize the event
+    #     :param trigger: Trigger object, if None - EmptyTrigger will be used
+    #     :param effect: Effect object, if None - EmptyEffect
+    #     """
+    #     super().__init__()
+    #     # assert trigger or effect, 'Why do you need meaningless event'
+    #     if trigger is None:
+    #         trigger = EmptyTrigger()
+    #     if effect is None:
+    #         effect = EmptyEffect()
+    #     self.trigger = trigger
+    #     self.effect = effect
+    #     self.is_applied = False
+    def __init__(self,trigger=None,effectLst = None):
         super().__init__()
-        # assert trigger or effect, 'Why do you need meaningless event'
         if trigger is None:
             trigger = EmptyTrigger()
-        if effect is None:
-            effect = EmptyEffect()
+        if (effectLst is None) or (not effectLst):
+            effectLst = [EmptyEffect()]
         self.trigger = trigger
-        self.effect = effect
+        self.EffectList = effectLst
         self.is_applied = False
 
     def apply(self, simulation):
@@ -406,18 +417,26 @@ class Event(_Hookable):
             return
         assert not self.is_applied
         self.is_applied = True
-        self.effect.apply(simulation)
+        for effect in self.EffectList:
+            effect.apply(simulation)
         self.hooks_apply(simulation)
 
 
 class DayEvent(Event):
     """
     A special subclass of Event that is triggered by a DayTrigger.
+    in which all the effects that came incapsulated in ParamsList are applied in the specified date
     """
     __slots__ = ('_date',)
 
-    def __init__(self, date, effect=None):
-        if effect is None:
-            effect = EmptyEffect()
-        super().__init__(DayTrigger(date), effect)
+    # def __init__(self, date, effect=None):
+    #     if effect is None:
+    #         effect = EmptyEffect()
+    #     super().__init__(DayTrigger(date), effect)
+    #     self._date = date
+    def __init__(self,date, ParmsList):
         self._date = date
+        for parm in ParmsList:
+            if "effect" not in parm:
+                parm["effect"] = EmptyEffect
+        super.__init__(DayTrigger(date),ParmsList)

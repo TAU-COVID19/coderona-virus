@@ -500,9 +500,9 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
                     with_population_caching=with_population_caching,
                     verbosity=verbosity
                 )
-                prog_bar.update()
+                # prog_bar.update()
             finalizer(outdir)
-            prog_bar.update()
+            # prog_bar.update()
     else:
         if with_population_caching:
             generate_all_cities_for_jobs(jobs, cpus_to_use)
@@ -533,15 +533,11 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
             #task = task_set[0]
             print(len(task_set), get_mem())
             #trace() ## Here pdb set_trace
-            Parallel(n_jobs=n_jobs)(delayed(rapper)(task,
-                                                    with_population_caching,
-                                                    verbosity) for
-                                    task in
-                                    task_set)
+            Parallel(n_jobs=n_jobs)(delayed(rapper)(task, with_population_caching,verbosity) for task in task_set)
             for task in task_set:
                 #prog_bar.update()
                 task.is_done = True
-            finalizer(outdir)
+            #finalizer(outdir)
             #prog_bar.update()
     sys.stderr.flush()
     print('end')
