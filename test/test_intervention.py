@@ -5,8 +5,8 @@ import pytest
 from src.run_utils import SimpleJob, run, INITIAL_DATE
 from src.simulation.interventions import *
 from src.simulation.initial_infection_params import SmartInitialInfectionParams
+from src.simulation.params import Params
 from src.logs import Statistics
-
 
 @pytest.fixture(params=[False, True])
 def hi_exit(request, params):

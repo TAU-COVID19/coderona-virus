@@ -2,6 +2,7 @@ import inspect
 import random
 import itertools
 from datetime import date, timedelta
+from typing import List
 
 from src.seir import DiseaseState
 from src.simulation.event import (
@@ -156,21 +157,21 @@ def make_routine_change_events(parmsList:list):
         return []
     AddEffectParms = []
     RemoveEffectParms = []
-    for elemnt in ParamsList:
+    for elemnt in parmsList:
         if elemnt["args"] is None:
             new_routine = elemnt["routine_generator"](elemnt["person"])
         else:
             new_routine = elemnt["routine_generator"](elemnt["person"],elemnt["args"])
         AddEffectParms.append(
-            {"effect": AddRoutineChangeEffect(
+             AddRoutineChangeEffect(
                 person=elemnt["person"],
                 routine_change_key = elemnt["key"],
-                routine_change_val = new_routine)})
+                routine_change_val = new_routine))
         RemoveEffectParms.append(
-            {"effect": RemoveRoutineChangeEffect(
+            RemoveRoutineChangeEffect(
                 person=elemnt["person"],
                 routine_change_key = elemnt["key"]
-            )}
+            )
         )
     ret=[DayEvent(elemnt["start_date"],AddEffectParms),
         DayEvent(elemnt["end_date"],RemoveEffectParms)]
@@ -281,7 +282,7 @@ class TimedIntervention(Intervention):
                         "key":self.key,
                         "routine_generator":self._routine_generator,
                         "args": self.args})
-        if len(ParamsList)==0
+        if len(ParamsList)==0:
             return  []
         new_events = make_routine_change_events(ParamsList)
 

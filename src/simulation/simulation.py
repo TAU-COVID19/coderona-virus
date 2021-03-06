@@ -72,18 +72,18 @@ class Simulation(object):
         self._world.sign_all_people_up_to_environments()
         for intervention in interventions:
             self.stats.add_intervention(intervention)
-        check(desc='Sim 75')
-        # attributes relevant for computing R data
+        # check(desc='Sim 75')
+        # # attributes relevant for computing R data
         self.stop_early = stop_early
         self.last_day_to_record_r = None
         self.num_r_days = None
-        check(desc='Sim 80')
+        # check(desc='Sim 80')
         if self.stop_early is not None:
             name_stop, self.num_r_days = self.stop_early
             self.last_day_to_record_r = initial_date + timedelta(days=self.num_r_days)
             assert name_stop == "r", "Other premature stops are not yet supported"
         self.first_infectious_people = set()
-        check(desc='Sim 85')
+        # check(desc='Sim 85')
         self.initial_infection_doc = None
         self.num_days_to_run = None
 
@@ -110,14 +110,14 @@ class Simulation(object):
         changed_population = [
             person for person in self._world.all_people() if person._changed
         ]
-        check(desc='Sim 113')
+        # check(desc='Sim 113')
 
         for individual in changed_population:
             individual.register_to_daily_environments()
 
         for env in self._world.all_environments:
             self.register_events(env.propagate_infection(self._date))
-        check(desc='Sim 120')
+        # check(desc='Sim 120')
                     
         changed_population = [
             person for person in self._world.all_people() if person._changed
@@ -134,7 +134,7 @@ class Simulation(object):
             self._date,
             changed_population
         )
-        check(desc='Sim 137')
+        # check(desc='Sim 137')
 
         self.stats.add_daily_data(daily_data)
         for person in changed_population:
@@ -143,7 +143,7 @@ class Simulation(object):
         if self.last_day_to_record_r is not None and self._date <= self.last_day_to_record_r:
             for person in changed_population:
                 if person.is_infected:
-                    check(desc='Sim 146')
+                    # check(desc='Sim 146')
                     self.first_infectious_people.add(person)
         self._date += timedelta(days=1)
 
@@ -154,9 +154,9 @@ class Simulation(object):
         :param date: datetime Date
         """
         if date not in self._events:
-            check(desc='Sim 157')
+            # check(desc='Sim 157')
             self._events[date] = DayEvent(date)
-        check(desc='Sim 159')
+        # check(desc='Sim 159')
         self._events[date].hook(event)
 
     def register_events(self, event_list):
@@ -168,7 +168,7 @@ class Simulation(object):
         if not isinstance(event_list, list):
             event_list = [event_list]
         for event in event_list:
-            check(desc='Sim 169')
+            # check(desc='Sim 169')
             assert isinstance(event, DayEvent), \
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)

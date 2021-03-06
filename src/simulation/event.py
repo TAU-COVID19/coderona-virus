@@ -167,7 +167,7 @@ class AndTrigger(MultiTrigger):
         self._is_triggered |= res
         return res
 
-
+#Dror checked
 class EmptyEffect:
     """
     Does nothing.
@@ -179,7 +179,7 @@ class EmptyEffect:
     def apply(self, simulation):
         pass
 
-
+#Dror checked
 class DiseaseStateChangeEffect:
     """
     Effect that changes a Person's disease state
@@ -201,7 +201,6 @@ class DiseaseStateChangeEffect:
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
-        #Dror Change apply function that will be good for mulitple persons 
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +
@@ -215,7 +214,7 @@ class DiseaseStateChangeEffect:
     def get_states(self):
         return self._old_state, self._new_state
 
-
+#Dror checked
 class DelayedEffect:
     """
     This effect is used to apply some event delay_time time after the moment it is applied.
@@ -241,7 +240,7 @@ class DelayedEffect:
         target_day = simulation._date + self._delay_time
         simulation.register_event_on_day(self._event, target_day)
 
-
+#Dror checked
 class AddRoutineChangeEffect:
     """
     An effect that adds some routine change to some Person
@@ -306,7 +305,7 @@ class RemoveRoutineChangeEnvironmentEffect:
         for member in self._environment.get_people():
             member.remove_routine_change(self.routine_change_key)
 
-
+#Dror checked
 class RemoveRoutineChangeEffect:
     """
     An effect which removes a routine change from a person
@@ -318,8 +317,7 @@ class RemoveRoutineChangeEffect:
         self.routine_change_key = routine_change_key
 
     def apply(self, simulation):
-        #Dror Change apply function that will be good for mulitple persons 
-        self._person.remove_routine_change(self.routine_change_key)
+      self._person.remove_routine_change(self.routine_change_key)
 
 
 class _Hookable():
@@ -434,9 +432,8 @@ class DayEvent(Event):
     #         effect = EmptyEffect()
     #     super().__init__(DayTrigger(date), effect)
     #     self._date = date
-    def __init__(self,date, ParmsList):
+    def __init__(self,date, ParmsList=None):
         self._date = date
-        for parm in ParmsList:
-            if "effect" not in parm:
-                parm["effect"] = EmptyEffect
-        super.__init__(DayTrigger(date),ParmsList)
+        if ParmsList is None:
+            ParmsList = [EmptyEffect()]
+        super().__init__(DayTrigger(date),ParmsList)

@@ -513,32 +513,33 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
         finalize_futures = []
 
-        def get_callback(finalizer, task_set, task):
-            def callback(_):
-                prog_bar.update()
-                task.is_done = True
-                if all(t.is_done for t in task_set):
-                    finalize_futures.append(pool.apply_async(
-                        finalizer, args=(outdir,),
-                        callback=lambda _: prog_bar.update()
-                    ))
+        # def get_callback(finalizer, task_set, task):
+        #     def callback(_):
+        #         prog_bar.update()
+        #         task.is_done = True
+        #         if all(t.is_done for t in task_set):
+        #             finalize_futures.append(pool.apply_async(
+        #                 finalizer, args=(outdir,),
+        #                 callback=lambda _: prog_bar.update()
+        #             ))
 
-            return callback
+        #     return callback
 
+        n_jobs = cpus_to_use#int(math.floor(cpus_to_use/2))
         futures = []
-        for task_set, finalizer in zip(tasks_sets, finalizers):
-            print('Joblib 491')
-            n_jobs = cpus_to_use#int(math.floor(cpus_to_use/2))
-            print('\n\n\n', n_jobs, get_mem(), '\n\n\n\n')
-            #task = task_set[0]
-            print(len(task_set), get_mem())
-            #trace() ## Here pdb set_trace
-            Parallel(n_jobs=n_jobs)(delayed(rapper)(task, with_population_caching,verbosity) for task in task_set)
-            for task in task_set:
+        with Parallel(n_jobs=n_jobs) as parallel:
+            for task_set, finalizer in zip(tasks_sets, finalizers):
+                print('Joblib 491')
+                print('\n\n\n', n_jobs, get_mem(), '\n\n\n\n')
+                #task = task_set[0]
+                print(len(task_set), get_mem())
+                #trace() ## Here pdb set_trace
+                parallel(delayed(rapper) (task,with_population_caching,verbosity) for task in task_set)
+                for task in task_set:
+                    #prog_bar.update()
+                    task.is_done = True
+                #finalizer(outdir)
                 #prog_bar.update()
-                task.is_done = True
-            #finalizer(outdir)
-            #prog_bar.update()
     sys.stderr.flush()
     print('end')
     return outdir
