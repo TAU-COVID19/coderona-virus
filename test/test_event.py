@@ -5,7 +5,7 @@ from typing import List
 
 from src.run_utils import INITIAL_DATE 
 from src.seir import DiseaseState
-from src.simulation.event import AddRoutineChangeEffect, AddRoutineChangeEnvironmentEffect, DayTrigger, DelayedEffect, DiseaseStateChangeEffect, EmptyTrigger,EmptyEffect,Event, RemoveRoutineChangeEffect
+from src.simulation.event import AddRoutineChangeEffect, AddRoutineChangeEnvironmentEffect, DayEvent, DayTrigger, DelayedEffect, DiseaseStateChangeEffect, EmptyTrigger,EmptyEffect,Event, RemoveRoutineChangeEffect
 from src.simulation.interventions.intervention import quarantine_routine
 from src.simulation.params import Params
 from src.simulation.simulation import Simulation
@@ -230,30 +230,43 @@ def test_1_delayedEffect_3_persons_delayed_reached():
     my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
 
     trigger = EmptyTrigger()
-    
-    Effect_List1=[]
-    for _person in persons_arr: 
-        Effect_List1.append(
-            DiseaseStateChangeEffect(
-                person = _person,
-                old_state = _person.get_disease_state(),
-                new_state = DiseaseState.SYMPTOMATICINFECTIOUS,
-        ))
+    Effect_List1 = [
+        DiseaseStateChangeEffect(
+            person = _person,
+            old_state= _person.get_disease_state(),
+            new_state = DiseaseState.SYMPTOMATICINFECTIOUS ) 
+        for _person in persons_arr]
+    assert(len(Effect_List1) == 3)
 
     e = Event(trigger=trigger,effectLst = Effect_List1)
     
     DelayedEvent = Event(
-        EmptyTrigger(),
-        [DelayedEffect(e, delay_time=timedelta(days=3))])
+        trigger = EmptyTrigger(),
+        effectLst = [DelayedEffect(e, delay_time=timedelta(days=3))])
 
-    DelayedEvent.apply(my_simulation)
+    my_simulation.register_event_on_day(event = DelayedEvent,date =INITIAL_DATE)
+
+    print("in the for loop printing keys and vals")
+    for key in my_simulation._events.keys():
+        if my_simulation._events[key]:
+            print(str(key) + ":" + str(len(my_simulation._events[key].EffectList)))
+            print(my_simulation._events[key].EffectList)
+
 
     #move the simulation 3 days forword day by day to see where it happens
     my_simulation.simulate_day()
+    for person in persons_arr:
+        assert person.get_disease_state() == DiseaseState.SUSCEPTIBLE
+    
     my_simulation.simulate_day()
+    for person in persons_arr:
+        assert person.get_disease_state() == DiseaseState.SUSCEPTIBLE
+    
     my_simulation.simulate_day()
+    for person in persons_arr:
+        assert person.get_disease_state() == DiseaseState.SUSCEPTIBLE
+    
     my_simulation.simulate_day()
-
     for person in persons_arr:
         assert person.get_disease_state() == DiseaseState.SYMPTOMATICINFECTIOUS
 
@@ -349,3 +362,62 @@ def test_AddRoutineChangeEnvironmentEffect_And_RemoveRoutineChangeEnvironmentEff
     assert "quarantine" in persons_arr[1].routine_changes.keys()
     assert "quarantine" not in persons_arr[2].routine_changes.keys()
 
+def test_hook_EmptyEffect_DayEvent():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    persons_arr = list(map(Person, [10,20,30]))
+
+    assert len(persons_arr) == 3
+    env_arr = []
+    my_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    e = DayEvent(date = INITIAL_DATE+timedelta(days=1))
+
+    my_simulation.register_event_on_day(event = e,date = INITIAL_DATE+timedelta(days=1))
+
+    assert isinstance(my_simulation._events[INITIAL_DATE+timedelta(days=1)] , DayEvent)
+
+def test_hook_NonEmptyEffect_DayEvent():
+
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    PersonList = list(map(Person, [10,20,30]))
+    print("init persons list ")
+    Effect_List1=[]
+    for _person in PersonList: 
+        Effect_List1.append(
+            DiseaseStateChangeEffect(
+                person = _person,
+                old_state = _person.get_disease_state(),
+                new_state = DiseaseState.SYMPTOMATICINFECTIOUS,
+        ))
+    print("in creation Effect_List size :"+str(len(Effect_List1)))
+    e = DayEvent(date = INITIAL_DATE +timedelta(days=1),ParmsList = Effect_List1)
+    print("Init world object")
+    my_world = World(
+        all_people = PersonList,
+        all_environments=[],
+        generating_city_name = "test",
+        generating_scale = 1)
+    print("Init simulation")
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.register_event_on_day(event = e,date = INITIAL_DATE + timedelta(days=1))
+    
+    my_simulation.simulate_day()
+    my_simulation.simulate_day()
+    
+    for person in PersonList:
+        assert person.get_disease_state() == DiseaseState.SYMPTOMATICINFECTIOUS

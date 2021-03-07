@@ -205,35 +205,35 @@ class SimpleJob(RunningJob):
 
         """
         
-        check(desc=208)
+        # check(desc=208)
         seed.set_random_seed()
         config_path = os.path.join(os.path.dirname(__file__),"config.json")
         with open(config_path) as json_data_file:
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
             paramsDataPath = ConfigData['ParamsFilePath']
-        check(desc=215)
+        # check(desc=215)
         Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
         for param, val in self.params_to_change.items():
             Params.loader()[param] = val
         DiseaseState.init_infectiousness_list()
         
         citiesDataPath  = citiesDataPath
-        check(desc=223)
+        # check(desc=223)
         population_loader = PopulationLoader(
             citiesDataPath,
             added_description=Params.loader().description(),
             with_caching=with_population_caching,
             verbosity=verbosity
         )
-        check(desc=230)
+        # check(desc=230)
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
-        check(desc=232)
+        # check(desc=232)
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
-        check(desc=235)
+        # check(desc=235)
         self.infection_params.infect_simulation(sim, outdir) # bug
-        check(desc=237)
+        # check(desc=237)
         print('runini')
         sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot)
         

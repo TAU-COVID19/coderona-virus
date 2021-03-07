@@ -132,12 +132,12 @@ def make_routine_change_events(parmsList:list):
     :param args: extra args for the routine_generator, like age
     :return: list of new events
     """
-    # #Dror Change from params to list of params accordingly
+    # #TODO Change from params to list of params accordingly
     # if args is None:
     #     new_routine = routine_generator(person)
     # else:
     #     new_routine = routine_generator(person, args)
-    # #Dror generate two events for all the people
+    # #TODO generate two events for all the people
     # ret = [DayEvent(
     #     date=start_date,
     #     effect=AddRoutineChangeEffect(
@@ -258,7 +258,7 @@ class TimedIntervention(Intervention):
         :param world: World object
         :return: list of Event objects
         """
-        #Dror make one event for all the persons
+        #TODO make one event for all the persons
         new_events = []
         ParamsList = []
         for person in world.all_people():
@@ -386,8 +386,8 @@ class SymptomaticIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
-        #Dror change trigger one for all persons 
-        #Dror Change to one effect for all the persons
+        #TODO change trigger one for all persons 
+        #TODO Change to one effect for all the persons
         ret = []
         for person in world.all_people():
             if random.random() < self.compliance:
@@ -487,7 +487,7 @@ class HouseholdIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
-        #Dror change to one effect for all the peoples 
+        #TODO change to one effect for all the peoples 
         ret = []
         for person in world.all_people():
             if random.random() < self.compliance:

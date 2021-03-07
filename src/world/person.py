@@ -108,11 +108,12 @@ class Person(object):
             return
         self.state_to_events[states] = Event(
             trigger=EmptyTrigger(),
-            effect=DiseaseStateChangeEffect(
-                person=self,
-                old_state=old_state,
-                new_state=new_state
-            )
+            effectLst = 
+                [DiseaseStateChangeEffect(
+                    person=self,
+                    old_state=old_state,
+                    new_state=new_state
+            )]
         )
 
     def make_eventless_copy(self):

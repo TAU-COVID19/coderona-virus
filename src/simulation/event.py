@@ -1,4 +1,5 @@
 import datetime
+from src.simulation.params import Params
 
 class Trigger:
     """
@@ -167,7 +168,7 @@ class AndTrigger(MultiTrigger):
         self._is_triggered |= res
         return res
 
-#Dror checked
+#checked
 class EmptyEffect:
     """
     Does nothing.
@@ -179,7 +180,7 @@ class EmptyEffect:
     def apply(self, simulation):
         pass
 
-#Dror checked
+#checked
 class DiseaseStateChangeEffect:
     """
     Effect that changes a Person's disease state
@@ -201,6 +202,7 @@ class DiseaseStateChangeEffect:
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
+        print("before apply DiseaseStateChangeEffect")
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +
@@ -214,7 +216,7 @@ class DiseaseStateChangeEffect:
     def get_states(self):
         return self._old_state, self._new_state
 
-#Dror checked
+#checked
 class DelayedEffect:
     """
     This effect is used to apply some event delay_time time after the moment it is applied.
@@ -236,11 +238,14 @@ class DelayedEffect:
         register self.event to happen in delay_time days
         :param simulation: Simulation object
         """
-        #Dror Change apply function that will be good for mulitple persons 
+        #TODO Change apply function that will be good for mulitple persons 
         target_day = simulation._date + self._delay_time
+        #Create new event with the original trigger and effect list 
+        #just without the delayed effect
+        print("in DelayedEffect len(EffectList):"+str(len(self._event.EffectList)))
         simulation.register_event_on_day(self._event, target_day)
 
-#Dror checked
+#checked
 class AddRoutineChangeEffect:
     """
     An effect that adds some routine change to some Person
@@ -258,7 +263,7 @@ class AddRoutineChangeEffect:
         self.routine_change_val = routine_change_val
 
     def apply(self, simulation):
-        #Dror Change apply function that will be good for mulitple persons 
+        #TODO Change apply function that will be good for mulitple persons 
         self._person.add_routine_change(self.routine_change_key, self.routine_change_val)
 
 
@@ -305,7 +310,7 @@ class RemoveRoutineChangeEnvironmentEffect:
         for member in self._environment.get_people():
             member.remove_routine_change(self.routine_change_key)
 
-#Dror checked
+#checked
 class RemoveRoutineChangeEffect:
     """
     An effect which removes a routine change from a person
@@ -334,8 +339,10 @@ class _Hookable():
         Hooks some event onto self
         :param sub: Event
         """
-        if isinstance(sub, DayEvent) and isinstance(sub.effect, EmptyEffect):
-            assert isinstance(self, DayEvent) and self._date == sub._date, "failed to flatten an empty DayEvent"
+        # if isinstance(sub, DayEvent) and isinstance(sub.effect, EmptyEffect):
+        isEmptyArr=[isinstance(effect, EmptyEffect) for effect in sub.EffectList]
+        if isinstance(sub, DayEvent) and all(isEmptyArr):
+            #assert isinstance(self, DayEvent) and self._date == sub._date, "failed to flatten an empty DayEvent"
             self.hook(sub.hooks)
         else:
             self.hooks.append(sub)
@@ -347,9 +354,9 @@ class _Hookable():
         """
         if isinstance(sub_events, _Hookable):
             self._hook_one(sub_events)
-            return
-        for e in sub_events:
-            self._hook_one(e)
+        else:
+            for e in sub_events:
+                self._hook_one(e)
 
     def hooks_apply(self, simulation):
         """
@@ -418,7 +425,19 @@ class Event(_Hookable):
         for effect in self.EffectList:
             effect.apply(simulation)
         self.hooks_apply(simulation)
-
+    
+    def hook(self, sub_events):
+        super(Event,self).hook(sub_events)
+        if isinstance(sub_events, _Hookable):
+            tmp_for_print = len(self.EffectList)
+            self.EffectList = [effect for curreny_event in self.get_tree() for effect in curreny_event.EffectList ]
+            self.EffectList = [effect for effect in self.EffectList if not isinstance(effect,EmptyEffect)]
+            #mistakenly removed all the effects
+            if len(self.EffectList) == 0:
+                self.EffectList = [EmptyEffect()]
+                tmp_for_print = len(sub_events.EffectList)
+            sub_events.EffectList = []
+            
 
 class DayEvent(Event):
     """

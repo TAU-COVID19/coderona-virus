@@ -86,7 +86,7 @@ class HomogeneousEnvironment(Environment):
             check_sum=False,
             is_singleton=True
         )
-        #Dror change from multiple events to a single event for all the people 
+        #TODO change from multiple events to a single event for all the people 
         new_events = []
         num_infections = 0
         for person, weight in self._person_dict.items():

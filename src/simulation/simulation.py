@@ -89,7 +89,7 @@ class Simulation(object):
 
         # save all the events that create the interventions behavior on the simulation
         for inter in self.interventions:
-            check(desc='Sim 92')
+            # check(desc='Sim 92')
             self.register_events(inter.generate_events(self._world))
         print('Initialized Simulation', get_mem())
 
@@ -252,7 +252,7 @@ class Simulation(object):
         :param datas_to_plot: Indicates what sort of data we wish to plot
         and save at the end of the simulation.
         """
-        check(desc='Sim 252')
+        # check(desc='Sim 252')
         assert self.num_days_to_run is None
         self.num_days_to_run = num_days
         if datas_to_plot is None:
@@ -265,18 +265,18 @@ class Simulation(object):
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
                 break
-        check(desc='Sim 265')
+        # check(desc='Sim 265')
         self.stats.mark_ending(self._world.all_people())
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():
             self.stats.plot_daily_sum(name, data_to_plot)
-        check(desc='Sim 271')
+        # check(desc='Sim 271')
         self.stats.write_summary_file('summary')
         self.stats.write_summary_file('summary_long', shortened=False)
         if self.stats._r0_data:
             self.stats.plot_r0_data('r0_data_' + name)
-        check(desc='Sim 276')
+        # check(desc='Sim 276')
         self.stats.write_params()
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()
