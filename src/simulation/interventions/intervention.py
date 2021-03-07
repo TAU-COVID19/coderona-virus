@@ -344,7 +344,7 @@ class SymptomaticIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
-        ret = []
+        intervention_start = DayEvent(self.start_date)
         for person in world.all_people():
             if random.random() < self.compliance:
                 add_effect = AddRoutineChangeEffect(
@@ -366,9 +366,7 @@ class SymptomaticIsolationIntervention(Intervention):
                     add_trigger, add_effect
                 )
                 entry_moment.hook(add_event)
-                day_event = DayEvent(self.start_date)  # Wasteful in memory!
-                day_event.hook(add_event)
-                ret.append(day_event)
+                intervention_start.hook(add_event)
                 if self.delay != 0:
                     delay_time = timedelta(self.delay)
                     person.hook_on_change(
@@ -400,7 +398,7 @@ class SymptomaticIsolationIntervention(Intervention):
                 remove_event = Event(remove_trigger, remove_effect)
                 for states in state_changes:
                     person.hook_on_change(states, remove_event)
-        return ret
+        return [intervention_start]
 
 
 class HouseholdIsolationIntervention(Intervention):
@@ -443,7 +441,7 @@ class HouseholdIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
-        ret = []
+        intervention_start = DayEvent(self.start_date)
         for person in world.all_people():
             if random.random() < self.compliance:
                 household_environment = person.get_environment('household')
@@ -466,9 +464,7 @@ class HouseholdIsolationIntervention(Intervention):
                     add_trigger, add_effect
                 )
                 entry_moment.hook(add_event)
-                day_event = DayEvent(self.start_date)  # Wasteful in memory!
-                day_event.hook(add_event)
-                ret.append(day_event)
+                intervention_start.hook(add_event)
                 if self.delay_on_enter:
                     delay_time = self.delay_on_enter
                     person.hook_on_change(
@@ -511,4 +507,4 @@ class HouseholdIsolationIntervention(Intervention):
                         DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
                     )
                     add_event.hook(remove_event)
-        return ret
+        return [intervention_start]
