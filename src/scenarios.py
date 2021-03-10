@@ -2193,29 +2193,30 @@ def paper_8(compliance, ci_delay, hi_delay):
         delay_on_enter=2
     )
 
-    interventions = [ci_intervention1,
-                     ci_intervention2,
-                     ci_intervention3,
-                     ci_intervention4,
-                     sd_intervention1,
-                     sd_intervention2,
-                     sd_intervention3,
-                     sd_intervention4,
-                     sd_intervention5,
-                     sd_intervention6,
-                     sd_intervention_eld_1,
-                     sd_intervention_eld_2,
-                     sd_intervention_eld_3,
-                     sd_intervention_eld_4,
-                     sd_intervention_eld_5,
-                     sd_intervention_eld_6,
-                     workplace_closure_intervention1,
-                     workplace_closure_intervention2,
-                     workplace_closure_intervention3,
-                     workplace_closure_intervention4,
-                     household_intervention,
-                     school_closer_intervention1,
-                     school_closer_intervention2
+    interventions = [
+        #              ci_intervention1,
+        #              ci_intervention2,
+        #              ci_intervention3,
+        #              ci_intervention4,
+        #              sd_intervention1,
+        #              sd_intervention2,
+        #              sd_intervention3,
+        #              sd_intervention4,
+        #              sd_intervention5,
+        #              sd_intervention6,
+        #              sd_intervention_eld_1,
+        #              sd_intervention_eld_2,
+        #              sd_intervention_eld_3,
+        #              sd_intervention_eld_4,
+        #              sd_intervention_eld_5,
+        #              sd_intervention_eld_6,
+        #              workplace_closure_intervention1,
+        #              workplace_closure_intervention2,
+        #              workplace_closure_intervention3,
+        #              workplace_closure_intervention4,
+        #              household_intervention,
+        #              school_closer_intervention1,
+        #              school_closer_intervention2
                      ]
     return interventions
 def paper_2_comp_9(compliance, ci_delay, hi_delay):

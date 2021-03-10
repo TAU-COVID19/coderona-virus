@@ -202,7 +202,6 @@ class DiseaseStateChangeEffect:
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
-        print("before apply DiseaseStateChangeEffect")
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +
