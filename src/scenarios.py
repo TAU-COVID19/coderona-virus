@@ -2198,7 +2198,7 @@ def paper_8(compliance, ci_delay, hi_delay):
         #              ci_intervention2,
         #              ci_intervention3,
         #              ci_intervention4,
-        #              sd_intervention1,
+                      sd_intervention1
         #              sd_intervention2,
         #              sd_intervention3,
         #              sd_intervention4,

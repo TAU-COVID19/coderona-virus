@@ -279,9 +279,9 @@ class TimedIntervention(Intervention):
                         {"person":person,
                         "start_date":self.start_date,
                         "end_date":self.end_date,
-                        "key":self.key,
+                        "key":self._key,
                         "routine_generator":self._routine_generator,
-                        "args": self.args})
+                        "args": self._args})
         if len(ParamsList)==0:
             return  []
         new_events = make_routine_change_events(ParamsList)

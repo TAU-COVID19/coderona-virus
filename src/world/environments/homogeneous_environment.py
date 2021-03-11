@@ -36,7 +36,7 @@ class HomogeneousEnvironment(Environment):
         """
         Change the amount of time that a person will stay in the environment
         This amount (weight) is based to 1 and may change with interventions.
-        If the weight is zero, this person won't go to this rnviroment until a further change.
+        If the weight is zero, this person won't go to this enviroment until a further change.
         """
         if person.is_dead:
             self._person_dict.pop(person, None)

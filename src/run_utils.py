@@ -526,7 +526,8 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
         #     return callback
 
         futures = []
-        with Parallel(n_jobs=cpus_to_use) as parallel:
+        # with Parallel(n_jobs=int(math.floor(cpus_to_use/2))) as parallel:
+        with Parallel(n_jobs=14) as parallel:
             for task_set, finalizer in zip(tasks_sets, finalizers):
                 print('Joblib 491')
                 print('\n\n\n', cpus_to_use, get_mem(), '\n\n\n\n')
