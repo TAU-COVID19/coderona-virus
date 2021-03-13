@@ -221,7 +221,7 @@ class Intervention(object):
     def __eq__(self, other):
         return self.attributes() == other.attributes() and type(self) == type(other)
 
-
+#TimedIntervention checked
 class TimedIntervention(Intervention):
     """
     Implementation of an intervention, that is time range based. Meaning, it happens between from some start date,
@@ -264,17 +264,17 @@ class TimedIntervention(Intervention):
         for person in world.all_people():
             if self._condition(person):
                 if random.random() < self.compliance:
-                    #old version
-                    # curr_events = make_routine_change_events(
-                    #     person,
-                    #     self.start_date,
-                    #     self.end_date,
-                    #     self._key,
-                    #     self._routine_generator,
-                    #     self._args
-                    # )
-                    # for event in curr_events:
-                    #     new_events.append(event)
+                #old version
+                # curr_events = make_routine_change_events(
+                #     person,
+                #     self.start_date,
+                #     self.end_date,
+                #     self._key,
+                #     self._routine_generator,
+                #     self._args
+                # )
+                # for event in curr_events:
+                #     new_events.append(event)
                     ParamsList.append(
                         {"person":person,
                         "start_date":self.start_date,
@@ -285,10 +285,10 @@ class TimedIntervention(Intervention):
         if len(ParamsList)==0:
             return  []
         new_events = make_routine_change_events(ParamsList)
-
+        
         return new_events
 
-
+#TimedIntervention checked
 class WorkplaceClosureIntervention(TimedIntervention):
     """
     Implements workplace closure that is time based.
@@ -305,7 +305,7 @@ class WorkplaceClosureIntervention(TimedIntervention):
     def _condition(self, person):
         return person.has_environment('workplace')
 
-
+#TimedIntervention checked
 class SocialDistancingIntervention(TimedIntervention):
     """
     Implementation of Social distancing that is time based, and is activated on people in the given age range
@@ -322,7 +322,7 @@ class SocialDistancingIntervention(TimedIntervention):
     def _condition(self, x):
         return self.min_age <= x.get_age() <= self.max_age
 
-
+#TimedIntervention checked
 class ElderlyQuarantineIntervention(TimedIntervention):
     """
     Implementation of Elderly Quarantine that is time based, and is activated on people older than the given age.
@@ -339,7 +339,7 @@ class ElderlyQuarantineIntervention(TimedIntervention):
     def _condition(self, x):
         return x.get_age() >= self._min_age
 
-
+#TimedIntervention checked
 class CityCurfewIntervention(TimedIntervention):
     """
     Implementation of city closure that is time based, and is activated on people in the given city (living or working)
@@ -386,66 +386,69 @@ class SymptomaticIsolationIntervention(Intervention):
         :param world: World object
         :return: list of new Events to register on the simulation
         """
-        #TODO change trigger one for all persons 
-        #TODO Change to one effect for all the persons
         ret = []
-        for person in world.all_people():
-            if random.random() < self.compliance:
-                add_effect = AddRoutineChangeEffect(
-                    person=person,
-                    routine_change_key='quarantine',
-                    routine_change_val=quarantine_routine(person)
-                )
-                states = (
-                    DiseaseState.INCUBATINGPOSTLATENT,
-                    DiseaseState.SYMPTOMATICINFECTIOUS
-                )
-                person._init_event(*states)
-                entry_moment = Event()
-                add_trigger = AndTrigger(
-                    AfterTrigger(entry_moment),
-                    TimeRangeTrigger(self.start_date, self.end_date)
-                )
-                add_event = Event(
-                    add_trigger, add_effect
-                )
-                entry_moment.hook(add_event)
-                day_event = DayEvent(self.start_date)  # Wasteful in memory!
-                day_event.hook(add_event)
-                ret.append(day_event)
-                if self.delay != 0:
-                    delay_time = timedelta(self.delay)
-                    person.hook_on_change(
-                        states,
-                        Event(
-                            EmptyTrigger(),
-                            DelayedEffect(entry_moment, delay_time)
-                        )
+        states = (
+            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.SYMPTOMATICINFECTIOUS)
+        AddEffectList = []
+
+        #list of persons that we are going to change
+        EffectedPersons = [person for person in world.all_people() if random.random() < self.compliance]
+
+        for person in EffectedPersons:
+            AddEffectList.append([AddRoutineChangeEffect(
+                person=person,
+                routine_change_key='quarantine',
+                routine_change_val=quarantine_routine(person)
+            )])
+            person._init_event(*states)
+        entry_moment = Event()
+        add_trigger = AndTrigger(
+            AfterTrigger(entry_moment),
+            TimeRangeTrigger(self.start_date, self.end_date)
+        )
+        add_event = Event(
+            add_trigger, AddEffectList
+        )
+        entry_moment.hook(add_event)
+        day_event = DayEvent(self.start_date) 
+        day_event.hook(add_event)
+        ret.append(day_event)
+
+        state_changes = list(itertools.product(
+            [DiseaseState.SYMPTOMATICINFECTIOUS, DiseaseState.CRITICAL],
+            [DiseaseState.IMMUNE, DiseaseState.DECEASED]
+        ))
+        for person in EffectedPersons:
+            if self.delay != 0:
+                delay_time = timedelta(self.delay)
+                person.hook_on_change(
+                    states,
+                    Event(
+                        EmptyTrigger(),
+                        [DelayedEffect(entry_moment, delay_time)]
                     )
-                else:
-                    person.hook_on_change(states, entry_moment)
+                )
+            else:
+                person.hook_on_change(states, entry_moment)
 
-                remove_effect = RemoveRoutineChangeEffect(
-                    person=person, routine_change_key='quarantine'
+            remove_effect = RemoveRoutineChangeEffect(
+                person=person, routine_change_key='quarantine'
+            )
+        
+            for states in state_changes:
+                person._init_event(*states)
+            remove_trigger = AndTrigger(
+                OrTrigger([
+                    AfterTrigger(person.state_to_events[states])
+                    for states in state_changes
+                ]),
+                AfterTrigger(add_event)
                 )
-                state_changes = list(itertools.product(
-                    [DiseaseState.SYMPTOMATICINFECTIOUS, DiseaseState.CRITICAL],
-                    [DiseaseState.IMMUNE, DiseaseState.DECEASED]
-                ))
-                for states in state_changes:
-                    person._init_event(*states)
-                remove_trigger = AndTrigger(
-                    OrTrigger([
-                        AfterTrigger(person.state_to_events[states])
-                        for states in state_changes
-                    ]),
-                    AfterTrigger(add_event)
-                )
-                remove_event = Event(remove_trigger, remove_effect)
-                for states in state_changes:
-                    person.hook_on_change(states, remove_event)
+            remove_event = Event(remove_trigger, [remove_effect])
+            for states in state_changes:
+                person.hook_on_change(states, remove_event)
         return ret
-
 
 class HouseholdIsolationIntervention(Intervention):
     """
@@ -489,71 +492,75 @@ class HouseholdIsolationIntervention(Intervention):
         """
         #TODO change to one effect for all the peoples 
         ret = []
-        for person in world.all_people():
-            if random.random() < self.compliance:
-                household_environment = person.get_environment('household')
-                add_effect = AddRoutineChangeEnvironmentEffect(
+        EffectsList= []
+        states = (
+            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.SYMPTOMATICINFECTIOUS
+            )
+        EffectedPersons = [person for person in world.all_people() if random.random() < self.compliance]
+        for person in EffectedPersons:
+            household_environment = person.get_environment('household')
+            EffectList.append(
+                AddRoutineChangeEnvironmentEffect(
                     environment=household_environment,
                     routine_change_key='household_isolation',
                     routine_change_generator=household_isolation_routine
-                )
-                states = (
-                    DiseaseState.INCUBATINGPOSTLATENT,
-                    DiseaseState.SYMPTOMATICINFECTIOUS
-                )
-                person._init_event(*states)
-                entry_moment = Event()
-                add_trigger = AndTrigger(
-                    AfterTrigger(entry_moment),
-                    TimeRangeTrigger(self.start_date, self.end_date)
-                )
-                add_event = Event(
-                    add_trigger, add_effect
-                )
-                entry_moment.hook(add_event)
-                day_event = DayEvent(self.start_date)  # Wasteful in memory!
-                day_event.hook(add_event)
-                ret.append(day_event)
-                if self.delay_on_enter:
-                    delay_time = self.delay_on_enter
-                    person.hook_on_change(
-                        states,
-                        Event(
-                            EmptyTrigger(),
-                            DelayedEffect(entry_moment, delay_time)
-                        )
-                    )
-                else:
-                    person.hook_on_change(states, entry_moment)
+            ))
+            person._init_event(*states)
+        entry_moment = Event()
+        add_trigger = AndTrigger(
+            AfterTrigger(entry_moment),
+            TimeRangeTrigger(self.start_date, self.end_date)
+        )
+        add_event = Event(
+            add_trigger, EffectsList
+        )
+        entry_moment.hook(add_event)
+        day_event = DayEvent(self.start_date) 
+        day_event.hook(add_event)
+        ret.append(day_event)
 
-                remove_effect = RemoveRoutineChangeEnvironmentEffect(
-                    environment=household_environment, routine_change_key='household_isolation'
+        for person in EffectedPersons:
+            if self.delay_on_enter:
+                delay_time = self.delay_on_enter
+                person.hook_on_change(
+                    states,
+                    Event(
+                        EmptyTrigger(),
+                        DelayedEffect(entry_moment, delay_time)
+                    )
                 )
-                if self.is_exit_after_recovery:
-                    state_changes = list(itertools.product(
-                        [DiseaseState.SYMPTOMATICINFECTIOUS, DiseaseState.CRITICAL],
-                        [DiseaseState.IMMUNE, DiseaseState.DECEASED]
-                    ))
-                    for states in state_changes:
-                        person._init_event(*states)
-                    remove_trigger = AndTrigger(
-                        OrTrigger([
-                            AfterTrigger(person.state_to_events[states])
-                            for states in state_changes
-                        ]),
-                        AfterTrigger(add_event)
-                    )
-                    remove_event = Event(
-                        remove_trigger,
-                        DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
-                    )
-                    for states in state_changes:
-                        person.hook_on_change(states, remove_event)
-                else:
-                    remove_trigger = AfterTrigger(add_event)
-                    remove_event = Event(
-                        remove_trigger,
-                        DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
-                    )
-                    add_event.hook(remove_event)
+            else:
+                person.hook_on_change(states, entry_moment)
+
+            remove_effect = RemoveRoutineChangeEnvironmentEffect(
+                environment=household_environment, routine_change_key='household_isolation'
+            )
+            if self.is_exit_after_recovery:
+                state_changes = list(itertools.product(
+                    [DiseaseState.SYMPTOMATICINFECTIOUS, DiseaseState.CRITICAL],
+                    [DiseaseState.IMMUNE, DiseaseState.DECEASED]
+                ))
+                for states in state_changes:
+                    person._init_event(*states)
+                remove_trigger = AndTrigger(
+                    OrTrigger([
+                        AfterTrigger(person.state_to_events[states])
+                        for states in state_changes
+                    ]),
+                    AfterTrigger(add_event)
+                )
+                remove_event = Event(
+                    remove_trigger,
+                    DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
+                )
+                for states in state_changes:
+                    person.hook_on_change(states, remove_event)
+            else:
+                remove_trigger = AfterTrigger(add_event)
+                remove_event = Event(
+                    remove_trigger,
+                    DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
+                )
+                add_event.hook(remove_event)
         return ret

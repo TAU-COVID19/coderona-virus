@@ -6,7 +6,7 @@ from typing import List
 from src.run_utils import INITIAL_DATE 
 from src.seir import DiseaseState
 from src.simulation.event import AddRoutineChangeEffect, AddRoutineChangeEnvironmentEffect, DayEvent, DayTrigger, DelayedEffect, DiseaseStateChangeEffect, EmptyTrigger,EmptyEffect,Event, RemoveRoutineChangeEffect
-from src.simulation.interventions.intervention import quarantine_routine,ElderlyQuarantineIntervention
+from src.simulation.interventions.intervention import quarantine_routine,ElderlyQuarantineIntervention,SymptomaticIsolationIntervention
 from src.simulation.params import Params
 from src.simulation.simulation import Simulation
 from src.world import Person
@@ -467,5 +467,63 @@ def test_TimedIntervention():
     assert persons_arr[0].get_routine()['household'] == 0
     assert persons_arr[1].get_routine()['household'] == 0
     assert persons_arr[2].get_routine()['household'] == 0
+
+def test_SymptomaticIsolationIntervention():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    #create diff enviroments
+    h1 = Household(city = None,contact_prob_between_each_two_people=1)
+    h2 = Household(city = None,contact_prob_between_each_two_people=1)
+    persons_arr = [Person(10,[h1]),Person(20,[h1]),Person(30,[h2])]
+
+     #register people to diff env
+    h1.sign_up_for_today(persons_arr[0],1)
+    h1.sign_up_for_today(persons_arr[1],1)
+    h2.sign_up_for_today(persons_arr[2],1)
     
+    assert len(h1.get_people()) == 2
+    assert len(h2.get_people()) == 1
+
+    env_arr = [h1,h2]
+
+    my_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
     
+    #infecting person_arr[2]
+    Effect_List1=[]
+    Effect_List1.append(
+        DiseaseStateChangeEffect(
+            person = persons_arr[2],
+            old_state = persons_arr[2].get_disease_state(),
+            new_state = DiseaseState.SYMPTOMATICINFECTIOUS
+    ))
+    e = DayEvent(date = INITIAL_DATE ,ParmsList = Effect_List1)
+    
+
+    # Put him in isolation 
+    SI_intervention = SymptomaticIsolationIntervention(
+        start_date=INITIAL_DATE +timedelta(days=1),
+        duration=timedelta(4),
+        compliance=1,
+        delay = 1 
+    )
+    all_interventions = [SI_intervention]
+    
+    #Creating simulation that will represent those changes
+    my_simulation = Simulation(
+        world = my_world, 
+        initial_date= INITIAL_DATE,
+        interventions = all_interventions)
+    
+    #Start the simulation
+    my_simulation.simulate_day()
+    my_simulation.simulate_day()
+
+    assert len(persons_arr[2].state_to_events.keys()) == 5
