@@ -30,9 +30,8 @@ def test_Init_haifa():
             with_caching=False,
             verbosity=False
         )
-    pop = population_loader.PopulationLoader(citiesDataPath)
-    City1 = pop.get_city_by_name('Haifa')
-    assert City1 is not None
+    pop = population_loader.get_world(city_name = 'Holon',scale =1,is_smart = False)
+    assert pop is not None
 
 
 def test_Init_haifaParms():

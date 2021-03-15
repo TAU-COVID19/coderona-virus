@@ -28,7 +28,8 @@ def generate_all_households_and_communities_of_city_naive(city, scaling=1.0):
      a list of all generated neighborhoods (lists of Person objects),
      a list of all generate environments (NeighborhoodCommunity objects))
     """
-    warnings.warn("DEPRECATED CODE! naive city generation should not be used!", DeprecationWarning)
+    #Amit confirmed that we should always use this class
+    #warnings.warn("DEPRECATED CODE! naive city generation should not be used!", DeprecationWarning)
     assert isinstance(city, City)
     curr_community = []
     all_people = []
