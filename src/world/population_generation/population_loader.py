@@ -177,7 +177,11 @@ class PopulationLoader(object):
             log.info("Generated a total of %d people in %d environments" % (len(world.all_people()), len(world.all_environments)))
         else:
             city = self.get_city_by_name(city_name)
-            world = generate_city(city, is_smart, scaling=scale, verbosity=self.verbosity)
+            world = generate_city(
+                city = city,
+                is_smart_household_generation = is_smart, 
+                scaling=scale, 
+                verbosity=self.verbosity)
             assert world._generating_scale == scale, \
                 "Internal error: %s != %s" % (world._generating_scale, scale)
             assert world._generating_city_name == city_name, \

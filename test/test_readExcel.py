@@ -30,8 +30,8 @@ def test_Init_haifa():
             with_caching=False,
             verbosity=False
         )
-    pop = population_loader.get_world(city_name = 'Holon',scale =1,is_smart = False)
-    assert pop is not None
+    world = population_loader.get_world(city_name='Haifa', scale=1,is_smart= False)
+    assert world is not None
 
 
 def test_Init_haifaParms():
@@ -50,51 +50,9 @@ def test_Init_haifaParms():
             with_caching=False,
             verbosity=False
         )
-    pop = population_loader.PopulationLoader(citiesDataPath)
-    City1 = pop.get_city_by_name('Haifa')
+    City1 = population_loader.get_city_by_name('Haifa')
     assert City1.region == 3
     assert City1.nafa == 31
-
-
-def test_Init_SmallTown():
-    citiesDataPath = ""
-    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
-    with open(config_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
-        paramsDataPath = ConfigData['ParamsFilePath']
-
-    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
-       
-    population_loader = PopulationLoader(
-            citiesDataPath,
-            added_description="",
-            with_caching=False,
-            verbosity=False
-        )
-    pop = population_loader.PopulationLoader(citiesDataPath)
-    City1 = pop.get_city_by_name('Roah Midbar')
-
-
-def test_Init_TownNotExist():
-    citiesDataPath = ""
-    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
-    with open(config_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        citiesDataPath = ConfigData['CitiesFilePath']
-        paramsDataPath = ConfigData['ParamsFilePath']
-
-    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
-       
-    population_loader = PopulationLoader(
-            citiesDataPath,
-            added_description="",
-            with_caching=False,
-            verbosity=False
-        )
-    pop = population_loader.PopulationLoader(citiesDataPath)
-    City1 = pop.get_city_by_name('lala')
-
 
 def test_GetCities():
     #There are only 198 cities that we know all the needed data
