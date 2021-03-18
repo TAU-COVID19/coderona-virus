@@ -153,6 +153,7 @@ class Simulation(object):
         :param event: Event
         :param date: datetime Date
         """
+        print("in simulation:register_event_on_day")
         if date not in self._events:
             # check(desc='Sim 157')
             self._events[date] = DayEvent(date)
@@ -192,12 +193,13 @@ class Simulation(object):
         else:
             population = self._world.all_people()
         assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
-    
+        print("population len:" + str(len(population)))
+        print("per_to_immune" + str(per_to_immune))
         num_immuned = int(round(len(population)*per_to_immune))
         assert len(population) >= num_infected + num_immuned
         Selected_persons = random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[:num_infected]
-        people_to_immune = Selected_persons[(-1) * num_immuned:]
+        people_to_infect = Selected_persons[0:num_infected]
+        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
         for person in people_to_infect:
             assert isinstance(person, Person), type(person)
             self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))

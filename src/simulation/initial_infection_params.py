@@ -57,7 +57,10 @@ class SmartInitialInfectionParams(InitialInfectionParams):
             verbosity=False,
             outdir=outdir
         )
-        mock_sim.infect_random_set(self.initial_random_set_for_mock, "N/A", None)
+        mock_sim.infect_random_set(
+            num_infected = self.initial_random_set_for_mock,
+            infection_doc = "N/A",
+            city_name = None)
         initial_infections = mock_sim.get_initial_infections(
             {city: self.initial_symptomatic_num_in_each_city for city in sim._world.get_all_city_names()}
         )

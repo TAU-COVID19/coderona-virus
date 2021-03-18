@@ -227,7 +227,7 @@ class SimpleJob(RunningJob):
             verbosity=verbosity
         )
         # check(desc=230)
-        world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
+        world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = False)
         # check(desc=232)
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
