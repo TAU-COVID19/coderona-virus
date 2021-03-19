@@ -115,7 +115,7 @@ class SimpleJob(RunningJob):
     A subclass that implements a job of a single task, that runs the simulation once.
     """
 
-    def __init__(self, scenario_name, city_name, scale, infection_params=SmartInitialInfectionParams(100, 50),
+    def __init__(self, scenario_name, city_name, scale=1.0, infection_params=SmartInitialInfectionParams(100, 50),
                  days=250, city_name_to_infect=None, initial_date=INITIAL_DATE,
                  params_to_change=None, datas_to_plot=None, interventions=None):
         """
@@ -247,7 +247,8 @@ class RepeatJob(RunningJob):
         outdir = os.path.join(outdir, self.scenario_name)
         assert not os.path.exists(outdir), "Directory '%s' already exists!" % outdir
         os.makedirs(outdir)
-        return sum([job.generate_tasks(outdir, stop_early) for job in self.jobs], [])
+        tasks_lists = [job.generate_tasks(outdir, stop_early) for job in self.jobs]
+        return [job for jobs in tasks_lists for job in jobs]
 
     def finalize(self, outdir):
         """
