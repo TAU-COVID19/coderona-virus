@@ -500,7 +500,7 @@ class HouseholdIsolationIntervention(Intervention):
         EffectedPersons = [person for person in world.all_people() if random.random() < self.compliance]
         for person in EffectedPersons:
             household_environment = person.get_environment('household')
-            EffectList.append(
+            EffectsList.append(
                 AddRoutineChangeEnvironmentEffect(
                     environment=household_environment,
                     routine_change_key='household_isolation',
@@ -552,7 +552,7 @@ class HouseholdIsolationIntervention(Intervention):
                 )
                 remove_event = Event(
                     remove_trigger,
-                    DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
+                    DelayedEffect(Event(effectLst=[remove_effect]), self.delay_on_exit)
                 )
                 for states in state_changes:
                     person.hook_on_change(states, remove_event)
@@ -560,7 +560,7 @@ class HouseholdIsolationIntervention(Intervention):
                 remove_trigger = AfterTrigger(add_event)
                 remove_event = Event(
                     remove_trigger,
-                    DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
+                    DelayedEffect(Event(effectLst=[remove_effect]), self.delay_on_exit)
                 )
                 add_event.hook(remove_event)
         return ret

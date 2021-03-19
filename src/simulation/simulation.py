@@ -153,7 +153,6 @@ class Simulation(object):
         :param event: Event
         :param date: datetime Date
         """
-        print("in simulation:register_event_on_day")
         if date not in self._events:
             # check(desc='Sim 157')
             self._events[date] = DayEvent(date)
