@@ -5,7 +5,7 @@ from src.run_utils import RepeatJob, SimpleJob, run
 
 def test_paper_8_bug():
     jobs = []
-    for percent_immune in [0.0, 0.5]:
+    for percent_immune in [0.0]:
         for city in ["Holon", "Bene Beraq"]:
             for initial_num_infected in [25, 100, 250, 500]:
                 name = "{}:{} initial infected:{} percent immune, paper_8_bug".format(city, initial_num_infected, percent_immune)
