@@ -237,11 +237,9 @@ class DelayedEffect:
         register self.event to happen in delay_time days
         :param simulation: Simulation object
         """
-        #TODO Change apply function that will be good for mulitple persons 
         target_day = simulation._date + self._delay_time
         #Create new event with the original trigger and effect list 
         #just without the delayed effect
-        print("in DelayedEffect len(EffectList):"+str(len(self._event.EffectList)))
         simulation.register_event_on_day(self._event, target_day)
 
 #checked
@@ -427,15 +425,16 @@ class Event(_Hookable):
     
     def hook(self, sub_events):
         super(Event,self).hook(sub_events)
-        if isinstance(sub_events, _Hookable):
-            tmp_for_print = len(self.EffectList)
-            self.EffectList = [effect for curreny_event in self.get_tree() for effect in curreny_event.EffectList ]
-            self.EffectList = [effect for effect in self.EffectList if not isinstance(effect,EmptyEffect)]
-            #mistakenly removed all the effects
-            if len(self.EffectList) == 0:
-                self.EffectList = [EmptyEffect()]
-                tmp_for_print = len(sub_events.EffectList)
-            sub_events.EffectList = []
+        # We are just making a big effect list not touching the structre
+        # if isinstance(sub_events, _Hookable):
+        #     tmp_for_print = len(self.EffectList)
+        #     self.EffectList = [effect for curreny_event in self.get_tree() for effect in curreny_event.EffectList ]
+        #     self.EffectList = [effect for effect in self.EffectList if not isinstance(effect,EmptyEffect)]
+        #     #mistakenly removed all the effects
+        #     if len(self.EffectList) == 0:
+        #         self.EffectList = [EmptyEffect()]
+        #         tmp_for_print = len(sub_events.EffectList)
+        #     sub_events.EffectList = []
             
 
 class DayEvent(Event):

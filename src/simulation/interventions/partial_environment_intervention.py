@@ -129,34 +129,35 @@ class PartialEnvironmentIntervention(Intervention):
                 new_events.append(
                     DayEvent(
                         date=self.start_date,
-                        effect=ChangeEnvInterventionStateEffect(
+                        ParmsList=[ChangeEnvInterventionStateEffect(
                             env=env,
                             old_state=self._unaffected_intervention_state,
                             new_state=self._affected_intervention_state
-                        )
+                        )]
                     )
                 )
                 new_events.append(
                     DayEvent(
                         date=self.end_date,
-                        effect=ChangeEnvInterventionStateEffect(
+                        ParmsList=[ChangeEnvInterventionStateEffect(
                             env=env,
                             old_state=self._affected_intervention_state,
                             new_state=self._unaffected_intervention_state
-                        )
+                        )]
                     )
                 )
             if self.period_data is None:
                 for person in env._person_dict:
                     if random.random() < self.compliance:
-                        curr_events = make_routine_change_events(
-                            person,
-                            self.start_date,
-                            self.end_date,
-                            self._key,
-                            self._routine_generator,
-                            self._args
-                        )
+                        
+                        ParamsList = [
+                            {"person":person,
+                            "start_date":self.start_date,
+                            "end_date":self.end_date,
+                            "key":self._key,
+                            "routine_generator":self._routine_generator,
+                            "args": self._args}]
+                        curr_events = make_routine_change_events(ParamsList)
                         for event in curr_events:
                             new_events.append(event)
             else:
@@ -170,14 +171,14 @@ class PartialEnvironmentIntervention(Intervention):
                                 end_date = self.end_date
                                 finished = True
                             if end_date > start_date:
-                                curr_events = make_routine_change_events(
-                                    person,
-                                    start_date,
-                                    end_date,
-                                    self._key,
-                                    self._routine_generator,
-                                    self._args
-                                )
+                                ParamsList = [
+                                    {"person":person,
+                                    "start_date":self.start_date,
+                                    "end_date":self.end_date,
+                                    "key":self._key,
+                                    "routine_generator":self._routine_generator,
+                                    "args": self._args}]
+                                curr_events = make_routine_change_events(ParamsList)
                                 for event in curr_events:
                                     new_events.append(event)
 

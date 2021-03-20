@@ -1,12 +1,16 @@
 from datetime import timedelta
+import json
 import os
 import pytest
 
 from src.run_utils import SimpleJob, run, INITIAL_DATE
+from src.seir import daysdelta
+from src.simulation.event import DayEvent
 from src.simulation.interventions import *
 from src.simulation.initial_infection_params import SmartInitialInfectionParams
 from src.simulation.params import Params
 from src.logs import Statistics
+from src.world import Person,World
 
 @pytest.fixture(params=[False, True])
 def hi_exit(request, params):
@@ -29,7 +33,7 @@ def hi_exit(request, params):
         return (delay_on_exit, False)
 
 
-def test_household_isolation_intervention_simulation(hi_exit):
+def test_household_isolation_intervention_simulation():
     """
     Tests that when asymptomatic and presymptomatic people are not infectious and household isolation occur with no delay,
     all the poeple that are infected are infected at home (of at the beginning), due to the household isolation
@@ -41,7 +45,7 @@ def test_household_isolation_intervention_simulation(hi_exit):
         ("disease_parameters", "infectiousness_per_stage", "incubating_post_latent"): 0.0,
         ("disease_parameters", "infectiousness_per_stage", "asymptomatic"): 0.0
     }
-    delay_on_exit, is_exit_after_recovery = hi_exit
+    delay_on_exit, is_exit_after_recovery = (1,True)
     job = SimpleJob(scenario_name, city_name='kefar yona', interventions=[
         HouseholdIsolationIntervention(
             compliance=1,
@@ -101,8 +105,11 @@ def test_school_isolation_intervention_simulation():
 
 def test_SymptomaticIsolationIntervention_Genarete_events():
     #pretesting
-    paramsDataPath = os.path.join("..","Assets","params.json")
-    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     my_intervention = SymptomaticIsolationIntervention(compliance = 1, start_date = INITIAL_DATE,duration  = daysdelta(40))
     assert my_intervention is not None
@@ -117,12 +124,12 @@ def test_SymptomaticIsolationIntervention_Genarete_events():
         generating_scale = 1)
     
     #test
-    lst =  [my_intervention.generate_events(small_world)][0]
-    
+    lst =  my_intervention.generate_events(small_world)
     #Assert results 
     assert lst is not None
-    assert len(lst) == 3
-    for i in range(3):
+    assert len(lst) == 1
+    assert len(lst[0].hooks[0].EffectList) == 3
+    for i in range(1):
         assert isinstance(lst[i],DayEvent)
     for person in persons_arr:
         assert len(list(person.state_to_events.keys())) == (1+4)

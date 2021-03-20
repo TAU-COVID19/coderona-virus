@@ -396,11 +396,11 @@ class SymptomaticIsolationIntervention(Intervention):
         EffectedPersons = [person for person in world.all_people() if random.random() < self.compliance]
 
         for person in EffectedPersons:
-            AddEffectList.append([AddRoutineChangeEffect(
+            AddEffectList.append(AddRoutineChangeEffect(
                 person=person,
                 routine_change_key='quarantine',
                 routine_change_val=quarantine_routine(person)
-            )])
+            ))
             person._init_event(*states)
         entry_moment = Event()
         add_trigger = AndTrigger(
@@ -527,7 +527,7 @@ class HouseholdIsolationIntervention(Intervention):
                     states,
                     Event(
                         EmptyTrigger(),
-                        DelayedEffect(entry_moment, delay_time)
+                        [DelayedEffect(entry_moment, delay_time)]
                     )
                 )
             else:
@@ -552,7 +552,7 @@ class HouseholdIsolationIntervention(Intervention):
                 )
                 remove_event = Event(
                     remove_trigger,
-                    DelayedEffect(Event(effectLst=[remove_effect]), self.delay_on_exit)
+                    [DelayedEffect(Event(effectLst=[remove_effect]), self.delay_on_exit)]
                 )
                 for states in state_changes:
                     person.hook_on_change(states, remove_event)
@@ -560,7 +560,7 @@ class HouseholdIsolationIntervention(Intervention):
                 remove_trigger = AfterTrigger(add_event)
                 remove_event = Event(
                     remove_trigger,
-                    DelayedEffect(Event(effectLst=[remove_effect]), self.delay_on_exit)
+                    [DelayedEffect(Event(effectLst=[remove_effect]), self.delay_on_exit)]
                 )
                 add_event.hook(remove_event)
         return ret
