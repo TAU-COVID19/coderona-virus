@@ -49,8 +49,6 @@ class Person(object):
     num_people_so_far = 0
 
     def __init__(self, age, environments=None):
-        params = Params.loader()['population']
-        R0 = params["R0_percent"]
         StartAsRecovered = False
         #if random.random() < R0:
         #   StartAsRecovered = True
@@ -108,11 +106,12 @@ class Person(object):
             return
         self.state_to_events[states] = Event(
             trigger=EmptyTrigger(),
-            effect=DiseaseStateChangeEffect(
-                person=self,
-                old_state=old_state,
-                new_state=new_state
-            )
+            effectLst = 
+                [DiseaseStateChangeEffect(
+                    person=self,
+                    old_state=old_state,
+                    new_state=new_state
+            )]
         )
 
     def make_eventless_copy(self):
@@ -332,7 +331,7 @@ class Person(object):
         If this is None, it is sampled with the distribution defined in params.json.
         :return: infection events
         """
-        assert self._disease_state == DiseaseState.SUSCEPTIBLE
+        assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
         self.set_disease_state(DiseaseState.IMMUNE)
         return []
 

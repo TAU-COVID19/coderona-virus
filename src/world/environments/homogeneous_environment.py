@@ -19,7 +19,11 @@ class HomogeneousEnvironment(Environment):
         '_contact_prob_between_each_two_people'
     )
 
-    def __init__(self, contact_prob_between_each_two_people, full_name=None):
+    def __init__(
+            self,
+            contact_prob_between_each_two_people,
+            full_name=None
+    ):
         if full_name is None:
             full_name = self.name
         super(HomogeneousEnvironment, self).__init__(full_name)
@@ -32,7 +36,7 @@ class HomogeneousEnvironment(Environment):
         """
         Change the amount of time that a person will stay in the environment
         This amount (weight) is based to 1 and may change with interventions.
-        If the weight is zero, this person won't go to this rnviroment until a further change.
+        If the weight is zero, this person won't go to this environment until a further change.
         """
         if person.is_dead:
             self._person_dict.pop(person, None)

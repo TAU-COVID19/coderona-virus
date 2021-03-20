@@ -1,6 +1,6 @@
 import logging
 import os
-import random as _random
+import random as random
 from collections import Counter
 from datetime import timedelta
 from copy import deepcopy
@@ -9,6 +9,7 @@ from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup
+from src.debuggers import *
 
 
 log = logging.getLogger(__name__)
@@ -36,8 +37,15 @@ class Simulation(object):
         'num_days_to_run'
     )
 
-    def __init__(self, world, initial_date, interventions=None, stop_early=None, verbosity=False,
-                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')):
+    def __init__(
+        self,
+        world,
+        initial_date,
+        interventions=None,
+        stop_early=None,
+        verbosity=False,
+        outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')
+    ):
         """
         :param world: The World object that this simulation will run on
         :param initial_date: The starting date for the simulation
@@ -81,6 +89,7 @@ class Simulation(object):
         # save all the events that create the interventions behavior on the simulation
         for inter in self.interventions:
             self.register_events(inter.generate_events(self._world))
+        print('Initialized Simulation', get_mem())
 
     def simulate_day(self):
         """
@@ -175,11 +184,13 @@ class Simulation(object):
         else:
             population = self._world.all_people()
         assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
-        
+        print("population len:" + str(len(population)))
+        print("per_to_immune" + str(per_to_immune))
         num_immuned = int(round(len(population)*per_to_immune))
-        Selected_persons = _random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[:num_infected]
-        people_to_immune = Selected_persons[num_infected:]
+        assert len(population) >= num_infected + num_immuned
+        Selected_persons = random.sample(population, num_infected + num_immuned)
+        people_to_infect = Selected_persons[0:num_infected]
+        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
         for person in people_to_infect:
             assert isinstance(person, Person), type(person)
             self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
@@ -235,6 +246,7 @@ class Simulation(object):
         if datas_to_plot is None:
             datas_to_plot = dict()
         log.info("Starting simulation " + name)
+        print('Sim', 250, get_mem())
         for day in range(num_days):
             self.simulate_day()
             if self.stats.is_static() or self.first_people_are_done():

@@ -1,5 +1,4 @@
 import json
-from logging import shutdown
 import math
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
@@ -18,6 +17,14 @@ from src.world.population_generation import PopulationLoader
 from src.simulation.simulation import Simulation
 from src.simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams
 from src.seir import DiseaseState
+from src.debuggers import *
+from pdb import set_trace as trace
+import time
+import pdb, traceback, sys
+#        traceback.print_exc()
+#        _, _, tb = sys.exc_info()
+#
+#        pdb.post_mortem(tb)
 
 INITIAL_DATE = date(year=2020, month=2, day=27)
 
@@ -39,7 +46,13 @@ class Task:
         self.params = params
         self.is_done = False
 
+    def __str__(self):
+        return str(self.func) + '\n' + '\n'.join([str(rr) for rr in self.params]) + '\n' + str(self.is_done)
 
+    def __repr__(self):
+        return str(self)
+
+    
 class RunningJob(object):
     """
     A job creates tasks in order run the simulation(s) and then process the outputs.
@@ -115,6 +128,11 @@ class SimpleJob(RunningJob):
     A subclass that implements a job of a single task, that runs the simulation once.
     """
 
+    def __str__(self):
+        return '\n'.join([f'{k}:{v}' for k,v in self.__dict__items()])
+    def __repr__(self):
+        return str(self)
+    
     def __init__(self, scenario_name, city_name, scale=1.0, infection_params=SmartInitialInfectionParams(100, 50),
                  days=250, city_name_to_infect=None, initial_date=INITIAL_DATE,
                  params_to_change=None, datas_to_plot=None, interventions=None):
@@ -164,14 +182,27 @@ class SimpleJob(RunningJob):
     def finalize(self, outdir):
         pass
 
-    def create_and_run_simulation(self, outdir, stop_early, with_population_caching=True, verbosity=False):
-        """
-        The main function that handles the run of the simulation by the task.
-        It updated the params changes, loads or creates the population, initializes the simulation and runs it.
+    
+    def create_and_run_simulation(self,
+                                  outdir,
+                                  stop_early,
+                                  with_population_caching=True,
+                                  verbosity=False):
+        """The main function that handles the run of the simulation by the
+        task.  It updated the params changes, loads or creates the
+        population, initializes the simulation and runs it.
+
         :param outdir: the output directory for the task
-        :param stop_early: only relevant to R computation, see Simulation doc
-        :param with_population_caching: bool, if False generates the population, else - tries to use the cache and save time.
-        :param verbosity: bool, if it's True then additional output logs will be printed to the screen
+
+        :param stop_early: only relevant to R computation, see
+        Simulation doc
+
+        :param with_population_caching: bool, if False generates the
+        population, else - tries to use the cache and save time.
+
+        :param verbosity: bool, if it's True then additional output
+        logs will be printed to the screen
+
         """
         seed.set_random_seed()
         config_path = os.path.join(os.path.dirname(__file__),"config.json")
@@ -370,11 +401,20 @@ def create_city_and_serialize(city_name, scale, params_to_change):
         paramsDataPath = ConfigData['ParamsFilePath']
 
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
-    for param, val in params_to_change.items():
-        Params.loader()[param] = val
-    population_loader = PopulationLoader(citiesDataPath,
-        added_description=Params.loader().description()
-    )
+    
+    #Check if dictionary is empty
+    if not params_to_change:
+        for param, val in params_to_change.items():
+            Params.loader()[param] = val
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description=Params.loader().description(),
+            with_caching= False
+        )
+    else:
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description="",
+            with_caching= False
+        )
     population_loader.get_world(city_name=city_name, scale=scale)
 
 
@@ -441,15 +481,6 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     cpus_to_use = int(math.floor(mp.cpu_count() * percent))
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
-    #else:
-        #only in papar_8 run slow
-        #run_slow = False
-        #for i in range(len(jobs)-1):
-            #if jobs[i].scenario_name =="paper_8":
-                #run_slow = True
-                #break
-        #if run_slow:
-            #cpus_to_use=1 
         
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
     finalizers = [job.finalize for job in jobs]

@@ -42,8 +42,10 @@ def get_datas_to_plot():
             DiseaseState.DECEASED
         ]
     }
-    return {'amit_graph': make_age_and_state_datas_to_plot(age_groups=((0, 19), (20, 59), (60, 99)),
-                                                           disease_state_groups=list(graphs.items()))}
+    return {'amit_graph': make_age_and_state_datas_to_plot(
+        age_groups=((0, 19), (20, 59), (60, 99)),
+        disease_state_groups=list(graphs.items())
+    )}
 
 def main():
     """

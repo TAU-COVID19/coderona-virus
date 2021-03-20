@@ -3,10 +3,12 @@ import os
 import pytest
 
 from src.run_utils import SimpleJob, run, INITIAL_DATE
+from src.seir import daysdelta
+from src.simulation.event import DayEvent
 from src.simulation.interventions import *
 from src.simulation.initial_infection_params import SmartInitialInfectionParams
 from src.logs import Statistics
-
+from src.world import Person,World
 
 @pytest.fixture(params=[False, True])
 def hi_exit(request, params):
@@ -98,3 +100,28 @@ def test_school_isolation_intervention_simulation():
     results = Statistics.load(os.path.join(outdir, scenario_name, 'statistics.pkl'))
     summary = results.get_summary_data_for_age_group((4, 12))
     assert summary["Total infected in school"] + summary["Total infected in initial_group"] == summary["Total infected"]
+
+def test_SymptomaticIsolationIntervention_Genarete_events(params):
+    my_intervention = SymptomaticIsolationIntervention(compliance = 1, start_date = INITIAL_DATE,duration  = daysdelta(40))
+    assert my_intervention is not None
+
+    persons_arr = list(map(Person, [10,20,30]))
+    assert len(persons_arr) == 3
+    env_arr = []
+    small_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+    
+    #test
+    lst =  my_intervention.generate_events(small_world)
+    #Assert results 
+    assert lst is not None
+    assert len(lst) == 1
+    assert len(lst[0].hooks[0].EffectList) == 3
+    for i in range(1):
+        assert isinstance(lst[i],DayEvent)
+    for person in persons_arr:
+        assert len(list(person.state_to_events.keys())) == (1+4)
+        
