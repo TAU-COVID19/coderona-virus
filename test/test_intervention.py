@@ -33,7 +33,7 @@ def hi_exit(request, params):
         return (delay_on_exit, False)
 
 
-def test_household_isolation_intervention_simulation():
+def test_household_isolation_intervention_simulation(hi_exit):
     """
     Tests that when asymptomatic and presymptomatic people are not infectious and household isolation occur with no delay,
     all the poeple that are infected are infected at home (of at the beginning), due to the household isolation
@@ -45,7 +45,7 @@ def test_household_isolation_intervention_simulation():
         ("disease_parameters", "infectiousness_per_stage", "incubating_post_latent"): 0.0,
         ("disease_parameters", "infectiousness_per_stage", "asymptomatic"): 0.0
     }
-    delay_on_exit, is_exit_after_recovery = (1,True)
+    delay_on_exit, is_exit_after_recovery = hi_exit
     job = SimpleJob(scenario_name, city_name='kefar yona', interventions=[
         HouseholdIsolationIntervention(
             compliance=1,
