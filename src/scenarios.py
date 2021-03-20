@@ -2052,7 +2052,7 @@ def paper_7(compliance, ci_delay, hi_delay):
                      ]
     return interventions
 
-def paper_8(compliance, ci_delay, hi_delay):
+def paper_8(compliance=1, ci_delay=4, hi_delay=4):
     ci_intervention1 = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(14),
