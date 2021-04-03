@@ -13,6 +13,7 @@ from src.logs import make_age_and_state_datas_to_plot
 from src.simulation.params import Params
 from src.run_utils import RepeatJob, SimpleJob, run
 import src.util.seed as seed
+from src.run_utils import make_base_infectiousness_to_r_job
 
 seed.set_random_seed()
 log = logging.getLogger(__name__)
@@ -82,7 +83,8 @@ def main():
         #"grant_time1" : grant_time1,
         #"grant_time2" : grant_time2
         #"paper_1" : paper_1
-        "paper_2" : paper_2
+        #"paper_2" : paper_2
+        "noam_only_school": noam_only_school
         #"paper_3" : paper_3
         #"paper_4" : paper_4
         #"paper_5": paper_5
@@ -112,9 +114,9 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.0,0.5]:
-        for initial_num_infected in [25, 100, 250, 500]:
-            for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:
+    for initial_percentage_immune in [0.0]: # [0.0,0.5]
+        for initial_num_infected in [25]:  # [25, 100, 250, 500]
+            for city_name, scale in [("Holon",1)]: # [("Holon",1), ("Bene Beraq",1)]
                 for compliance in [0.8]:
                     for ci_delay in [4]:
                         for hi_delay in [4]:
@@ -141,13 +143,14 @@ def main():
                                                                         params_to_change=params_to_change,
                                                                         interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                         datas_to_plot=datas_to_plot),
-                                                            num_repetitions=50))
+                                                            num_repetitions=1))
 
     # add job to make r to base infectiousness graph:
-    # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
-    #                                            [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
-    #                                            interventions=ci_sde,num_repetitions=3)]
-
+    '''
+    jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
+                                                [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
+                                                interventions=noam_only_school(), num_repetitions=1,)]
+    '''
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False,verbosity=False)
 

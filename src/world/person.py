@@ -16,6 +16,7 @@ from src.seir import sample_seir_times
 from src.simulation.params import Params
 from src.world.infection_data import InfectionData
 
+from src.world.infection_data import InfectionData
 
 RedactedPerson = namedtuple("RedactedPerson", ("age", "disease_state"))
 RedactedPersonAndEnv = namedtuple("RedactedPersonAndEnv", ("age", "disease_state", "infection_env_source"))
@@ -216,7 +217,7 @@ class Person(object):
         """
         return self._age - self._age % 10
 
-    def get_infection_data(self):
+    def get_infection_data(self) -> InfectionData:
         """
         gets the person's infection data, that states were and by whom he got infected.
         :return: InfectionData object

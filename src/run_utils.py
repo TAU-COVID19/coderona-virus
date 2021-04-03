@@ -192,6 +192,7 @@ class SimpleJob(RunningJob):
             verbosity=verbosity
         )
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
+
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
         self.infection_params.infect_simulation(sim, outdir)

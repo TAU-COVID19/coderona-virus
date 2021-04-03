@@ -22,6 +22,9 @@ from src.seir import DiseaseState
 from src.world import RedactedPersonAndEnv
 from src.logs.r0_data import calculate_r0_data
 
+from typing import List
+from src.world import Person
+from src.simulation.interventions.intervention import Intervention
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -152,7 +155,7 @@ class Statistics(object):
             os.mkdir(output_path)
         self._days_data = []
         self._final_state = None
-        self._interventions = []
+        self._interventions: List[Intervention] = []
         self._r0_data = None
         self.num_infected = 0
         self.min_date = None
@@ -209,7 +212,7 @@ class Statistics(object):
         self.min_date = min(self.min_date, date)
         self.max_date = max(self.max_date, date)
 
-    def add_intervention(self, intervention):
+    def add_intervention(self, intervention: Intervention):
         """
         Adds an intervention to the documented list of interventions
         :param intervention: an intervention to add
@@ -289,7 +292,7 @@ class Statistics(object):
                 ))
         return ret
 
-    def calc_r0_data(self, population, max_date=None):
+    def calc_r0_data(self, population: List[Person], max_date=None):
         """
         Calculate the R data of the given list of people
         (i -> the average number of people a person on day i infected)
