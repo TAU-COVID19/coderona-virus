@@ -1,12 +1,12 @@
-from datetime import timedelta
+from datetime import timedelta, date
 import numpy as np
 
-from typing import List
+from typing import List, Dict
 from src.world import Person
 from src.world.infection_data import InfectionData
 
 
-def calculate_r0_data(population: List[Person], max_date=None):
+def calculate_r0_data(population: List[Person], max_date=None, susceptibles: Dict[date, int] = None):
     """
     Calculates daily avg r data.
     Returns a dictionary that contains an array of dates, an array of avg r values,
@@ -77,4 +77,6 @@ def calculate_r0_data(population: List[Person], max_date=None):
     dates = [c[0] for c in r0_by_infection_date]
     smoothed_avg_r0 = [c[1][1] for c in r0_by_infection_date]
     avg_r0 = [c[1][0] for c in r0_by_infection_date]
-    return {'dates': dates, 'smoothed_avg_r0': smoothed_avg_r0, 'avg_r0': avg_r0}
+    population_size = len(population)
+    r_effective = [(r * susceptibles.get(d) / population_size) for r, d in zip(avg_r0, dates)]
+    return {'dates': dates, 'smoothed_avg_r0': smoothed_avg_r0, 'avg_r0': avg_r0, 'r_effective': r_effective}

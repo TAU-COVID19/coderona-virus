@@ -236,6 +236,7 @@ class Simulation(object):
         log.info("Starting simulation " + name)
         for day in range(num_days):
             self.simulate_day()
+            self.stats.calculate_susceptible(self._initial_date + timedelta(day), self._world.all_people())
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))

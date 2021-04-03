@@ -25,6 +25,7 @@ from src.logs.r0_data import calculate_r0_data
 from typing import List
 from src.world import Person
 from src.simulation.interventions.intervention import Intervention
+import datetime
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -139,6 +140,7 @@ class Statistics(object):
         '_output_path',
         '_days_data',
         '_final_state',
+        '_susceptibles',
         'num_infected',
         '_interventions',
         '_r0_data',
@@ -155,6 +157,7 @@ class Statistics(object):
             os.mkdir(output_path)
         self._days_data = []
         self._final_state = None
+        self._susceptibles = {}
         self._interventions: List[Intervention] = []
         self._r0_data = None
         self.num_infected = 0
@@ -169,7 +172,7 @@ class Statistics(object):
             self.full_env_name_to_short_env_name[env._full_name] = env.name
         self._params_at_init = Params.loader()
 
-    def add_daily_data(self, daily_data):
+    def add_daily_data(self, daily_data: DayStatistics):
         """
         Register the data of this day
         """
@@ -220,7 +223,7 @@ class Statistics(object):
         """
         self._interventions.append(intervention)
 
-    def get_days_data(self):
+    def get_days_data(self) -> List[DayStatistics]:
         """
         Return the list of DayStatistics held on this object
         :return: self._days_data
@@ -292,6 +295,13 @@ class Statistics(object):
                 ))
         return ret
 
+    def calculate_susceptible(self, today_date: datetime.date, population: List[Person]):
+        count = 0
+        for person in population:
+            if person.is_susceptible:
+                count += 1
+        self._susceptibles[today_date] = count
+
     def calc_r0_data(self, population: List[Person], max_date=None):
         """
         Calculate the R data of the given list of people
@@ -303,7 +313,7 @@ class Statistics(object):
         """
         if max_date is None:
             max_date = self.max_date
-        self._r0_data = calculate_r0_data(population, max_date)
+        self._r0_data = calculate_r0_data(population, max_date, self._susceptibles)
 
     def plot_r0_data(self, image_path, avg_props=None, smoothed_props=None):
         """
@@ -322,9 +332,14 @@ class Statistics(object):
             smoothed_props = {}
         if 'label' not in smoothed_props:
             smoothed_props['label'] = "smoothed_avg_r0"
+
+        r_effective_props = {}
+        if 'label' not in r_effective_props:
+            r_effective_props['label'] = "r0_effective"
         datas = [
             {'data': self._r0_data['smoothed_avg_r0'], 'props': smoothed_props},
-            {'data': self._r0_data['avg_r0'], 'props': smoothed_props}
+            {'data': self._r0_data['avg_r0'], 'props': smoothed_props},
+            {'data': self._r0_data['r_effective'], 'props': r_effective_props}
         ]
         self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes())
 
