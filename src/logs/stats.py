@@ -326,7 +326,7 @@ class Statistics(object):
             {'data': self._r0_data['smoothed_avg_r0'], 'props': smoothed_props},
             {'data': self._r0_data['avg_r0'], 'props': smoothed_props}
         ]
-        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas)
+        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes())
 
     def sum_days_data(self, property_to_count, is_integral, infection_data=None):
         """
