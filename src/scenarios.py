@@ -1783,7 +1783,7 @@ def paper_1(compliance, ci_delay, hi_delay):
     interventions = []
     return interventions
 
-def noam_lockdown_scenarios(compliance=1, ci_delay=None, hi_delay=None):
+def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
     lockdown_intervention = LockdownIntervention(
         start_date=INITIAL_DATE+timedelta(6.0),
         duration=daysdelta(3*7),
