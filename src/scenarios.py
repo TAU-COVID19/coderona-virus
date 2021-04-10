@@ -1783,9 +1783,9 @@ def paper_1(compliance, ci_delay, hi_delay):
     interventions = []
     return interventions
 
-def noam_only_school(compliance=1, ci_delay=None, hi_delay=None):
-    school_closer_intervention = SchoolClosureIntervention(
-        start_date=INITIAL_DATE+timedelta(5.0),
+def noam_lockdown_scenarios(compliance=1, ci_delay=None, hi_delay=None):
+    lockdown_intervention = LockdownIntervention(
+        start_date=INITIAL_DATE+timedelta(6.0),
         duration=daysdelta(3*7),
         compliance=0.70,
         city_name='all'
