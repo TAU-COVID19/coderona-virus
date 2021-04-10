@@ -5,7 +5,8 @@ from src.simulation.interventions.intervention import \
     SymptomaticIsolationIntervention, \
     CityCurfewIntervention, \
     HouseholdIsolationIntervention, \
-    WorkplaceClosureIntervention
+    WorkplaceClosureIntervention, \
+    LockdownIntervention
 
 __all__ = [
     'SchoolClosureIntervention',
@@ -17,4 +18,5 @@ __all__ = [
     'CityCurfewIntervention',
     'HouseholdIsolationIntervention',
     'WorkplaceClosureIntervention',
+    'LockdownIntervention'
 ]

@@ -117,6 +117,14 @@
         "quarantine": {
             "all": 0
         },
+        "lockdown": {
+            "household": 1.75,
+            "workplace": 0.30,
+            "school": 0,
+            "city_community": 0,
+            "neighborhood_community": 0.20,
+            "other": 0.25
+        },
         "social_distancing": {
             "household": 1.25,
             "workplace": 0.75,

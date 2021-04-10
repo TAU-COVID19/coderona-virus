@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from src.simulation.interventions import *
 from src.run_utils import INITIAL_DATE
 from src.seir import daysdelta
+from src.simulation.interventions.intervention import LockdownIntervention
 from src.world.environments.environment import EnvironmentalAttribute
 
 #first scenarios
@@ -1786,20 +1787,11 @@ def noam_only_school(compliance=1, ci_delay=None, hi_delay=None):
     school_closer_intervention = SchoolClosureIntervention(
         start_date=INITIAL_DATE+timedelta(5.0),
         duration=daysdelta(3*7),
-        compliance=1.0,
-        proportion_of_envs=1.0,
-        city_name='all',
-        age_segment=(3, 22)
-    )
-    ci_intervention = SymptomaticIsolationIntervention(
-        start_date=INITIAL_DATE+timedelta(15.0),
-        duration=timedelta(3*7),
-        compliance=0.8,
-        delay=4
+        compliance=0.70,
+        city_name='all'
     )
     interventions = [
-                     school_closer_intervention,
-                     ci_intervention
+                     lockdown_intervention
                      ]
     return interventions
 

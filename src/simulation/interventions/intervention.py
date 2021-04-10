@@ -50,6 +50,16 @@ def quarantine_routine(person: Person):
     params = Params.loader()["interventions_routines"]["quarantine"]
     return {env_name: params["all"] for env_name in person.get_routine()}
 
+def lockdown_routine(person: Person):
+    """
+    Create a routine change that represents a person being in lockdown.
+    Here we try to represent the changing (decreasing of weights) of the weight in all the environment, due to the lockdown and at home contacts increase.
+    :param person: Person
+    :return: routine change dict, keys are environment names, values are weight multipliers.
+    """
+    params = Params.loader()["interventions_routines"]["lockdown"]
+    return {env_name: params["all"] for env_name in person.get_routine()}
+
 
 def social_distancing_routine(person: Person):
     """
@@ -297,6 +307,25 @@ class ElderlyQuarantineIntervention(TimedIntervention):
     def _condition(self, x):
         return x.get_age() >= self._min_age
 
+class LockdownIntervention(TimedIntervention):
+    """
+    Implementation of Lockdown where everyone are at home, going out just for necessities
+    """
+    __slots__ = ("city_name",)
+
+    def __init__(self, city_name, start_date: date, duration: timedelta, compliance: float):
+        super(LockdownIntervention, self).__init__(
+            start_date, duration, compliance, 'lockdown',
+            lockdown_routine
+        )
+        self.city_name = city_name
+
+    def _condition(self, x):
+        if all(env._city.get_name() != self.city_name for env in x._environments.values()):
+            return False
+        if all(env._city.get_name() == self.city_name for env in x._environments.values()):
+            return False
+        return True
 
 class CityCurfewIntervention(TimedIntervention):
     """

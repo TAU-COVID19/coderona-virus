@@ -39,7 +39,9 @@ INTERVENTION_TYPE_TO_COLOR = {
     SymptomaticIsolationIntervention: 'red',
     CityCurfewIntervention: 'gray',
     HouseholdIsolationIntervention: 'blue',
-    WorkplaceClosureIntervention: 'teal'
+    WorkplaceClosureIntervention: 'teal',
+    LockdownIntervention: 'pink'
+
 }
 
 INTERVENTION_TYPE_TO_LABEL = {
@@ -50,7 +52,8 @@ INTERVENTION_TYPE_TO_LABEL = {
     SymptomaticIsolationIntervention: 'symptomatic isolation',
     CityCurfewIntervention: 'city curfew intervention',
     HouseholdIsolationIntervention: 'household isolation',
-    WorkplaceClosureIntervention: 'workplace closure'
+    WorkplaceClosureIntervention: 'workplace closure',
+    LockdownIntervention: 'lockdown isolation'
 }
 
 class DataToPlot(object):

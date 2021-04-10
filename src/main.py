@@ -84,7 +84,7 @@ def main():
         #"grant_time2" : grant_time2
         #"paper_1" : paper_1
         #"paper_2" : paper_2
-        "noam_only_school": noam_only_school
+        "noam_lockdown_scenario": noam_lockdown_scenario
         #"paper_3" : paper_3
         #"paper_4" : paper_4
         #"paper_5": paper_5
@@ -149,7 +149,7 @@ def main():
     '''
     jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
                                                 [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
-                                                interventions=noam_only_school(), num_repetitions=1,)]
+                                                interventions=noam_lockdown_scenario(), num_repetitions=1,)]
     '''
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False,verbosity=False)
