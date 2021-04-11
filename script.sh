@@ -1,6 +1,7 @@
 #!/bin/bash
+## Run as: bash script.sh
+PASSWORD=UR_UNI_PASSWORD
 
-PASSWORD=YOURPASSWORD
 echo "Clean."
 rm -f errors # Just in case...
 
@@ -22,25 +23,25 @@ sshpass -p $PASSWORD rsync -av -e ssh --exclude-from 'exclude_list.txt' . power9
 echo "Sending new jobs to Q."
 COMMAND='qsub -q uriobols -lnodes=1:ppn=36 ./coderona-virus/power9.sh'
 sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
 
 
-COMMAND='qsub -q public -lnodes=1:ppn=5 ./coderona-virus/power9.sh'
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
-sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# COMMAND='qsub -q public -lnodes=1:ppn=5 ./coderona-virus/power9.sh'
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
+# sshpass -p $PASSWORD ssh -t power9 $COMMAND
 
 sleep 1
 sshpass -p $PASSWORD ssh power9 "qstat -u yairdaon" ## Change to your usename
