@@ -1,18 +1,15 @@
-parsers.py
-kenya/
 tmp/
 outputs/
 outputs.pickle
+*.pickle
 .git/
 *cache*
 latex/
 pix/
 *~
 *ipynb*
-tests/
 nohup.out
 *.txt
-push.sh
 README.md
 conftest.py
 backup/
@@ -25,7 +22,6 @@ profiles
 visualizations/
 download.sh
 agg.py
-mc_error.py
 .???*
 error*
 tmp*
