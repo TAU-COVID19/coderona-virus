@@ -3,6 +3,7 @@ import json
 import numpy as np
 import os
 from datetime import date, timedelta
+from socket import gethostname
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..')) # Adding the src folder to PYTHONPATH
 
@@ -19,7 +20,8 @@ log = logging.getLogger(__name__)
 
 
 def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
-    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}"
+    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}" + \
+    f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}_computerName_{gethostname()}"
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
     current_probs = Params.loader()['disease_parameters']['symptomatic_given_infected_per_age']
@@ -81,14 +83,14 @@ def main():
         #"not_relaxing_interventions": not_relaxing_interventions
         #"grant_time1" : grant_time1,
         #"grant_time2" : grant_time2
-        #"paper_1" : paper_1
+        "paper_1" : paper_1
         #"paper_2" : paper_2
         #"paper_3" : paper_3
         #"paper_4" : paper_4
         #"paper_5": paper_5
         #"paper_6": paper_6
         #"paper_7": paper_7
-        "paper_8": paper_8
+        #"paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
     }
 
