@@ -142,7 +142,7 @@ def main():
                                                                                 symptomatic_probs_scale)
                                     #                                    full_scenario_name = "res"
                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                    days=40,
+                                                                    days=20,
                                                                     city_name=city_name,
                                                                     scale=scale,
                                                                     infection_params=NaiveInitialInfectionParams(
@@ -157,9 +157,9 @@ def main():
                                                           num_repetitions=1))
 
     # add job to make r to base infectiousness graph:
-    jobs = [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
+    jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
                                                [x/20 for x in range(20)],  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
-                                               interventions=[], num_repetitions=10, days=40)]
+                                               interventions=[], num_repetitions=3, days=20)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 

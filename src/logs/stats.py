@@ -688,7 +688,7 @@ class Statistics(object):
         minimum = min(data)
         maximum = max(data)
         step = (maximum - minimum) / number_of_ticks
-        return [tick*step for tick in range(number_of_ticks)]
+        return [(minimum+tick*step) for tick in range(number_of_ticks)]
 
     @staticmethod
     def plot(image_path, dates, datas, background_stripes=None, is_dates=True, y_axes_label=""):
@@ -785,7 +785,7 @@ class Statistics(object):
             new_data, new_err = new_data_and_err
             upper_err_curve = [d + e for d, e in zip(new_data, new_err)]
             lower_err_curve = [d - e for d, e in zip(new_data, new_err)]
-            plt.plot(new_dates, new_data, **data['props'], label="data")
+            plt.plot(new_dates, new_data, **data['props'])
             plt.plot(new_dates, upper_err_curve, **err['props'], label="err upper bound")
             plt.plot(new_dates, lower_err_curve, **err['props'], label="err lower bound")
             plt.fill_between(new_dates, lower_err_curve, upper_err_curve, alpha=0.5)
