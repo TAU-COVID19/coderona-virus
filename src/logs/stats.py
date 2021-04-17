@@ -688,7 +688,7 @@ class Statistics(object):
         minimum = min(data)
         maximum = max(data)
         step = (maximum - minimum) / number_of_ticks
-        return [(minimum+tick*step) for tick in range(number_of_ticks)]
+        return [(minimum+tick*step) for tick in range(number_of_ticks+1)]
 
     @staticmethod
     def plot(image_path, dates, datas, background_stripes=None, is_dates=True, y_axes_label=""):
@@ -726,8 +726,9 @@ class Statistics(object):
             plt.plot(new_dates, new_data, **data['props'])
             plt.xlabel("Date" if is_dates else "????")
             plt.ylabel(y_axes_label)
-            plt.xticks(Statistics.compute_axis_ticks(new_dates, 10))
+            plt.xticks(Statistics.compute_axis_ticks(new_dates, 10), rotation='vertical')
             plt.title(os.path.basename(image_path))
+            plt.grid(color='r', linestyle='-', linewidth=2)
         if not drew_anything:
             warnings.warn(f"Did not draw anything! No good data! for {os.path.basename(image_path)}")
             return
@@ -789,6 +790,7 @@ class Statistics(object):
             plt.plot(new_dates, upper_err_curve, **err['props'])
             plt.plot(new_dates, lower_err_curve, **err['props'])
             plt.fill_between(new_dates, lower_err_curve, upper_err_curve, alpha=0.5)
+            plt.xticks(Statistics.compute_axis_ticks(new_dates, 10), rotation='vertical')
         for stripe in background_stripes:
             plt.axvspan(
                 mdates.date2num(stripe.start),
