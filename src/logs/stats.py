@@ -786,8 +786,8 @@ class Statistics(object):
             upper_err_curve = [d + e for d, e in zip(new_data, new_err)]
             lower_err_curve = [d - e for d, e in zip(new_data, new_err)]
             plt.plot(new_dates, new_data, **data['props'])
-            plt.plot(new_dates, upper_err_curve, **err['props'], label="err upper bound")
-            plt.plot(new_dates, lower_err_curve, **err['props'], label="err lower bound")
+            plt.plot(new_dates, upper_err_curve, **err['props'])
+            plt.plot(new_dates, lower_err_curve, **err['props'])
             plt.fill_between(new_dates, lower_err_curve, upper_err_curve, alpha=0.5)
         for stripe in background_stripes:
             plt.axvspan(
