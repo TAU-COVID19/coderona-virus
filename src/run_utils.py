@@ -517,7 +517,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
 
 def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_range,
-                                      interventions=None, num_repetitions=7, num_rs=0):
+                                      interventions=None, num_repetitions=7, num_rs=0, days=250):
     """
     Wraps the inialization of a job that creates a graph of R as a function of base infectiousness value.
 
@@ -528,9 +528,10 @@ def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_ran
     :param interventions: list of interventions to apply during the simulation
     :param num_repetitions: int repetition for each base infectiousness value
     :param num_rs: number of Rs to compute
+    :param days: number of days to compute
     :return: ParamChangeRJob
     """
     simple_job = SimpleJob(scenario_name, city_name, scale, interventions=interventions,
-                           infection_params=NaiveInitialInfectionParams(20))
+                           infection_params=NaiveInitialInfectionParams(20), days=days)
     repeated_job = RepeatJob(simple_job, num_repetitions)
     return ParamChangeRJob(repeated_job, ("person", "base_infectiousness"), param_range, num_rs=num_rs)

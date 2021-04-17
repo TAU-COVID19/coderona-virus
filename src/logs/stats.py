@@ -269,7 +269,8 @@ class Statistics(object):
             os.path.join(self._output_path, image_path),
             dates,
             datas,
-            self.make_background_stripes()
+            self.make_background_stripes(),
+            y_axes_label="infections #"
         )
 
     def clip_date_to_time_frame(self, date):
@@ -344,7 +345,7 @@ class Statistics(object):
             {'data': self._r0_data['avg_r0'], 'props': smoothed_props},
             {'data': self._r0_data['r_effective'], 'props': r_effective_props}
         ]
-        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes())
+        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes(), y_axes_label="r0")
 
     def sum_days_data(self, property_to_count, is_integral, infection_data=None):
         """
@@ -683,7 +684,14 @@ class Statistics(object):
         return csv_filename, svg_filename
 
     @staticmethod
-    def plot(image_path, dates, datas, background_stripes=None, is_dates=True):
+    def compute_axis_ticks(data, number_of_ticks):
+        minimum = min(data)
+        maximum = max(data)
+        step = (maximum - minimum) / number_of_ticks
+        return [tick*step for tick in range(number_of_ticks)]
+
+    @staticmethod
+    def plot(image_path, dates, datas, background_stripes=None, is_dates=True, y_axes_label=""):
         """
         plot a graph:
         dates = the x-axis range
@@ -716,8 +724,12 @@ class Statistics(object):
             drew_anything = True
             new_data = new_data[0]
             plt.plot(new_dates, new_data, **data['props'])
+            plt.xlabel("Date" if is_dates else "????")
+            plt.ylabel(y_axes_label)
+            plt.xticks(Statistics.compute_axis_ticks(new_dates, 10))
+            plt.title(os.path.basename(image_path))
         if not drew_anything:
-            warnings.warn("Did not draw anything! No good data!")
+            warnings.warn(f"Did not draw anything! No good data! for {os.path.basename(image_path)}")
             return
         for stripe in background_stripes:
             plt.axvspan(
@@ -773,9 +785,9 @@ class Statistics(object):
             new_data, new_err = new_data_and_err
             upper_err_curve = [d + e for d, e in zip(new_data, new_err)]
             lower_err_curve = [d - e for d, e in zip(new_data, new_err)]
-            plt.plot(new_dates, new_data, **data['props'])
-            plt.plot(new_dates, upper_err_curve, **err['props'])
-            plt.plot(new_dates, lower_err_curve, **err['props'])
+            plt.plot(new_dates, new_data, **data['props'], label="data")
+            plt.plot(new_dates, upper_err_curve, **err['props'], label="err upper bound")
+            plt.plot(new_dates, lower_err_curve, **err['props'], label="err lower bound")
             plt.fill_between(new_dates, lower_err_curve, upper_err_curve, alpha=0.5)
         for stripe in background_stripes:
             plt.axvspan(
@@ -790,6 +802,7 @@ class Statistics(object):
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
         plt.legend()
         plt.yscale(yscale)
+        plt.title(os.path.basename(image_path))
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
         plt.savefig(svg_filename)
         with open(csv_filename, 'w') as f:
@@ -1169,5 +1182,6 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
             'props': props
         })
 
+    #TODO NOAM: why std_data and confidence_data are all 0?
     Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), params, exp_data, std_data, is_dates=False)
     Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), params, exp_data, confidence_data, is_dates=False)
