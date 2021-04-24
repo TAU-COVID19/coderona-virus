@@ -160,7 +160,7 @@ def main():
     # add job to make r to base infectiousness graph:
     jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
                                                [x/20 for x in range(20)],  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
-                                               interventions=intervention_scheme(), num_repetitions=3, days=20)]
+                                               interventions=intervention_scheme(), num_repetitions=3, days=20)] 
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 
