@@ -89,7 +89,7 @@ def main():
         # "grant_time2" : grant_time2
         # "paper_1" : paper_1
         # "paper_2" : paper_2
-        # "noam_lockdown_scenario": noam_lockdown_scenario,
+        "noam_lockdown_scenario": noam_lockdown_scenario,
         "no_interventions": no_interventions,
         # "paper_3" : paper_3
         # "paper_4" : paper_4
@@ -122,7 +122,7 @@ def main():
     jobs = []
     for initial_percentage_immune in [0.0]:  # [0.0,0.5]
         for initial_num_infected in [25]:  # [25, 100, 250, 500]
-            for city_name, scale in [("Holon", 1)]:  # [("Holon",1), ("Bene Beraq",1)]
+            for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:  # [("Holon",1), ("Bene Beraq",1)]
                 for compliance in [0.8]:
                     for ci_delay in [4]:
                         for hi_delay in [4]:
@@ -155,14 +155,14 @@ def main():
                                                                                                       ci_delay,
                                                                                                       hi_delay),
                                                                     datas_to_plot=datas_to_plot),
-                                                          num_repetitions=1))
+                                                          num_repetitions=100))
 
                                     # add job to make r to base infectiousness graph:
                                     jobs += [make_base_infectiousness_to_r_job(
                                                 'r_graph_' + full_scenario_name, city_name, scale,
-                                                [x/100 for x in range(10)],  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
+                                                np.arange(0.0, 0.15, 0.001),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                                num_repetitions=3, days=20)]
+                                                num_repetitions=100, days=20)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 
