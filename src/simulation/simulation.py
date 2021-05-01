@@ -1,6 +1,6 @@
 import logging
 import os
-import random as _random
+import random as random
 from collections import Counter
 from datetime import timedelta
 from copy import deepcopy
@@ -176,9 +176,10 @@ class Simulation(object):
         assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
         
         num_immuned = int(round(len(population)*per_to_immune))
-        Selected_persons = _random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[:num_infected]
-        people_to_immune = Selected_persons[num_infected:]
+        assert len(population) >= num_infected + num_immuned
+        Selected_persons = random.sample(population, num_infected + num_immuned)
+        people_to_infect = Selected_persons[0:num_infected]
+        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
         for person in people_to_infect:
             assert isinstance(person, Person), type(person)
             self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))

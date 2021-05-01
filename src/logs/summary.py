@@ -48,7 +48,14 @@ def summary_datas_to_absolute_and_relative_means_and_stdevs(summary_datas):
     absolute_data = {}
     relative_data = {}
     for key, absolute_array in keys_to_data_arrays.items():
-        relative_array = [x / y for (x, y) in zip(absolute_array, keys_to_data_arrays["Total people"])]
+        #relative_array = [x / y for (x, y) in zip(absolute_array, keys_to_data_arrays["Total people"])]
+        relative_array = []
+        for (x,y) in zip(absolute_array, keys_to_data_arrays["Total people"]):
+            if y != 0:
+                relative_array.append(x/y)
+            else:
+                relative_array.append(NaN)
+        
         if len(relative_array) == 1:
             absolute_data[key] = "{}".format(absolute_array[0])
             relative_data[key] = "{:3.3f}%".format(100 * relative_array[0])

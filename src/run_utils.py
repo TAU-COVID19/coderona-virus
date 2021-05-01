@@ -191,7 +191,9 @@ class SimpleJob(RunningJob):
             with_caching=with_population_caching,
             verbosity=verbosity
         )
-        world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
+
+        world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = False)
+
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
         self.infection_params.infect_simulation(sim, outdir)
@@ -367,11 +369,20 @@ def create_city_and_serialize(city_name, scale, params_to_change):
         paramsDataPath = ConfigData['ParamsFilePath']
 
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
-    for param, val in params_to_change.items():
-        Params.loader()[param] = val
-    population_loader = PopulationLoader(citiesDataPath,
-        added_description=Params.loader().description()
-    )
+    
+    #Check if dictionary is empty
+    if not params_to_change:
+        for param, val in params_to_change.items():
+            Params.loader()[param] = val
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description=Params.loader().description(),
+            with_caching= False
+        )
+    else:
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description="",
+            with_caching= False
+        )
     population_loader.get_world(city_name=city_name, scale=scale)
 
 

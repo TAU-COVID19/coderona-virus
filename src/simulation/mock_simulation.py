@@ -160,22 +160,23 @@ class InitialStateSimulation(Simulation):
         for e in [event, *event.hooks]:
             if isinstance(e.effect, DiseaseStateChangeEffect):
                 person = e.effect.get_person()
-                city = person.get_city_name()
-                if city not in self._infected_people_seir_times_per_city:
-                    self._infected_people_seir_times_per_city[city] = {}
+                if person.get_disease_state() != DiseaseState.IMMUNE:
+	                city = person.get_city_name()
+	                if city not in self._infected_people_seir_times_per_city:
+	                    self._infected_people_seir_times_per_city[city] = {}
 
-                person_data = self._infected_people_seir_times_per_city[city].setdefault(
-                    person,
-                    self.InfectedPersonData(
-                        symptomatic=False,
-                        symptomatic_date=None,
-                        infection_date=self._date,
-                        states_and_dates=[(self._date, None, DiseaseState.LATENT)]
-                    )
-                )
-                if e.effect.get_states()[1] == DiseaseState.SYMPTOMATICINFECTIOUS:
-                    person_data.symptomatic = True
-                    person_data.symptomatic_date = date
-                person_data.states_and_dates.append((date, *e.effect.get_states()))
+	                person_data = self._infected_people_seir_times_per_city[city].setdefault(
+	                    person,
+	                    self.InfectedPersonData(
+	                        symptomatic=False,
+	                        symptomatic_date=None,
+	                        infection_date=self._date,
+	                        states_and_dates=[(self._date, None, DiseaseState.LATENT)]
+	                    )
+	                )
+	                if e.effect.get_states()[1] == DiseaseState.SYMPTOMATICINFECTIOUS:
+	                    person_data.symptomatic = True
+	                    person_data.symptomatic_date = date
+	                person_data.states_and_dates.append((date, *e.effect.get_states()))
 
         super(InitialStateSimulation, self).register_event_on_day(event, date)
