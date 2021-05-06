@@ -16,7 +16,7 @@
             "incubating_post_latent" : 0.5,
             "asymptomatic": 1,
             "noam_original_asymptomatic": 1,
-            "symptomatic" : 1.0,
+            "symptomatic" : 0.5,
             "critical": 1.0
         },
         "ages_do_not_change":                           [    0,    10,    20,    30,    40,    50,    60,    70,    80],
