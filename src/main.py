@@ -155,14 +155,14 @@ def main():
                                                                                                       ci_delay,
                                                                                                       hi_delay),
                                                                     datas_to_plot=datas_to_plot),
-                                                          num_repetitions=70))
+                                                          num_repetitions=60))
 
                                     # add job to make r to base infectiousness graph:
                                     jobs += [make_base_infectiousness_to_r_job(
                                                 'r_graph_' + full_scenario_name, city_name, scale,
-                                                np.arange(0.04, 0.1, 0.03),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
+                                                np.arange(0.05, 0.15, 0.05),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                                num_repetitions=40, days=20)]
+                                                num_repetitions=30, days=20)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 
