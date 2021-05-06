@@ -15,7 +15,7 @@
         "infectiousness_per_stage": {
             "incubating_post_latent" : 0.5,
             "asymptomatic": 0.5,
-            "noam_original_asymptomatic": 0.5,
+            "noam_original_asymptomatic": 1,
             "symptomatic" : 1.0,
             "critical": 1.0
         },
