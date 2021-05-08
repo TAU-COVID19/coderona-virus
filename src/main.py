@@ -122,7 +122,7 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.0]:  # [0.0,0.5]
+    for initial_percentage_immune in [0.0, 0.5]:  # [0.0,0.5]
         for initial_num_infected in [25]:  # [25, 100, 250, 500]
             for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:  # [("Holon",1), ("Bene Beraq",1)]
                 for compliance in [0.8]:
