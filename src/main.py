@@ -123,7 +123,7 @@ def main():
 
     jobs = []
     for initial_percentage_immune in [0.0]:  # [0.0,0.5]
-        for initial_num_infected in [500]:  # [25, 100, 250, 500]
+        for initial_num_infected in [25, 1000]:  # [25, 100, 250, 500]
             for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:  # [("Holon",1), ("Bene Beraq",1)]
                 for compliance in [0.8]:
                     for ci_delay in [4]:
@@ -145,7 +145,7 @@ def main():
                                                                                 symptomatic_probs_scale)
                                     #                                    full_scenario_name = "res"
                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                    days=100,
+                                                                    days=180,
                                                                     city_name=city_name,
                                                                     scale=scale,
                                                                     infection_params=NaiveInitialInfectionParams(
