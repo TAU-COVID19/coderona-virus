@@ -122,8 +122,8 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.0, 0.5]:  # [0.0,0.5]
-        for initial_num_infected in [25]:  # [25, 100, 250, 500]
+    for initial_percentage_immune in [0.0]:  # [0.0,0.5]
+        for initial_num_infected in [500]:  # [25, 100, 250, 500]
             for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:  # [("Holon",1), ("Bene Beraq",1)]
                 for compliance in [0.8]:
                     for ci_delay in [4]:
@@ -145,7 +145,7 @@ def main():
                                                                                 symptomatic_probs_scale)
                                     #                                    full_scenario_name = "res"
                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                    days=20,
+                                                                    days=100,
                                                                     city_name=city_name,
                                                                     scale=scale,
                                                                     infection_params=NaiveInitialInfectionParams(
@@ -157,14 +157,14 @@ def main():
                                                                                                       ci_delay,
                                                                                                       hi_delay),
                                                                     datas_to_plot=datas_to_plot),
-                                                          num_repetitions=3))
+                                                          num_repetitions=100))
 
                                     # add job to make r to base infectiousness graph:
                                     jobs += [make_base_infectiousness_to_r_job(
                                                 'r_graph_' + full_scenario_name, city_name, scale,
                                                 np.arange(0.05, 0.15, 0.05),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                                num_repetitions=30, days=3)]
+                                                num_repetitions=50, days=3)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 

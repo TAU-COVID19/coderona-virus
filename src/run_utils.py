@@ -17,7 +17,7 @@ from src.simulation.simulation import Simulation
 from src.simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams
 from src.seir import DiseaseState
 
-INITIAL_DATE = date(year=2020, month=2, day=27)
+INITIAL_DATE = date(year=2020, month=2, day=29)
 
 
 class Task:
