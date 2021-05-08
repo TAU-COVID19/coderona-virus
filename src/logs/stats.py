@@ -707,7 +707,9 @@ class Statistics(object):
                 label=stripe.label
             )
         if is_dates:
-            plt.gcf().autofmt_xdate()
+            fig = plt.gcf()
+            fig.autofmt_xdate()
+            fig.set_size_inches(11,8)
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
         plt.legend()
         plt.yscale(yscale)
