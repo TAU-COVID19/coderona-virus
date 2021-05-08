@@ -1,3 +1,4 @@
+@@ -0,0 +1,48 @@
 #!/bin/bash
 ## Run as: bash script.sh
 PASSWORD=UR_UNI_PASSWORD
@@ -45,4 +46,3 @@ sshpass -p $PASSWORD ssh -t power9 $COMMAND
 
 sleep 1
 sshpass -p $PASSWORD ssh power9 "qstat -u yairdaon" ## Change to your usename
-

@@ -444,7 +444,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
         percent = float(percentStr)
 
     outdir = create_outdir()
-    cpus_to_use = int(math.floor(mp.cpu_count() * percent))
+    cpus_to_use = min(int(math.floor(mp.cpu_count() * percent)), 30)
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
     #else:

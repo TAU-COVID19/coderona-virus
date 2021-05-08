@@ -15,6 +15,7 @@ from src.simulation.params import Params
 from src.run_utils import RepeatJob, SimpleJob, run
 import src.util.seed as seed
 from src.run_utils import make_base_infectiousness_to_r_job
+from socket import gethostname
 
 seed.set_random_seed()
 log = logging.getLogger(__name__)
@@ -22,7 +23,8 @@ log = logging.getLogger(__name__)
 
 def generate_scenario_name(city_name, scenario, initial_num_infected, initial_per_immuned, compliance, ci_delay,
                            hi_delay, symptomatic_probs_scale):
-    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}"
+    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}" + \
+           f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}_computerName_{gethostname()}"
 
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
@@ -155,14 +157,14 @@ def main():
                                                                                                       ci_delay,
                                                                                                       hi_delay),
                                                                     datas_to_plot=datas_to_plot),
-                                                          num_repetitions=60))
+                                                          num_repetitions=3))
 
                                     # add job to make r to base infectiousness graph:
                                     jobs += [make_base_infectiousness_to_r_job(
                                                 'r_graph_' + full_scenario_name, city_name, scale,
                                                 np.arange(0.05, 0.15, 0.05),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                                num_repetitions=30, days=20)]
+                                                num_repetitions=30, days=3)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 

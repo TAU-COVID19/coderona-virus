@@ -727,7 +727,7 @@ class Statistics(object):
             plt.plot(new_dates, new_data, **data['props'])
             plt.xlabel("Date" if is_dates else "????")
             plt.ylabel(y_axes_label)
-            plt.xticks(Statistics.compute_axis_ticks(new_dates, 10), rotation='vertical')
+            # plt.xticks(Statistics.compute_axis_ticks(new_dates, len(new_dates)), rotation='vertical')
             plt.title(os.path.basename(image_path))
             plt.grid(color='pink', linestyle='--', linewidth=0.5)
         if not drew_anything:
@@ -791,7 +791,7 @@ class Statistics(object):
             plt.plot(new_dates, upper_err_curve, **err['props'])
             plt.plot(new_dates, lower_err_curve, **err['props'])
             plt.fill_between(new_dates, lower_err_curve, upper_err_curve, alpha=0.5)
-            plt.xticks(Statistics.compute_axis_ticks(new_dates, 10), rotation='vertical')
+            # plt.xticks(Statistics.compute_axis_ticks(new_dates, len(new_dates)), rotation='vertical')
             plt.grid(color='pink', linestyle='--', linewidth=0.5)
         for stripe in background_stripes:
             plt.axvspan(
