@@ -440,6 +440,15 @@ def create_outdir():
     print('your outputs will be in: {}'.format(curr_outdir))
     return curr_outdir
 
+def calc_CPU_count(maxCPU:int,percentCPU:float,jobs):
+    if len(jobs) > 700:
+        percentCPU = 0.75
+    if len(jobs) > 850:
+        percentCPU = 0.5
+    if len(jobs) > 1000:
+        percentCPU = 0.25
+
+    return min(int(math.floor(mp.cpu_count() * percentCPU)), maxCPU)
 
 def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True):
     """
@@ -454,7 +463,8 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
         percent = float(percentStr)
 
     outdir = create_outdir()
-    cpus_to_use = min(int(math.floor(mp.cpu_count() * percent)), 30)
+    cpus_to_use = calc_CPU_count(30,percent,jobs)
+
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
             
