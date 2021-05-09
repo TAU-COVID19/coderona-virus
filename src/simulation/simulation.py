@@ -187,6 +187,43 @@ class Simulation(object):
             assert isinstance(person, Person), type(person)
             self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
 
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None):
+        """
+        Immune some percentage of the households in the population and infectimg a given percentage of the population
+        so that the disease can spread during the simulation.
+        :param num_infected: int number of infected to make
+        :param infection_doc: str to document the infection data
+        (written to the inputs.txt file)
+        :param city_name: the name of the city to infect
+        (if left None, infects people from all around the World)
+        """
+        assert isinstance(num_infected, int)
+        assert self.initial_infection_doc is None
+        self.initial_infection_doc = infection_doc
+        if per_to_immune is None:
+            per_to_immune = 0.0
+        if city_name is not None:
+            households = [h for h in self._world.get_all_city_households() if h._city == city_name]
+        else:
+            households = [h for h in self._world.get_all_city_households()]
+        #Select houses to emmun 
+        cnt_house_to_emmun = int(per_to_immune * len(households))
+        random.shuffle(households)
+        safe_group =households[0 : cnt_house_to_emmun]
+        not_safe_group = households[cnt_house_to_emmun:]
+        #Emmune people in the safe group
+        for house in safe_group:
+            for person in house.get_people():
+                self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+        #Infect people not in safe group
+        for house in not_safe_group:
+            for person in house.get_people():
+                if num_infected > 0:
+                    self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
+                    num_infected = num_infected - 1
+                else:
+                    break
+
     def first_people_are_done(self):
         """
         chacks whether the people infected on the first “num_r_days” days

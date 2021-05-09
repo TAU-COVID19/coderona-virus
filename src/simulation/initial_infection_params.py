@@ -1,4 +1,5 @@
 from src.simulation.mock_simulation import InitialStateSimulation
+from enum import Enum
 
 
 class InitialInfectionParams(object):
@@ -12,26 +13,38 @@ class InitialInfectionParams(object):
     def infect_simulation(self, sim, outdir):
         raise NotImplementedError()
 
+class InitialImmuneType(Enum):
+    """
+    The initial immune can come from 2 sources:
+    1. Immuning certain percentage of the population randomally
+    2. Immuning certain percentage of households randomally 
+    """
+    GENERAL_POPULATION = 1
+    HOUSEHOLDS = 2
 
 class NaiveInitialInfectionParams(InitialInfectionParams):
     """
     Infect num_to_infect random people in city_name_to_infect
     or in the entire country if city_name_to_infect is not given
     """
-    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None):
+    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None, immune_source = InitialImmuneType.GENERAL_POPULATION):
         super(NaiveInitialInfectionParams, self).__init__()
         self.num_to_infect = num_to_infect
         self.city_name_to_infect = city_name_to_infect
         self.per_to_Immune = per_to_Immune
+        self.immune_source = immune_source
 
     def infect_simulation(self, sim, outdir):
-        sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
+        if self.immune_source == InitialImmuneType.GENERAL_POPULATION:
+            sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
+        if self.immune_source == InitialImmuneType.HOUSEHOLDS:
+            sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
 
     def __str__(self):
         if self.city_name_to_infect is None:
             return "{}(num_to_infect={})".format(self.__class__.__name__, self.num_to_infect)
-        return "{}(num_to_infect={}, city_name_to_infect={})".format(
-            self.__class__.__name__, self.num_to_infect, self.city_name_to_infect
+        return "{}(num_to_infect={}, city_name_to_infect={}, per_to_Immune={},immune_source={})".format(
+            self.__class__.__name__, self.num_to_infect, self.city_name_to_infect,self.per_to_Immune,self.immune_source
         )
 
 
