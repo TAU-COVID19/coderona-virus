@@ -56,6 +56,10 @@ class World(object):
         :return: list of CityEnvironment
         """
         return list(self._city_name_to_env.values())
+    
+    def get_all_city_households(self):
+        households  = [ p for p in self.all_environments if p.name == 'household']
+        return households
 
     def get_all_city_names(self):
         """

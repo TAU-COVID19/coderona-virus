@@ -7,6 +7,8 @@ from src.simulation.params import Params
 from src.simulation.simulation import Simulation
 from src.world import Person
 from src.world.world import World
+from src.world.population_generation import population_loader
+from src.world.population_generation import generate_city
 
 #Test the amount of the  created Immune
 def test_createInfectedPersons():
@@ -39,8 +41,23 @@ def test_createInfectedPersons():
     # within 5 percent of expected
     assert abs(per_immune - 0.7)< 0.05
     
+def test_createEmmunehouseholds():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
+    pop = population_loader.PopulationLoader(citiesDataPath)
+    tmp_city = pop.get_city_by_name('Haifa')
+    my_world = generate_city(tmp_city,
+                         True,
+                         internal_workplaces=True,
+                         scaling=1.0,
+                         verbosity=False,
+                         to_world=True)
 
-
-
-
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.immune_households_infect_others(num_infected = 0, infection_doc = "", per_to_immune = 0.7,city_name = 'Haifa' )
