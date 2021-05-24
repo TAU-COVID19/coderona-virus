@@ -256,7 +256,7 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
-    def run_simulation(self, num_days, name, datas_to_plot=None):
+    def run_simulation(self, num_days, name, datas_to_plot=None,AddOn = None):
         """
         This main loop of the simulation.
         It advances the simulation day by day and saves,
@@ -266,6 +266,7 @@ class Simulation(object):
         directory path and filenames.
         :param datas_to_plot: Indicates what sort of data we wish to plot
         and save at the end of the simulation.
+        :param AddOn: user function that is been called at the end of each day
         """
         assert self.num_days_to_run is None
         self.num_days_to_run = num_days
@@ -278,6 +279,11 @@ class Simulation(object):
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
                 break
+            else:
+                #Call Addon function
+                if AddOn !=None :
+                    AddOn.DoProcessing()
+
         self.stats.mark_ending(self._world.all_people())
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
@@ -290,3 +296,4 @@ class Simulation(object):
         self.stats.write_params()
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()
+        

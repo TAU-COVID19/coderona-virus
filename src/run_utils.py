@@ -177,13 +177,20 @@ class SimpleJob(RunningJob):
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
             paramsDataPath = ConfigData['ParamsFilePath']
-
+            AddOnName = ConfigData['AddOnName']
         Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
         for param, val in self.params_to_change.items():
             Params.loader()[param] = val
         DiseaseState.init_infectiousness_list()
 
         citiesDataPath  = citiesDataPath
+        
+        AddOn = None
+        if len(AddOnName) > 0:
+            mod  = __import__('src.addons.' + AddOnName,fromlist=[AddOnName])
+            klass = getattr(mod,AddOnName)
+            AddOn = klass()
+            
 
         population_loader = PopulationLoader(
             citiesDataPath,
@@ -197,7 +204,7 @@ class SimpleJob(RunningJob):
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
         self.infection_params.infect_simulation(sim, outdir)
-        sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot)
+        sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,AddOn = AddOn)
 
 
 class RepeatJob(RunningJob):
