@@ -177,7 +177,7 @@ class SimpleJob(RunningJob):
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
             paramsDataPath = ConfigData['ParamsFilePath']
-            AddOnName = ConfigData['AddOnName']
+            ExtensionsName = ConfigData['ExtensionsName']
         Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
         for param, val in self.params_to_change.items():
             Params.loader()[param] = val
@@ -185,12 +185,6 @@ class SimpleJob(RunningJob):
 
         citiesDataPath  = citiesDataPath
         
-        AddOn = None
-        if len(AddOnName) > 0:
-            mod  = __import__('src.addons.' + AddOnName,fromlist=[AddOnName])
-            klass = getattr(mod,AddOnName)
-            AddOn = klass()
-            
 
         population_loader = PopulationLoader(
             citiesDataPath,
@@ -201,10 +195,16 @@ class SimpleJob(RunningJob):
 
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = False)
 
+        Extension = None
+        if len(ExtensionsName) > 0:
+            mod  = __import__('src.extensions.' + ExtensionsName,fromlist=[ExtensionsName])
+            ExtensionType = getattr(mod,ExtensionsName)
+            Extension =  ExtensionType()
+
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
         self.infection_params.infect_simulation(sim, outdir)
-        sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,AddOn = AddOn)
+        sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extension = Extension)
 
 
 class RepeatJob(RunningJob):
