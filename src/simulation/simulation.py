@@ -275,14 +275,15 @@ class Simulation(object):
         log.info("Starting simulation " + name)
         for day in range(num_days):
             self.simulate_day()
+            #Call Extension function at the end of the day
+            if extension !=None :
+                extension.DoProcessing()
+                
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
                 break
-            else:
-                #Call Extension function at the end of the day
-                if extension !=None :
-                    extension.DoProcessing()
+                
 
         self.stats.mark_ending(self._world.all_people())
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)

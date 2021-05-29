@@ -195,16 +195,18 @@ class SimpleJob(RunningJob):
 
         world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = False)
 
-        Extension = None
+        ExtensionType = None
         if len(ExtensionsName) > 0:
             mod  = __import__('src.extensions.' + ExtensionsName,fromlist=[ExtensionsName])
             ExtensionType = getattr(mod,ExtensionsName)
-            Extension =  ExtensionType()
 
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
         self.infection_params.infect_simulation(sim, outdir)
-        sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extension = Extension)
+        if ExtensionType !=None:
+            sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extension = ExtensionType(sim))
+        else:
+            sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extension = None)
 
 
 class RepeatJob(RunningJob):
