@@ -116,7 +116,7 @@ def main():
 
     jobs = []
     for initial_percentage_immune in [0.0,0.5]:
-        for immune_source in [InitialImmuneType.HOUSEHOLDS]:
+        for immune_source in [InitialImmuneType.HOUSEHOLDS]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
             for initial_num_infected in [25, 100, 250, 500]:
                 for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:
                     for compliance in [0.8]:
