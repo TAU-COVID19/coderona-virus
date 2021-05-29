@@ -12,13 +12,13 @@ from src.world import Person,World
 def test_createInfectedPersons():
     """
     #create population with 5 people ages [9,19,29,39,49]
-    #test that each day one pf them is getting immuned
+    #test that each day one of them is getting immuned
     """
     #Editig confige file saving is nessery 
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     ConfigData = None
     
-    #reading the upuap aconfige file 
+    #reading the confige file 
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
@@ -34,7 +34,7 @@ def test_createInfectedPersons():
         generating_scale = 1)
 
     my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
-    my_simulation.run_simulation(7,"test_simulation",datas_to_plot = None,extension = ImmuneByAgeExtension(my_simulation) )
+    my_simulation.run_simulation(7,"test_simulation",datas_to_plot = None,extensionsList = ["ImmuneByAgeExtension","EmptyExtension"] )
     
     cnt = sum([1 for p in persons_arr if p.get_disease_state() == DiseaseState.IMMUNE])
     assert cnt == 3

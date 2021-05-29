@@ -1,5 +1,6 @@
 from statistics import mean, stdev
 from enum import Enum
+import numpy as np
 
 class TableFormat(Enum):
     TEXTUAL = 1
@@ -54,7 +55,7 @@ def summary_datas_to_absolute_and_relative_means_and_stdevs(summary_datas):
             if y != 0:
                 relative_array.append(x/y)
             else:
-                relative_array.append(NaN)
+                relative_array.append(np.nan)
         
         if len(relative_array) == 1:
             absolute_data[key] = "{}".format(absolute_array[0])
