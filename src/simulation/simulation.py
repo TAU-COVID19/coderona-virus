@@ -256,7 +256,7 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
-    def run_simulation(self, num_days, name, datas_to_plot=None,extension = None):
+    def run_simulation(self, num_days, name, datas_to_plot=None,run_simulation = None,extensionsList = None):
         """
         This main loop of the simulation.
         It advances the simulation day by day and saves,
@@ -273,11 +273,19 @@ class Simulation(object):
         if datas_to_plot is None:
             datas_to_plot = dict()
         log.info("Starting simulation " + name)
+
+        extensions = []
+        for ExtName in extensionsList:
+            mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
+            ExtensionType = getattr(mod,ExtName)
+            extensions = extensions + [ExtensionType(self)]
+            
+
         for day in range(num_days):
             self.simulate_day()
             #Call Extension function at the end of the day
-            if extension !=None :
-                extension.DoProcessing()
+            for ext in extensions:
+                ext.DoProcessing()
                 
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
