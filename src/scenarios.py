@@ -1790,7 +1790,7 @@ def no_interventions(compliance=1, ci_delay=None, hi_delay=None):
 def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
     lockdown_intervention = LockdownIntervention(
         start_date=INITIAL_DATE+timedelta(0.0),
-        duration=daysdelta(4*7),
+        duration=daysdelta(7*7),
         compliance=0.80,
         city_name='all'
     )
