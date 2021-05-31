@@ -1081,18 +1081,20 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
         stats_files
     ]
     longest_date_range = max_date_range(all_stats)
-    smoothed_r0_avg_with_date_range = [
-        (s.get_r0_data()['smoothed_avg_r0'], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
-        for s in all_stats if s.get_r0_data() is not None
-    ]
-    aligned_data = fill_in_dates(smoothed_r0_avg_with_date_range, False, longest_date_range)
-    to_plot = [
-        {
-            'samples': aligned_data,
-            'props': {'label': "smoothed_avg_r0"}
-         }
-    ]
-    compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot, outdir, name + "_r_data")
+
+    for key in ["smoothed_avg_r0", "avg_r0", "estimated_r0", "instantaneous_r"]:
+        smoothed_r0_avg_with_date_range = [
+            (s.get_r0_data()[key], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
+            for s in all_stats if s.get_r0_data() is not None
+        ]
+        aligned_data = fill_in_dates(smoothed_r0_avg_with_date_range, False, longest_date_range)
+        to_plot = [
+            {
+                'samples': aligned_data,
+                'props': {'label': key}
+             }
+        ]
+        compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot, outdir, name + "_r_data_" + key)
 
 
 def get_multiple_stats_summary_file(stats_files, name, outdir, shortened=False):

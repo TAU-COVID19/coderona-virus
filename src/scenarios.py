@@ -1801,7 +1801,7 @@ def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
 
 def paper_2(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
-        start_date=INITIAL_DATE,
+        start_date=INITIAL_DATE+timedelta(days=14),
         duration=timedelta(180),
         compliance=0.8,
         delay=4
@@ -1809,14 +1809,14 @@ def paper_2(compliance, ci_delay, hi_delay):
 
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
-        duration=timedelta(180),
+        duration=timedelta(180)+timedelta(days=14),
         compliance=0.8,
         age_range=(0, 99)
     )
 
     school_closer_intervention = SchoolClosureIntervention(
         start_date=INITIAL_DATE,
-        duration=daysdelta(180),
+        duration=daysdelta(180)+timedelta(days=14),
         compliance=1.0,
         proportion_of_envs=1.0,
         city_name='all',
@@ -1824,13 +1824,13 @@ def paper_2(compliance, ci_delay, hi_delay):
     )
 
     workplace_closure_intervention = WorkplaceClosureIntervention(
-        start_date=INITIAL_DATE,
+        start_date=INITIAL_DATE+timedelta(days=14),
         duration=daysdelta(180),
         compliance=1.0
     )
 
     household_intervention = HouseholdIsolationIntervention(
-        start_date=INITIAL_DATE,
+        start_date=INITIAL_DATE+timedelta(days=14),
         duration=timedelta(180),
         compliance=0.8,
         delay_on_enter=4
