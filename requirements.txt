@@ -8,5 +8,5 @@ aiofiles
 jinja2
 tqdm
 flask
-flask_autoindex
+functional
 

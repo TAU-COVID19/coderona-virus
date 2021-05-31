@@ -341,10 +341,16 @@ class Statistics(object):
         r_effective_props = {}
         if 'label' not in r_effective_props:
             r_effective_props['label'] = "r0_effective"
+
+        instantaneous_r_props = {}
+        if 'label' not in instantaneous_r_props:
+            instantaneous_r_props['label'] = "instantaneous_r"
+
         datas = [
             {'data': self._r0_data['smoothed_avg_r0'], 'props': smoothed_props},
-            {'data': self._r0_data['avg_r0'], 'props': smoothed_props},
-            {'data': self._r0_data['r_effective'], 'props': r_effective_props}
+            {'data': self._r0_data['avg_r0'], 'props': avg_props},
+            {'data': self._r0_data['estimated_r0'], 'props': r_effective_props},
+            {'data': self._r0_data['instantaneous_r'], 'props': instantaneous_r_props},
         ]
         self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes(), y_axes_label="r0")
 
@@ -724,6 +730,7 @@ class Statistics(object):
                 continue
             drew_anything = True
             new_data = new_data[0]
+            plt.rcParams["figure.figsize"] = (20, 3)
             plt.plot(new_dates, new_data, **data['props'])
             plt.xlabel("Date" if is_dates else "????")
             plt.ylabel(y_axes_label)
