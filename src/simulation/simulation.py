@@ -275,10 +275,11 @@ class Simulation(object):
         log.info("Starting simulation " + name)
 
         extensions = []
-        for ExtName in extensionsList:
-            mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
-            ExtensionType = getattr(mod,ExtName)
-            extensions = extensions + [ExtensionType(self)]
+        if extensionsList != None:
+            for ExtName in extensionsList:
+                mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
+                ExtensionType = getattr(mod,ExtName)
+                extensions = extensions + [ExtensionType(self)]
             
 
         for day in range(num_days):
