@@ -226,7 +226,7 @@ def generate_city(city, is_smart_household_generation, internal_workplaces=True,
     :param city: The City object corresponding to the city we wish to create
     :param is_smart_household_generation:
     Should we use smart_population_generation or naive_population_generation
-    (this should always be smart, unless testing this particular thing)
+    (this should always be naive, unless testing this particular thing)
     :param internal_workplaces: Should the workplace be generated
     (from their CrossEnvironmentDatas nodes) or should they not be generated
     (so they may be generated between different cities).

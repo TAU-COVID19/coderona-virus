@@ -1,4 +1,3 @@
-@@ -0,0 +1,48 @@
 #!/bin/bash
 ## Run as: bash script.sh
 PASSWORD=UR_UNI_PASSWORD

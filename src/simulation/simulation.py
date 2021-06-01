@@ -1,6 +1,6 @@
 import logging
 import os
-import random as _random
+import random as random
 from collections import Counter
 from datetime import timedelta
 from copy import deepcopy
@@ -176,15 +176,53 @@ class Simulation(object):
         assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
         
         num_immuned = int(round(len(population)*per_to_immune))
-        Selected_persons = _random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[:num_infected]
-        people_to_immune = Selected_persons[num_infected:]
+        assert len(population) >= num_infected + num_immuned
+        Selected_persons = random.sample(population, num_infected + num_immuned)
+        people_to_infect = Selected_persons[0:num_infected]
+        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
         for person in people_to_infect:
             assert isinstance(person, Person), type(person)
             self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
         for person in people_to_immune:
             assert isinstance(person, Person), type(person)
             self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None):
+        """
+        Immune some percentage of the households in the population and infectimg a given percentage of the population
+        so that the disease can spread during the simulation.
+        :param num_infected: int number of infected to make
+        :param infection_doc: str to document the infection data
+        (written to the inputs.txt file)
+        :param city_name: the name of the city to infect
+        (if left None, infects people from all around the World)
+        """
+        assert isinstance(num_infected, int)
+        assert self.initial_infection_doc is None
+        self.initial_infection_doc = infection_doc
+        if per_to_immune is None:
+            per_to_immune = 0.0
+        if city_name is not None:
+            households = [h for h in self._world.get_all_city_households() if h._city == city_name]
+        else:
+            households = [h for h in self._world.get_all_city_households()]
+        #Select houses to emmun 
+        cnt_house_to_emmun = int(per_to_immune * len(households))
+        random.shuffle(households)
+        safe_group =households[0 : cnt_house_to_emmun]
+        not_safe_group = households[cnt_house_to_emmun:]
+        #Emmune people in the safe group
+        for house in safe_group:
+            for person in house.get_people():
+                self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+        #Infect people not in safe group
+        for house in not_safe_group:
+            for person in house.get_people():
+                if num_infected > 0:
+                    self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
+                    num_infected = num_infected - 1
+                else:
+                    break
 
     def first_people_are_done(self):
         """
@@ -218,7 +256,7 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
-    def run_simulation(self, num_days, name, datas_to_plot=None):
+    def run_simulation(self, num_days, name, datas_to_plot=None,run_simulation = None,extensionsList = []):
         """
         This main loop of the simulation.
         It advances the simulation day by day and saves,
@@ -228,19 +266,33 @@ class Simulation(object):
         directory path and filenames.
         :param datas_to_plot: Indicates what sort of data we wish to plot
         and save at the end of the simulation.
+        :param Extension: user's class that contains function that is called at the end of each day
         """
         assert self.num_days_to_run is None
         self.num_days_to_run = num_days
         if datas_to_plot is None:
             datas_to_plot = dict()
         log.info("Starting simulation " + name)
+
+        extensions = []
+        for ExtName in extensionsList:
+            mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
+            ExtensionType = getattr(mod,ExtName)
+            extensions = extensions + [ExtensionType(self)]
+            
+
         for day in range(num_days):
             self.simulate_day()
-            self.stats.calculate_susceptible(self._initial_date + timedelta(day), self._world.all_people())
+            #Call Extension function at the end of the day
+            for ext in extensions:
+                ext.DoProcessing()
+                
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
                 break
+                
+
         self.stats.mark_ending(self._world.all_people())
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
@@ -253,3 +305,4 @@ class Simulation(object):
         self.stats.write_params()
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()
+        

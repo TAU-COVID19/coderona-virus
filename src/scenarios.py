@@ -1808,15 +1808,15 @@ def paper_2(compliance, ci_delay, hi_delay):
     )
 
     sd_intervention = SocialDistancingIntervention(
-        start_date=INITIAL_DATE,
-        duration=timedelta(180)+timedelta(days=14),
+        start_date=INITIAL_DATE+timedelta(days=14),
+        duration=timedelta(180),
         compliance=0.8,
         age_range=(0, 99)
     )
 
     school_closer_intervention = SchoolClosureIntervention(
-        start_date=INITIAL_DATE,
-        duration=daysdelta(180)+timedelta(days=14),
+        start_date=INITIAL_DATE+timedelta(days=14),
+        duration=daysdelta(180),
         compliance=1.0,
         proportion_of_envs=1.0,
         city_name='all',

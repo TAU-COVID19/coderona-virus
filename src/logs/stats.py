@@ -144,7 +144,6 @@ class Statistics(object):
         '_output_path',
         '_days_data',
         '_final_state',
-        '_susceptibles',
         'num_infected',
         '_interventions',
         '_r0_data',
@@ -161,7 +160,6 @@ class Statistics(object):
             os.mkdir(output_path)
         self._days_data = []
         self._final_state = None
-        self._susceptibles = {}
         self._interventions: List[Intervention] = []
         self._r0_data = None
         self.num_infected = 0
@@ -318,7 +316,7 @@ class Statistics(object):
         """
         if max_date is None:
             max_date = self.max_date
-        self._r0_data = calculate_r0_data(population, max_date, self._susceptibles)
+        self._r0_data = calculate_r0_data(population, max_date)
 
     def plot_r0_data(self, image_path, avg_props=None, smoothed_props=None):
         """
@@ -349,7 +347,7 @@ class Statistics(object):
         datas = [
             {'data': self._r0_data['smoothed_avg_r0'], 'props': smoothed_props},
             {'data': self._r0_data['avg_r0'], 'props': avg_props},
-            {'data': self._r0_data['estimated_r0'], 'props': r_effective_props},
+            # {'data': self._r0_data['estimated_r0'], 'props': r_effective_props},
             {'data': self._r0_data['instantaneous_r'], 'props': instantaneous_r_props},
         ]
         self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes(), y_axes_label="r0")
@@ -749,7 +747,9 @@ class Statistics(object):
                 label=stripe.label
             )
         if is_dates:
-            plt.gcf().autofmt_xdate()
+            fig = plt.gcf()
+            fig.autofmt_xdate()
+            fig.set_size_inches(11,8)
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
         plt.legend()
         plt.yscale(yscale)
@@ -1082,7 +1082,7 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
     ]
     longest_date_range = max_date_range(all_stats)
 
-    for key in ["smoothed_avg_r0", "avg_r0", "estimated_r0", "instantaneous_r"]:
+    for key in ["smoothed_avg_r0", "avg_r0", "instantaneous_r"]:
         smoothed_r0_avg_with_date_range = [
             (s.get_r0_data()[key], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
             for s in all_stats if s.get_r0_data() is not None
@@ -1094,7 +1094,8 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
                 'props': {'label': key}
              }
         ]
-        compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot, outdir, name + "_r_data_" + key)
+        compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot, outdir, name + "_r_data_" + key,
+                                                all_stats[0].make_background_stripes())
 
 
 def get_multiple_stats_summary_file(stats_files, name, outdir, shortened=False):
@@ -1115,7 +1116,7 @@ def apply_unless_all_nans(func, arr):
         return func(arr)
 
 
-def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_props, outdir, name):
+def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_props, outdir, name, background_stripes_data = None):
     """
     process the samples in list_of_all_samples_with_props to compute the mean, the stddev and the confidence and plot them
     """
@@ -1146,9 +1147,9 @@ def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_prop
             'data': confidence,
             'props': std_conf_props
         })
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), dates, exp_data, std_data)
+    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), dates, exp_data, std_data, background_stripes_data)
     Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), dates, exp_data,
-                             confidence_data)
+                             confidence_data, background_stripes_data)
 
 
 def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir):

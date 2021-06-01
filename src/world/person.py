@@ -16,7 +16,6 @@ from src.seir import sample_seir_times
 from src.simulation.params import Params
 from src.world.infection_data import InfectionData
 
-from src.world.infection_data import InfectionData
 
 RedactedPerson = namedtuple("RedactedPerson", ("age", "disease_state"))
 RedactedPersonAndEnv = namedtuple("RedactedPersonAndEnv", ("age", "disease_state", "infection_env_source"))
@@ -333,7 +332,7 @@ class Person(object):
         If this is None, it is sampled with the distribution defined in params.json.
         :return: infection events
         """
-        assert self._disease_state == DiseaseState.SUSCEPTIBLE
+        assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
         self.set_disease_state(DiseaseState.IMMUNE)
         return []
 

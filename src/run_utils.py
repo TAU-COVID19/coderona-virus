@@ -177,13 +177,14 @@ class SimpleJob(RunningJob):
             ConfigData = json.load(json_data_file)
             citiesDataPath = ConfigData['CitiesFilePath']
             paramsDataPath = ConfigData['ParamsFilePath']
-
+            Extensionslst = ConfigData['ExtensionsNamelst']
         Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
         for param, val in self.params_to_change.items():
             Params.loader()[param] = val
         DiseaseState.init_infectiousness_list()
 
         citiesDataPath  = citiesDataPath
+        
 
         population_loader = PopulationLoader(
             citiesDataPath,
@@ -191,12 +192,18 @@ class SimpleJob(RunningJob):
             with_caching=with_population_caching,
             verbosity=verbosity
         )
-        world = population_loader.get_world(city_name=self.city_name, scale=self.scale)
 
+        world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = False)
+
+        ExtensionType = None
+        
         sim = Simulation(world, self.initial_date, self.interventions,
                          verbosity=verbosity, outdir=outdir, stop_early=stop_early)
         self.infection_params.infect_simulation(sim, outdir)
-        sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot)
+        if len(Extensionslst) > 0:
+            sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extensionsList = Extensionslst)
+        else:
+            sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot)
 
 
 class RepeatJob(RunningJob):
@@ -368,11 +375,20 @@ def create_city_and_serialize(city_name, scale, params_to_change):
         paramsDataPath = ConfigData['ParamsFilePath']
 
     Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
-    for param, val in params_to_change.items():
-        Params.loader()[param] = val
-    population_loader = PopulationLoader(citiesDataPath,
-        added_description=Params.loader().description()
-    )
+    
+    #Check if dictionary is empty
+    if not params_to_change:
+        for param, val in params_to_change.items():
+            Params.loader()[param] = val
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description=Params.loader().description(),
+            with_caching= False
+        )
+    else:
+        population_loader = PopulationLoader(citiesDataPath,
+            added_description="",
+            with_caching= False
+        )
     population_loader.get_world(city_name=city_name, scale=scale)
 
 
@@ -430,6 +446,15 @@ def create_outdir():
     print('your outputs will be in: {}'.format(curr_outdir))
     return curr_outdir
 
+def calc_CPU_count(maxCPU:int,percentCPU:float,jobs):
+    if len(jobs) > 700:
+        percentCPU = 0.75
+    if len(jobs) > 850:
+        percentCPU = 0.5
+    if len(jobs) > 1000:
+        percentCPU = 0.25
+
+    return min(int(math.floor(mp.cpu_count() * percentCPU)), maxCPU)
 
 def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True):
     """
@@ -444,19 +469,11 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
         percent = float(percentStr)
 
     outdir = create_outdir()
-    cpus_to_use = min(int(math.floor(mp.cpu_count() * percent)), 30)
+    cpus_to_use = calc_CPU_count(30,percent,jobs)
+
     if cpus_to_use == 0 or not multi_processed:
         cpus_to_use = 1
-    #else:
-        #only in papar_8 run slow
-        #run_slow = False
-        #for i in range(len(jobs)-1):
-            #if jobs[i].scenario_name =="paper_8":
-                #run_slow = True
-                #break
-        #if run_slow:
-            #cpus_to_use=1 
-        
+            
     tasks_sets = [job.generate_tasks(outdir) for job in jobs]
     finalizers = [job.finalize for job in jobs]
     if cpus_to_use == 1:
@@ -517,7 +534,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
 
 def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_range,
-                                      interventions=None, num_repetitions=7, num_rs=0, days=250):
+                                      interventions=None, num_repetitions=7, num_rs=0):
     """
     Wraps the inialization of a job that creates a graph of R as a function of base infectiousness value.
 
@@ -528,10 +545,9 @@ def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_ran
     :param interventions: list of interventions to apply during the simulation
     :param num_repetitions: int repetition for each base infectiousness value
     :param num_rs: number of Rs to compute
-    :param days: number of days to compute
     :return: ParamChangeRJob
     """
     simple_job = SimpleJob(scenario_name, city_name, scale, interventions=interventions,
-                           infection_params=NaiveInitialInfectionParams(20), days=days)
+                           infection_params=NaiveInitialInfectionParams(20))
     repeated_job = RepeatJob(simple_job, num_repetitions)
     return ParamChangeRJob(repeated_job, ("person", "base_infectiousness"), param_range, num_rs=num_rs)
