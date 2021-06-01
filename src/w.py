@@ -8,6 +8,9 @@ import json
 
 class W:
     def __init__(self):
+        p_hulon = 0.793
+        p_bnei_brak = 0.754
+        p_city_avg = (p_hulon+p_bnei_brak)/2
         number_of_samples = 1000
         s = RealDataSeirTimesGeneration()
         infectious_before_symptomatic_distribution = int(seq([s._infectious_before_symptomatic_distribution.sample() for i in range(number_of_samples)]).average())
@@ -15,7 +18,7 @@ class W:
         # print(f"infectious_before_symptomatic_distribution={infectious_before_symptomatic_distribution}, infectious_before_immune_distribution={infectious_before_immune_distribution}")
         factors = Params.loader()["disease_parameters"]["infectiousness_per_stage"]
         p_incubating_post_latent = factors["incubating_post_latent"]
-        p_symptomatic = factors["symptomatic"]
+        p_symptomatic = p_city_avg # factors["symptomatic"]
         p_per_day = [p_incubating_post_latent] * int(infectious_before_symptomatic_distribution) + [p_symptomatic] * int(infectious_before_immune_distribution)
         sum_p = seq(p_per_day).sum()
         self.p_per_day_rate = seq(p_per_day).map(lambda x: x/sum_p)

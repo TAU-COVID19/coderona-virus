@@ -117,8 +117,8 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.5]:  # [0.0,0.5]:
-        for immune_source in [InitialImmuneType.HOUSEHOLDS]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
+    for initial_percentage_immune in [0.0]:  # [0.0,0.5]:
+        for immune_source in [InitialImmuneType.HOUSEHOLDS]:  # [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.GENERAL_POPULATION]:  #the options are:GENERAL_POPULATION,HOUSEHOLDS
             for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                 for city_name, scale in [("Holon",1)]:  # [("Holon",1), ("Bene Beraq",1)]:
                     for compliance in [0.8]:
