@@ -74,15 +74,20 @@ def calculate_r0_data(population: List[Person], max_date=None):
     RS = namedtuple('RS', 'infection_date people_infected_by_me')
     # rs = {p: [None, 0] for p in population}
     rs = {p: RS(None, 0) for p in population}
+    # rs_original = {p: [None, 0] for p in population}
     for p in population:
         infection_data: InfectionData = p.get_infection_data()
         if (infection_data is not None) and (infection_data.date is not None):
-            # rs[p][0] = infection_data.date
-            rs[p] = RS(infection_data.date, 0)
+            # rs_original[p][0] = infection_data.date
+            rs[p] = RS(infection_data.date, rs[p].people_infected_by_me)
             if infection_data.transmitter is not None:
-                # rs[infection_data.transmitter][1] += 1
+                # rs_original[infection_data.transmitter][1] += 1
                 rs[infection_data.transmitter] = \
-                    RS(infection_data.date, rs[infection_data.transmitter].people_infected_by_me + 1)
+                    RS(rs[infection_data.transmitter].infection_date, rs[infection_data.transmitter].people_infected_by_me + 1)
+                #if rs_original[infection_data.transmitter][1] != rs[infection_data.transmitter].people_infected_by_me:
+                #    print("ERRORRRRRRRR people_infected_by_me!")
+                #if rs_original[infection_data.transmitter][0] is not None and rs_original[infection_data.transmitter][0] != rs[infection_data.transmitter].infection_date:
+                #    print("ERROR!!!!!DATE !")
 
     valid_infections = any(p.get_infection_data().date is not None for p in population
                                 if (p.get_infection_data() is not None)
@@ -104,6 +109,10 @@ def calculate_r0_data(population: List[Person], max_date=None):
 	#Generating dictionary date:num of infectors, num of infected, how much every person contributed to the infection every day
     InfectionByDate = namedtuple('InfectionByDate',
                                  'infected_today infected_by_someone_who_got_infected_today smoothed_infected_by_someone_who_got_infected_today')
+    # r0_by_infection_date_pre_division_original = {
+    #     min_infection_date + timedelta(days=i): [0, 0, 0]
+    #     for i in range((max_infection_date - min_infection_date).days + 1)
+    # }
     r0_by_infection_date_pre_division = {
         # for every date [number-of-people-got-infected-today,
         #                 total-number-of-people-infected-by-someone-who-got-sick-today]
@@ -121,24 +130,31 @@ def calculate_r0_data(population: List[Person], max_date=None):
     for infected_by in rs.values():
         if infected_by.infection_date is not None:
             # the date is the date where the person got sick
-            # r0_by_infection_date_pre_division[infected_by.infection_date][0] += 1  # how many people who got-infected today
-            # r0_by_infection_date_pre_division[infected_by.infection_date][1] += infected_by.people_infected_by_me  # sum of all of the people who were
+            # r0_by_infection_date_pre_division_original[infected_by.infection_date][0] += 1  # how many people who got-infected today
+            # r0_by_infection_date_pre_division_original[infected_by.infection_date][1] += infected_by.people_infected_by_me  # sum of all of the people who were
             i = r0_by_infection_date_pre_division[infected_by.infection_date]
             r0_by_infection_date_pre_division[infected_by.infection_date] = InfectionByDate(
                 i.infected_today + 1,
                 i.infected_by_someone_who_got_infected_today + infected_by.people_infected_by_me,
                 0
             )
+            # if r0_by_infection_date_pre_division_original[infected_by.infection_date][0] != r0_by_infection_date_pre_division[infected_by.infection_date].infected_today:
+            #    print("ERRORRRR infected_today")
+            # if r0_by_infection_date_pre_division_original[infected_by.infection_date][1] != r0_by_infection_date_pre_division[infected_by.infection_date].infected_by_someone_who_got_infected_today:
+            #     print("ERRORRRR infected_by_someone_who_got_infected_today")
+
             # infected by a person who got sick today
 
     for p in population:
         if (p.get_infection_data() is not None) and (p.get_infection_data().date is not None):
-            # r0_by_infection_date_pre_division[p.get_infection_data().date][2] += p._num_infections
+            # r0_by_infection_date_pre_division_original[p.get_infection_data().date][2] += p._num_infections
             i = r0_by_infection_date_pre_division[p.get_infection_data().date]
             r0_by_infection_date_pre_division[p.get_infection_data().date] = InfectionByDate(
                 i.infected_today,
                 i.infected_by_someone_who_got_infected_today,
                 i.smoothed_infected_by_someone_who_got_infected_today + p._num_infections)
+            # if r0_by_infection_date_pre_division_original[p.get_infection_data().date][2] != r0_by_infection_date_pre_division[p.get_infection_data().date].smoothed_infected_by_someone_who_got_infected_today:
+            #     print("ERROR!!!! smoothed_infected_by_someone_who_got_infected_today")
 
     '''
     Incubating post Latent:
