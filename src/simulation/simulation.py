@@ -223,7 +223,40 @@ class Simulation(object):
             people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
             for person in people_to_infect:
                 self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
+    
+    def immune_18_plus(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None):
+        """
+        Immune some percentage of the people over the age of 18 out of all thet people that are above 18 in the population and infectimg a given percentage of the population
+        so that the disease can spread during the simulation.
+        :param num_infected: int number of infected to make
+        :param infection_doc: str to document the infection data
+        (written to the inputs.txt file)
+        :param city_name: the name of the city to infect
+        (if left None, infects people from all around the World)
+        """
+        assert isinstance(num_infected, int)
+        assert self.initial_infection_doc is None
+        self.initial_infection_doc = infection_doc
+        if per_to_immune is None:
+            per_to_immune = 0.0
+        if city_name is not None:
+            population = [p for p in self._world.all_people() if (p.get_city_name() == city_name ) and p.get_age() > 17]
+        else:
+            population = [p for p in self._world.all_people() if p.get_age() > 17]
         
+        cnt_all_population = len(population)
+        num_immuned = int(round(cnt_all_population*per_to_immune))
+        assert cnt_all_population >= num_infected + num_immuned, "Trying to infect {} and immune{} people out of {}".format(num_infected,num_immuned,cnt_all_population)
+        Selected_persons = random.sample(population, num_infected + num_immuned)
+        people_to_infect = Selected_persons[0:num_infected]
+        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
+        for person in people_to_infect:
+            assert isinstance(person, Person), type(person)
+            self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
+        for person in people_to_immune:
+            assert isinstance(person, Person), type(person)
+            self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+
     def first_people_are_done(self):
         """
         chacks whether the people infected on the first “num_r_days” days

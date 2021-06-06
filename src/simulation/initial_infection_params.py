@@ -17,10 +17,12 @@ class InitialImmuneType(Enum):
     """
     The initial immune can come from 2 sources:
     1. Immuning certain percentage of the population randomally
-    2. Immuning certain percentage of households randomally 
+    2. Immuning certain percentage of households randomally and infect random people from the rest of the population.
+    3. Immuning certain percentage of population over the age of 18 out of all the people over the age of 18
     """
     GENERAL_POPULATION = 1
     HOUSEHOLDS = 2
+    AGE18PLUS = 3
 
 class NaiveInitialInfectionParams(InitialInfectionParams):
     """
@@ -39,6 +41,8 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
             sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
         if self.immune_source == InitialImmuneType.HOUSEHOLDS:
             sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
+        if self.immune_source == InitialImmuneType.AGE18PLUS:
+            sim.immune_18_plus(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect)
 
     def __str__(self):
         if self.city_name_to_infect is None:
