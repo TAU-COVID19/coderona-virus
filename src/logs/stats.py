@@ -745,6 +745,7 @@ class Statistics(object):
         assert all([yscale == yscales[0] for yscale in yscales]), "All yscales must be equal!"
         yscale = yscales[0]
         plt.clf()
+        plt.tight_layout()
         if is_dates:
             npdates = [mdates.date2num(d) for d in dates]
         else:
@@ -770,7 +771,7 @@ class Statistics(object):
             plt.gcf().autofmt_xdate()
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
         plt.legend()
-        plt.yscale(yscale)
+        plt.yscale(yscale) 
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
         plt.savefig(svg_filename)
         with open(csv_filename, 'w') as f:
