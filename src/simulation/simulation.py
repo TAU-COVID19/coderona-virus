@@ -316,10 +316,13 @@ class Simulation(object):
             
 
         for day in range(num_days):
+            for ext in extensions:
+                ext.start_of_day_processing()
+
             self.simulate_day()
             #Call Extension function at the end of the day
             for ext in extensions:
-                ext.DoProcessing()
+                ext.end_of_day_processing()
                 
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:

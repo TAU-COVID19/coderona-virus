@@ -11,7 +11,10 @@ class ImmuneByAgeExtension(Simulation):
         self.MaxAgeToImmune = 9
         self.parent = parent
 
-    def DoProcessing(self):
+    def start_of_day_processing(self):
+        pass
+    
+    def end_of_day_processing(self):
         """
         if portion of population that is immune > self.ImmunePortion Do nothing
         else immune by age group
