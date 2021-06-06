@@ -12,7 +12,7 @@ from src.seir import DiseaseState
 from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams,InitialImmuneType
 from src.logs import make_age_and_state_datas_to_plot
 from src.simulation.params import Params
-from src.run_utils import RepeatJob, SimpleJob, run
+from src.run_utils import RepeatJob, SimpleJob, run, make_base_infectiousness_to_r_job
 import src.util.seed as seed
 
 seed.set_random_seed()
@@ -150,12 +150,12 @@ def main():
                                                                             datas_to_plot=datas_to_plot),
                                                                 num_repetitions=10))
 
-                                    # add job to make r to base infectiousness graph:
+                                    # # add job to make r to base infectiousness graph:
                                     # jobs += [make_base_infectiousness_to_r_job(
                                     #             'r_graph_' + full_scenario_name, city_name, scale,
                                     #             np.arange(0.05, 0.15, 0.05),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
                                     #             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                    #             num_repetitions=3, days=120)]
+                                    #             num_repetitions=3, initial_num_infected=initial_num_infected)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False,verbosity=False)
 

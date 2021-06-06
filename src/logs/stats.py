@@ -1028,7 +1028,7 @@ def fill_in_dates(list_of_data_and_daterange, edge_values, dates=None):
     return aligned_filled_data
 
 
-def max_date_range(stats, max_num_days=None):
+def max_date_range(stats, max_num_days=None) -> List[datetime.datetime]:
     """
     Returns a list of the days between stats.min_date and stats.max_date
     If max_num_days is provided, the list is cut to be at most that long
@@ -1182,7 +1182,7 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
     std_data = []
     confidence_data = []
     for day in range(max_num_days + 1):
-        props = {'label': str(day)}
+        props = {'label': "smoothed_avg_r0"}
         exp_data.append({
             'data': [elem[0][day] for elem in data],
             'props': props

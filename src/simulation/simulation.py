@@ -9,6 +9,7 @@ from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup
+from src.seir.disease_state import DiseaseState
 
 
 log = logging.getLogger(__name__)
@@ -215,14 +216,13 @@ class Simulation(object):
         for house in safe_group:
             for person in house.get_people():
                 self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
-        #Infect people not in safe group
-        for house in not_safe_group:
-            for person in house.get_people():
-                if num_infected > 0:
-                    self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-                    num_infected = num_infected - 1
-                else:
-                    break
+        #Select num_infected persons from General population that was not infected(not_sage_group) and infect them
+        if num_infected > 0:
+            UnsafePersons = [person for house in not_safe_group for person in house.get_people() \
+             if person.get_disease_state() == DiseaseState.SUSCEPTIBLE]
+            people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
+            for person in people_to_infect:
+                self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
 
     def first_people_are_done(self):
         """
