@@ -155,7 +155,7 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None):
+    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None,min_age=0):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
@@ -164,6 +164,8 @@ class Simulation(object):
         (written to the inputs.txt file)
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
+        :param min_age: specify the min age from which we start to infect population
+        if the value is 0 we infect all the population 
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -171,16 +173,34 @@ class Simulation(object):
         if per_to_immune is None:
             per_to_immune = 0.0
         if city_name is not None:
-            population = [p for p in self._world.all_people() if p.get_city_name() == city_name]
+            population = [p for p in self._world.all_people() \
+                if (p.get_city_name() == city_name)]
         else:
-            population = self._world.all_people()
-        assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
-        
+            population = [p for p in self._world.all_people()]
+
         num_immuned = int(round(len(population)*per_to_immune))
-        assert len(population) >= num_infected + num_immuned
-        Selected_persons = random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[0:num_infected]
-        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
+        assert len(population) >= num_infected + num_immuned \
+            , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
+        people_to_infect = []
+        people_to_immune = []
+        used_persons = {}
+        #First set the immune persons that are above min_age
+        while num_immuned > 0:
+            Selected_persons = random.sample(population, num_immuned)
+            for p in Selected_persons:
+                if p.get_age() >= min_age : 
+                    people_to_immune = people_to_immune + [p]
+                    num_immuned = num_immuned-1
+                    used_persons[p.get_id()] = p
+
+        #Second set the people that aren't immune to be infected
+        while num_infected > 0:
+            Selected_persons = random.sample(population, num_infected)
+            for p in Selected_persons:
+                if not(p.get_id() in used_persons): 
+                    people_to_infect = people_to_infect + [p]
+                    num_infected = num_infected-1
+
         for person in people_to_infect:
             assert isinstance(person, Person), type(person)
             self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
@@ -188,7 +208,7 @@ class Simulation(object):
             assert isinstance(person, Person), type(person)
             self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
 
-    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None):
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
         so that the disease can spread during the simulation.
@@ -197,6 +217,8 @@ class Simulation(object):
         (written to the inputs.txt file)
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
+        :param min_age: specify the min age from which we start to infect population
+        if the value is 0 we infect all the population 
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -215,7 +237,8 @@ class Simulation(object):
         #Emmune people in the safe group
         for house in safe_group:
             for person in house.get_people():
-                self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+                if person.get_age() >= min_age:
+                    self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
         #Select num_infected persons from General population that was not infected(not_sage_group) and infect them 
         if num_infected > 0:
             UnsafePersons = [person for house in not_safe_group for person in house.get_people() \
@@ -224,39 +247,6 @@ class Simulation(object):
             for person in people_to_infect:
                 self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
     
-    def immune_18_plus(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None):
-        """
-        Immune some percentage of the people over the age of 18 out of all thet people that are above 18 in the population and infectimg a given percentage of the population
-        so that the disease can spread during the simulation.
-        :param num_infected: int number of infected to make
-        :param infection_doc: str to document the infection data
-        (written to the inputs.txt file)
-        :param city_name: the name of the city to infect
-        (if left None, infects people from all around the World)
-        """
-        assert isinstance(num_infected, int)
-        assert self.initial_infection_doc is None
-        self.initial_infection_doc = infection_doc
-        if per_to_immune is None:
-            per_to_immune = 0.0
-        if city_name is not None:
-            population = [p for p in self._world.all_people() if (p.get_city_name() == city_name ) and p.get_age() > 17]
-        else:
-            population = [p for p in self._world.all_people() if p.get_age() > 17]
-        
-        cnt_all_population = len(population)
-        num_immuned = int(round(cnt_all_population*per_to_immune))
-        assert cnt_all_population >= num_infected + num_immuned, "Trying to infect {} and immune{} people out of {}".format(num_infected,num_immuned,cnt_all_population)
-        Selected_persons = random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[0:num_infected]
-        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
-        for person in people_to_infect:
-            assert isinstance(person, Person), type(person)
-            self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-        for person in people_to_immune:
-            assert isinstance(person, Person), type(person)
-            self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
-
     def first_people_are_done(self):
         """
         chacks whether the people infected on the first “num_r_days” days
