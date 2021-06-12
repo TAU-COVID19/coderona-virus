@@ -223,7 +223,7 @@ class Simulation(object):
             households = [h for h in self._world.get_all_city_households() if h._city == city_name]
         else:
             households = [h for h in self._world.get_all_city_households()]
-        #Select houses to emmun 
+        #Select houses immun 
         cnt_house_to_emmun = int(per_to_immune * len(households))
         random.shuffle(households)
         safe_group =households[0 : cnt_house_to_emmun]
