@@ -181,32 +181,26 @@ class Simulation(object):
         num_immuned = int(round(len(population)*per_to_immune))
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
-        people_to_infect = []
-        people_to_immune = []
+        
         used_persons = {}
         #First set the immune persons that are above min_age
-        while num_immuned > 0:
+        while num_immuned > 0: #we start to count from zero therefor we need one more person
             Selected_persons = random.sample(population, num_immuned)
             for p in Selected_persons:
-                if p.get_age() >= min_age : 
-                    people_to_immune = people_to_immune + [p]
+                if (p.get_age() >= min_age) and (p.get_id() not in used_persons) : 
+                    self.register_events(p.immune_and_get_events(self._date, InitialGroup.initial_group()))
                     num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
+        for p in used_persons.values():
+            print("id:" + str(p.get_id()) +" age:"+ str(p.get_age())) 
 
         #Second set the people that aren't immune to be infected
         while num_infected > 0:
             Selected_persons = random.sample(population, num_infected)
             for p in Selected_persons:
-                if not(p.get_id() in used_persons): 
-                    people_to_infect = people_to_infect + [p]
+                if (p.get_id() not in used_persons) and (p.get_disease_state() == DiseaseState.SUSCEPTIBLE): 
+                    self.register_events(p.infect_and_get_events(self._date, InitialGroup.initial_group()))
                     num_infected = num_infected-1
-
-        for person in people_to_infect:
-            assert isinstance(person, Person), type(person)
-            self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-        for person in people_to_immune:
-            assert isinstance(person, Person), type(person)
-            self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
 
     def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0):
         """

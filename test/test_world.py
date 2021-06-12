@@ -19,7 +19,9 @@ def test_createInfectedPersons():
         paramsDataPath = ConfigData['ParamsFilePath']
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
-    ageList = [random.randint(10,40) for i in range(100)]    
+    kids = [random.randint(0,17) for i in range(5)]    
+    adults  = [random.randint(19,40) for i in range(5)]    
+    ageList = kids + adults 
     PersonList = list(map(Person, ageList))
 
     env_arr = []
@@ -30,16 +32,16 @@ def test_createInfectedPersons():
         generating_scale = 1)
 
     my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
-    my_simulation.infect_random_set(num_infected = 0, infection_doc = "", per_to_immune = 0.7,city_name = None )
+    my_simulation.infect_random_set(num_infected = 5, infection_doc = "", per_to_immune = 0.5,city_name = None,min_age=18 )
     #assert events dictionary is not empty
     cnt_immune = 0 
     for person in my_world.all_people():
         if person.get_disease_state() == DiseaseState.IMMUNE:
             cnt_immune = cnt_immune + 1
-    per_immune  = cnt_immune / 100
+    per_immune  = cnt_immune / len(PersonList)
     #Assert that the amount of people that created in recovered state are 
     # within 5 percent of expected
-    assert abs(per_immune - 0.7)< 0.05
+    assert abs(per_immune - 0.5)< 0.05
     
 def test_createEmmunehouseholds():
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")

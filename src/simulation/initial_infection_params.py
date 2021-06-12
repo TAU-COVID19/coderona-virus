@@ -28,8 +28,7 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
     Infect num_to_infect random people in city_name_to_infect
     or in the entire country if city_name_to_infect is not given
     """
-    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None,
-    / immune_source = InitialImmuneType.GENERAL_POPULATION,min_age = 0):
+    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None,immune_source = InitialImmuneType.GENERAL_POPULATION,min_age = 0):
         super(NaiveInitialInfectionParams, self).__init__()
         self.num_to_infect = num_to_infect
         self.city_name_to_infect = city_name_to_infect
