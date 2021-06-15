@@ -269,6 +269,7 @@ class RepeatJob(RunningJob):
                 "statistics.pkl"
             ))
         for name, data_to_plot in self.datas_to_plot.items():
+            print(f"RepeatJob.finalize() {self.scenario_name}_{name} outdir={outdir}")
             get_mean_and_confidence_from_statistics(stats_files, data_to_plot, self.scenario_name + "_" + name, outdir)
         get_multiple_stats_summary_file(stats_files, self.scenario_name, outdir, shortened=False)
         get_multiple_stats_summary_file(stats_files, self.scenario_name, outdir, shortened=True)

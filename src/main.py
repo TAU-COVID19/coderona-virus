@@ -19,10 +19,10 @@ seed.set_random_seed()
 log = logging.getLogger(__name__)
 
 
-def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_source, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
+def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_source,min_age, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
     return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}" + \
     f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}_computerName_{gethostname()}" + \
-    f"_immune_source_{immune_source}"
+    f"_immune_source_{immune_source}_min_age_{min_age}"
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
     current_probs = Params.loader()['disease_parameters']['symptomatic_given_infected_per_age']
@@ -118,7 +118,7 @@ def main():
 
     jobs = []
     for initial_percentage_immune in [0.0]:  # [0.0,0.5]:
-        for immune_source in [InitialImmuneType.HOUSEHOLDS]:  # [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.GENERAL_POPULATION]:  #the options are:GENERAL_POPULATION,HOUSEHOLDS
+        for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:  # [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.GENERAL_POPULATION]:  #the options are:GENERAL_POPULATION,HOUSEHOLDS
             for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                 for city_name, scale in [("Holon",1)]:  # [("Holon",1), ("Bene Beraq",1)]:
                     for compliance in [0.8]:
@@ -134,6 +134,7 @@ def main():
                                                                                         initial_num_infected,
                                                                                         initial_percentage_immune,
                                                                                         immune_source,
+                                                                                        min_age,
                                                                                         compliance,
                                                                                         ci_delay,
                                                                                         hi_delay,
