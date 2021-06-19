@@ -69,3 +69,20 @@ def test_gethouses():
 def test_NaiveInitialInfectionParams():
     c = NaiveInitialInfectionParams(10,0.5,'atlit',immune_source=InitialImmuneType.GENERAL_POPULATION)
     assert len(c.__str__()) > 0
+
+def test_chickagoCityEnvGeneration():
+    file_path = os.path.dirname(__file__) + "/../src/config.json"
+    with open(file_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
+    pop = population_loader.PopulationLoader(citiesDataPath)
+    tmp_city = pop.get_city_by_name('Chicago')
+    city = generate_city(tmp_city,
+                         True,
+                         internal_workplaces=True,
+                         scaling=1.0,
+                         verbosity=False,
+                         to_world=True)
+    assert len(city.all_environments) > 0
