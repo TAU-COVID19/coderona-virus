@@ -4,12 +4,12 @@ import random as random
 from collections import Counter
 from datetime import timedelta
 from copy import deepcopy
+from src.seir.disease_state import DiseaseState
 
 from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup
-from src.seir.disease_state import DiseaseState
 
 
 log = logging.getLogger(__name__)
@@ -155,7 +155,7 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None):
+    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None,min_age=0):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
@@ -164,6 +164,8 @@ class Simulation(object):
         (written to the inputs.txt file)
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
+        :param min_age: specify the min age from which we start to infect population
+        if the value is 0 we infect all the population 
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -171,24 +173,36 @@ class Simulation(object):
         if per_to_immune is None:
             per_to_immune = 0.0
         if city_name is not None:
-            population = [p for p in self._world.all_people() if p.get_city_name() == city_name]
+            population = [p for p in self._world.all_people() \
+                if (p.get_city_name() == city_name)]
         else:
-            population = self._world.all_people()
-        assert 0 <= num_infected <= len(population), "Trying to infect {} people out of {}".format(num_infected, len(population))
-        
-        num_immuned = int(round(len(population)*per_to_immune))
-        assert len(population) >= num_infected + num_immuned
-        Selected_persons = random.sample(population, num_infected + num_immuned)
-        people_to_infect = Selected_persons[0:num_infected]
-        people_to_immune = Selected_persons[num_infected: num_infected + num_immuned]
-        for person in people_to_infect:
-            assert isinstance(person, Person), type(person)
-            self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-        for person in people_to_immune:
-            assert isinstance(person, Person), type(person)
-            self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+            population = [p for p in self._world.all_people()]
 
-    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None):
+        num_immuned = int(round(len(population)*per_to_immune))
+        assert len(population) >= num_infected + num_immuned \
+            , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
+        
+        used_persons = {}
+        #First set the immune persons that are above min_age
+        while num_immuned > 0: #we start to count from zero therefor we need one more person
+            Selected_persons = random.sample(population, num_immuned)
+            for p in Selected_persons:
+                if (p.get_age() >= min_age) and (p.get_id() not in used_persons) : 
+                    self.register_events(p.immune_and_get_events(self._date, InitialGroup.initial_group()))
+                    num_immuned = num_immuned-1
+                    used_persons[p.get_id()] = p
+        for p in used_persons.values():
+            print("id:" + str(p.get_id()) +" age:"+ str(p.get_age())) 
+
+        #Second set the people that aren't immune to be infected
+        while num_infected > 0:
+            Selected_persons = random.sample(population, num_infected)
+            for p in Selected_persons:
+                if (p.get_id() not in used_persons) and (p.get_disease_state() == DiseaseState.SUSCEPTIBLE): 
+                    self.register_events(p.infect_and_get_events(self._date, InitialGroup.initial_group()))
+                    num_infected = num_infected-1
+
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
         so that the disease can spread during the simulation.
@@ -197,6 +211,8 @@ class Simulation(object):
         (written to the inputs.txt file)
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
+        :param min_age: specify the min age from which we start to infect population
+        if the value is 0 we infect all the population 
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -207,7 +223,7 @@ class Simulation(object):
             households = [h for h in self._world.get_all_city_households() if h._city == city_name]
         else:
             households = [h for h in self._world.get_all_city_households()]
-        #Select houses to emmun 
+        #Select houses immun 
         cnt_house_to_emmun = int(per_to_immune * len(households))
         random.shuffle(households)
         safe_group =households[0 : cnt_house_to_emmun]
@@ -215,15 +231,16 @@ class Simulation(object):
         #Emmune people in the safe group
         for house in safe_group:
             for person in house.get_people():
-                self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
-        #Select num_infected persons from General population that was not infected(not_sage_group) and infect them
+                if person.get_age() >= min_age:
+                    self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+        #Select num_infected persons from General population that was not infected(not_sage_group) and infect them 
         if num_infected > 0:
             UnsafePersons = [person for house in not_safe_group for person in house.get_people() \
              if person.get_disease_state() == DiseaseState.SUSCEPTIBLE]
             people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
             for person in people_to_infect:
                 self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-
+    
     def first_people_are_done(self):
         """
         chacks whether the people infected on the first “num_r_days” days
@@ -256,7 +273,7 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
-    def run_simulation(self, num_days, name, datas_to_plot=None,run_simulation = None,extensionsList = []):
+    def run_simulation(self, num_days, name, datas_to_plot=None,run_simulation = None,extensionsList = None):
         """
         This main loop of the simulation.
         It advances the simulation day by day and saves,
@@ -275,17 +292,21 @@ class Simulation(object):
         log.info("Starting simulation " + name)
 
         extensions = []
-        for ExtName in extensionsList:
-            mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
-            ExtensionType = getattr(mod,ExtName)
-            extensions = extensions + [ExtensionType(self)]
+        if extensionsList != None:
+            for ExtName in extensionsList:
+                mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
+                ExtensionType = getattr(mod,ExtName)
+                extensions = extensions + [ExtensionType(self)]
             
 
         for day in range(num_days):
+            for ext in extensions:
+                ext.start_of_day_processing()
+
             self.simulate_day()
             #Call Extension function at the end of the day
             for ext in extensions:
-                ext.DoProcessing()
+                ext.end_of_day_processing()
                 
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:

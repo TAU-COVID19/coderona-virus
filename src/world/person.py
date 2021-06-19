@@ -309,7 +309,7 @@ class Person(object):
         If this is None, it is sampled with the distribution defined in params.json.
         :return: infection events
         """
-        assert self._disease_state == DiseaseState.SUSCEPTIBLE, "person state:" + str(self._disease_state)
+        assert self._disease_state == DiseaseState.SUSCEPTIBLE  , "person state:" + str(self._disease_state)
         self.set_disease_state(DiseaseState.LATENT)
         assert self._infection_data is None, \
             "Infecting someone who is already infected"
