@@ -22,6 +22,7 @@ from src.simulation.event import (
 )
 from src.simulation.params import Params
 from src.world import Person, World
+from src.world.environments.household import Household
 
 
 def workplace_closure_routine(person: Person):
@@ -518,7 +519,7 @@ class HouseholdIsolationIntervention(Intervention):
 class ImmuneGeneralPopulationIntervention(Intervention):
     """
     Implementation of a policy of immune 100 (get as parameter) people a day,
-    until we reach certain amount of the population (which is specified in max paramter)
+    until we reach certain amount of the population (which is specified in compliance paramter)
     parmeter: people_per_day specify who many people should we immune per pay
     parameter: compliance specify the percetage of the population that got immuned
     parameter: age specifies the min age from which we start to immune people, 0 if not
@@ -547,6 +548,55 @@ class ImmuneGeneralPopulationIntervention(Intervention):
                 ret.append(new_event)
                 cnt_to_Immune  = cnt_to_Immune - 1
             group_index = group_index + 1
-            if self.duration.days > group_index:
+            if self.duration.days < group_index:
                 break
         return ret
+
+class ImmuneByHouseholdIntervention(Intervention):
+    """
+    Implementation of a policy of immune 100 (get as parameter) households a day,
+    until we reach certain amount of the households (which is specified in compliance paramter)
+    parmeter: houses_per_day specify who many houses should we immune per pay
+    parameter: compliance specify the percetage of the households that got immuned
+    parameter: age specifies the min age from which we start to immune people, 0 if not
+    specified otherwise
+    """
+    __slots__ = ('start_date', 'end_date', 'duration', 'houses_per_day','min_age')
+
+    def __init__(self, compliance: float, start_date: date, duration: timedelta, houses_per_day:int,min_age :int =0):
+        super().__init__(compliance, start_date, duration)
+        self.houses_per_day = houses_per_day
+        self.min_age = min_age
+    
+    def generate_events(self, world: World):
+        print("Enter generate_events")
+        assert self.compliance <= 1
+        all_houses = []
+        for h in world.get_all_city_households():
+            if any([p.get_age() > self.min_age for p in h.get_people()]):
+                all_houses.append(h)
+
+        cnt_to_Immune = int(self.compliance * len(all_houses))
+        houses_to_immune = random.sample(all_houses,cnt_to_Immune)
+        ret = []
+        group_index = 0
+        print("cnt_to_Immune"+str(cnt_to_Immune))
+        while cnt_to_Immune > 0:
+            for i in range(min(self.houses_per_day,cnt_to_Immune)):
+                house_index = group_index * self.houses_per_day  + i
+                print("gi:"+str(group_index) + "hpd:" + str(self.houses_per_day)+"house_index:" + str(house_index))
+                for p in houses_to_immune[house_index].get_people():
+                    new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
+                    new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
+                    ret.append(new_event)
+                    print("Enter append p.age()"+str(p.get_age()))
+            cnt_to_Immune  = cnt_to_Immune - 1
+            print("cnt_to_Immune:"+str(cnt_to_Immune))
+            group_index = group_index + 1
+            if self.duration.days < group_index:
+                print("break")
+                break
+        return ret
+
+    
+        

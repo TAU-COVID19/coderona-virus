@@ -6,6 +6,7 @@ from src.simulation.interventions.intervention import \
     CityCurfewIntervention, \
     HouseholdIsolationIntervention, \
     WorkplaceClosureIntervention,\
+    ImmuneByHouseholdIntervention,\
     ImmuneGeneralPopulationIntervention
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     'HouseholdIsolationIntervention',
     'WorkplaceClosureIntervention',
     'ImmuneGeneralPopulationIntervention',
+    'ImmuneByHouseholdIntervention',
 ]
