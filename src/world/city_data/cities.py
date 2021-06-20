@@ -22,10 +22,10 @@ HOUSEHOLD_AMOUNT_COLUMN = 30
 KIDS_PER_HOUSEHOLD_DISTRIBUTION_COLUMNS = list(range(31, 36))
 KIDS_PER_HOUSEHOLD_SEGMENTS = [(i, i) for i in range(1, 6)]
 POPULATION_COLUMN = 36
-WORKPLACE_NAFA_DISTRIBUTION_COLUMNS = list(range(37, 55))
-PROPORTION_WORKING_IN_CITY_COLUMN = 55
-OLD_POPULATION_COLUMN = 56
-COMPLETE_DATA_COLUMNS = [57, 58]
+WORKPLACE_NAFA_DISTRIBUTION_COLUMNS = list(range(37, 57))
+PROPORTION_WORKING_IN_CITY_COLUMN = 57
+OLD_POPULATION_COLUMN = 58
+COMPLETE_DATA_COLUMNS = [59, 60]
 
 # The segments underlying the given age distribution.
 # The smart household generation does not use the last segment, but rather
@@ -87,7 +87,11 @@ def city_from_csv_line(line, nafa_col_values):
     kids_per_household_distribution = Distribution(KIDS_PER_HOUSEHOLD_SEGMENTS, kids_per_household_data)
 
     old_population = float(line[OLD_POPULATION_COLUMN]) * 1000
-    growth_factor = population / old_population
+    if old_population != 0:
+        growth_factor = population / old_population
+    #In some cases old_population is missing and there for been zeroed e.g Chicago
+    else:
+        growth_factor = 1
     num_households = int(float(line[HOUSEHOLD_AMOUNT_COLUMN]) * 1000 * growth_factor)
 
     workplace_nafa_distribution = {}
