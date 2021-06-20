@@ -547,4 +547,6 @@ class ImmuneGeneralPopulationIntervention(Intervention):
                 ret.append(new_event)
                 cnt_to_Immune  = cnt_to_Immune - 1
             group_index = group_index + 1
+            if self.duration.days > group_index:
+                break
         return ret
