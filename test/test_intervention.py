@@ -1,6 +1,7 @@
 from datetime import timedelta
 import json
 import os
+from src.seir.disease_state import DiseaseState
 import pytest
 
 from src.run_utils import SimpleJob, run, INITIAL_DATE
@@ -9,6 +10,7 @@ from src.simulation.event import DayEvent
 from src.simulation.interventions import *
 from src.simulation.initial_infection_params import SmartInitialInfectionParams
 from src.simulation.params import Params
+from src.simulation.simulation import Simulation
 from src.logs import Statistics
 from src.world import Person,World
 
@@ -158,6 +160,8 @@ def test_ImmuneGeneralPopulationIntervention():
         generating_city_name = "test",
         generating_scale = 1)
     
+    my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[my_intervention])
+    
     #test
     lst =  my_intervention.generate_events(small_world)
     #Assert results 
@@ -166,4 +170,13 @@ def test_ImmuneGeneralPopulationIntervention():
     for i in range(1):
         assert isinstance(lst[i],DayEvent)
     
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 1
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 2
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 2
 
