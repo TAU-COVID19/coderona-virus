@@ -87,7 +87,11 @@ def city_from_csv_line(line, nafa_col_values):
     kids_per_household_distribution = Distribution(KIDS_PER_HOUSEHOLD_SEGMENTS, kids_per_household_data)
 
     old_population = float(line[OLD_POPULATION_COLUMN]) * 1000
-    growth_factor = population / old_population
+    if old_population != 0:
+        growth_factor = population / old_population
+    #In some cases old_population is missing and there for been zeroed e.g Chicago
+    else:
+        growth_factor = 1
     num_households = int(float(line[HOUSEHOLD_AMOUNT_COLUMN]) * 1000 * growth_factor)
 
     workplace_nafa_distribution = {}
