@@ -132,4 +132,38 @@ def test_SymptomaticIsolationIntervention_Genarete_events():
         assert isinstance(lst[i],DayEvent)
     for person in persons_arr:
         assert len(list(person.state_to_events.keys())) == (1+4)
-        
+    
+def test_ImmuneGeneralPopulationIntervention():
+    #pretesting
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    my_intervention = ImmuneGeneralPopulationIntervention(
+        compliance = 1, 
+        start_date = INITIAL_DATE,
+        duration  = daysdelta(40),
+        people_per_day = 1,
+        min_age = 15) 
+    assert my_intervention is not None
+
+    persons_arr = list(map(Person, [10,20,30]))
+    assert len(persons_arr) == 3
+    env_arr = []
+    small_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+    
+    #test
+    lst =  my_intervention.generate_events(small_world)
+    #Assert results 
+    assert lst is not None
+    assert len(lst) == 2
+    for i in range(1):
+        assert isinstance(lst[i],DayEvent)
+    
+

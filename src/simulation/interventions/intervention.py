@@ -5,21 +5,23 @@ from datetime import date, timedelta
 
 from src.seir import DiseaseState
 from src.simulation.event import (
-    Event,
-    DayEvent,
     AddRoutineChangeEffect,
-    RemoveRoutineChangeEffect,
-    AddRoutineChangeEnvironmentEffect,
-    RemoveRoutineChangeEnvironmentEffect,
-    DelayedEffect,
-    AndTrigger,
     AfterTrigger,
-    TimeRangeTrigger,
+    AddRoutineChangeEnvironmentEffect,
+    AndTrigger,
+    DayEvent,
+    DelayedEffect,
+    DiseaseStateChangeEffect,
+    EmptyEffect,
     EmptyTrigger,
-    OrTrigger
+    Event,
+    OrTrigger,
+    RemoveRoutineChangeEffect,
+    RemoveRoutineChangeEnvironmentEffect,
+    TimeRangeTrigger
 )
-from src.world import Person, World
 from src.simulation.params import Params
+from src.world import Person, World
 
 
 def workplace_closure_routine(person: Person):
@@ -511,4 +513,38 @@ class HouseholdIsolationIntervention(Intervention):
                         DelayedEffect(Event(effect=remove_effect), self.delay_on_exit)
                     )
                     add_event.hook(remove_event)
+        return ret
+    
+class ImmuneGeneralPopulationIntervention(Intervention):
+    """
+    Implementation of a policy of immune 100 (get as parameter) people a day,
+    until we reach certain amount of the population (which is specified in max paramter)
+    parmeter: people_per_day specify who many people should we immune per pay
+    parameter: compliance specify the percetage of the population that got immuned
+    parameter: age specifies the min age from which we start to immune people, 0 if not
+    specified otherwise
+    """
+    __slots__ = ('start_date', 'end_date', 'duration', 'people_per_day','min_age')
+
+    def __init__(self, compliance: float, start_date: date, duration: timedelta, people_per_day:int,min_age :int =0):
+        super().__init__(compliance, start_date, duration)
+        self.people_per_day = people_per_day
+        self.min_age = min_age
+    
+    def generate_events(self, world: World):
+        assert self.compliance <= 1
+        all_people = [p for p in world.all_people() if p.get_age() > self.min_age]
+        cnt_to_Immune = int(self.compliance * len(all_people))
+        people_to_immune = random.sample(all_people,cnt_to_Immune)
+        ret = []
+        group_index = 0
+        while cnt_to_Immune > 0:
+            for i in range(min(self.people_per_day,cnt_to_Immune)):
+                person_index = group_index * self.people_per_day  + i
+                p  = people_to_immune[person_index]
+                new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
+                new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
+                ret.append(new_event)
+                cnt_to_Immune  = cnt_to_Immune - 1
+            group_index = group_index + 1
         return ret
