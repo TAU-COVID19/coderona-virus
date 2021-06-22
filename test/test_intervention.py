@@ -1,11 +1,21 @@
 from datetime import timedelta
+import json
 import os
+from src.seir.disease_state import DiseaseState
 import pytest
+import random
 
 from src.run_utils import SimpleJob, run, INITIAL_DATE
+from src.seir import daysdelta
+from src.simulation.event import DayEvent
 from src.simulation.interventions import *
 from src.simulation.initial_infection_params import SmartInitialInfectionParams
+from src.simulation.params import Params
+from src.simulation.simulation import Simulation
 from src.logs import Statistics
+from src.world import Person,World
+from src.world.environments.household import Household
+
 
 
 @pytest.fixture(params=[False, True])
@@ -98,3 +108,152 @@ def test_school_isolation_intervention_simulation():
     results = Statistics.load(os.path.join(outdir, scenario_name, 'statistics.pkl'))
     summary = results.get_summary_data_for_age_group((4, 12))
     assert summary["Total infected in school"] + summary["Total infected in initial_group"] == summary["Total infected"]
+
+def test_SymptomaticIsolationIntervention_Genarete_events():
+    #pretesting
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    my_intervention = SymptomaticIsolationIntervention(compliance = 1, start_date = INITIAL_DATE,duration  = daysdelta(40))
+    assert my_intervention is not None
+
+    persons_arr = list(map(Person, [10,20,30]))
+    assert len(persons_arr) == 3
+    env_arr = []
+    small_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+    
+    #test
+    lst =  my_intervention.generate_events(small_world)
+    #Assert results 
+    assert lst is not None
+    assert len(lst) == 3
+    for i in range(1):
+        assert isinstance(lst[i],DayEvent)
+    for person in persons_arr:
+        assert len(list(person.state_to_events.keys())) == (1+4)
+    
+def test_ImmuneGeneralPopulationIntervention():
+    #pretesting
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    my_intervention = ImmuneGeneralPopulationIntervention(
+        compliance = 1, 
+        start_date = INITIAL_DATE,
+        duration  = daysdelta(40),
+        people_per_day = 1,
+        min_age = 15) 
+    assert my_intervention is not None
+
+    persons_arr = list(map(Person, [10,20,30]))
+    assert len(persons_arr) == 3
+    env_arr = []
+    small_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+    
+    my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[my_intervention])
+    
+    #test
+    lst =  my_intervention.generate_events(small_world)
+    #Assert results 
+    assert lst is not None
+    assert len(lst) == 2
+    for i in range(1):
+        assert isinstance(lst[i],DayEvent)
+    
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 1
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 2
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 2
+
+def test_ImmuneByHouseholdIntervention():
+    #pretesting
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    my_intervention = ImmuneByHouseholdIntervention(
+        compliance = 1, 
+        start_date = INITIAL_DATE,
+        duration  = daysdelta(40),
+        houses_per_day = 1,
+        min_age = 18) 
+    assert my_intervention is not None
+
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    #create diff enviroments
+    KidsHouse = Household(city = None,contact_prob_between_each_two_people=1)
+    AdultsHouse = Household(city = None,contact_prob_between_each_two_people=1)
+    MixedHouse = Household(city = None,contact_prob_between_each_two_people=1)
+
+    kidsAges = [random.randint(0,17) for i in range(4)]    
+    adultsAges  = [random.randint(19,40) for i in range(3)]    
+    KidsLst  = list(map(Person, kidsAges))
+    adultsLst = list(map(Person, adultsAges))
+    persons_arr = KidsLst + adultsLst
+
+    #register people to diff env
+    KidsHouse.sign_up_for_today(KidsLst[0],1)
+    KidsHouse.sign_up_for_today(KidsLst[1],1)
+
+    AdultsHouse.sign_up_for_today(adultsLst[0],1)
+    AdultsHouse.sign_up_for_today(adultsLst[1],1)
+
+    MixedHouse.sign_up_for_today(adultsLst[2],1)
+    MixedHouse.sign_up_for_today(KidsLst[2],1)
+    MixedHouse.sign_up_for_today(KidsLst[3],1)
+    
+    assert len(KidsHouse.get_people()) == 2
+    assert len(AdultsHouse.get_people()) == 2
+    assert len(MixedHouse.get_people()) == 3
+
+    env_arr = [KidsHouse,AdultsHouse,MixedHouse]
+    my_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1,)
+    
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE,interventions=[my_intervention])
+    
+    #test
+    lst =  my_intervention.generate_events(my_world)
+    #Assert results 
+    assert lst is not None
+    assert len(lst) == 5
+    for i in range(1):
+        assert isinstance(lst[i],DayEvent)
+    
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune <=3
+    my_simulation.simulate_day()
+    cnt_immune = sum([1 for p in persons_arr if p.get_disease_state()==DiseaseState.IMMUNE])
+    assert cnt_immune == 5 
+    my_simulation.simulate_day()
+    

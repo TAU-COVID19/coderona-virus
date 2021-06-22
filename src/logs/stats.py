@@ -25,7 +25,7 @@ from src.logs.r0_data import calculate_r0_data
 
 from typing import List
 from src.world import Person
-from src.simulation.interventions.intervention import Intervention
+from src.simulation.interventions.intervention import Intervention, LockdownIntervention
 import datetime
 
 logging.getLogger('matplotlib.font_manager').disabled = True
