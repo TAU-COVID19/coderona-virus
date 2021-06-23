@@ -1787,6 +1787,19 @@ def paper_1(compliance, ci_delay, hi_delay):
 def no_interventions(compliance=1, ci_delay=None, hi_delay=None):
     return []
 
+
+def vaccinations_scenario(compliance=1, ci_delay=None, hi_delay=None):
+    vaccinations = ImmuneGeneralPopulationIntervention(
+        compliance=compliance,
+        start_date=INITIAL_DATE+timedelta(days=30),
+        duration=daysdelta(3*7),
+        people_per_day=1000,
+        min_age=18)
+    interventions = [
+        vaccinations
+    ]
+    return interventions
+
 def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
     lockdown_intervention = LockdownIntervention(
         start_date=INITIAL_DATE+timedelta(days=30),
