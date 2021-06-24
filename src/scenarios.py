@@ -1787,13 +1787,24 @@ def paper_1(compliance, ci_delay, hi_delay):
 def no_interventions(compliance=1, ci_delay=None, hi_delay=None):
     return []
 
-
-def vaccinations_scenario(compliance=1, ci_delay=None, hi_delay=None):
+def vaccinations_scenario_general(compliance=1, ci_delay=None, hi_delay=None):
     vaccinations = ImmuneGeneralPopulationIntervention(
         compliance=compliance,
-        start_date=INITIAL_DATE+timedelta(days=30),
-        duration=daysdelta(3*7),
-        people_per_day=1000,
+        start_date=INITIAL_DATE,
+        duration=daysdelta(16*7),
+        people_per_day=100,
+        min_age=18)
+    interventions = [
+        vaccinations
+    ]
+    return interventions
+
+def vaccinations_scenario_households(compliance=1, ci_delay=None, hi_delay=None):
+    vaccinations = ImmuneByHouseholdIntervention(
+        compliance=compliance,
+        start_date=INITIAL_DATE,
+        duration=daysdelta(16*7),
+        people_per_day=20,
         min_age=18)
     interventions = [
         vaccinations
