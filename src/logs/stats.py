@@ -27,6 +27,8 @@ from typing import List
 from src.world import Person
 from src.simulation.interventions.intervention import Intervention, LockdownIntervention
 import datetime
+from functional import seq
+from collections import namedtuple
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -643,6 +645,13 @@ class Statistics(object):
         assert not os.path.exists(outpath), "File %s already exists!" % outpath
         with open(outpath, 'wb') as f:
             pickle.dump(self, f)
+
+    def write_all_person_stats_to_csv(self, persons: List[Person], to_file_name: str = "persons_age_sickness.csv"):
+        if not os.path.exists(self._output_path):
+            os.makedirs(self._output_path)
+        outpath = os.path.join(self._output_path, to_file_name)
+        PERSON_STATS = namedtuple('PERSON_STATS', 'age sickness_status')
+        seq(persons).map(lambda person: PERSON_STATS(person.get_age(), person.get_disease_state())).to_csv(outpath)
 
     @staticmethod
     def load(path):

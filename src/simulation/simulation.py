@@ -326,4 +326,6 @@ class Simulation(object):
         self.stats.write_params()
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()
+        self.stats.write_all_person_stats_to_csv(self._world.all_people())
+
         
