@@ -3,7 +3,7 @@ import random
 import itertools
 from datetime import date, timedelta
 
-from src.seir import DiseaseState
+from src.seir import DiseaseState, seir_times
 from src.simulation.event import (
     AddRoutineChangeEffect,
     AfterTrigger,
@@ -543,9 +543,12 @@ class ImmuneGeneralPopulationIntervention(Intervention):
             for i in range(min(self.people_per_day,cnt_to_Immune)):
                 person_index = group_index * self.people_per_day  + i
                 p  = people_to_immune[person_index]
-                new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
-                new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
-                ret.append(new_event)
+                # new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
+                # new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
+                # ret.append(new_event)
+                events_to_add = p.immune_and_get_events(start_date = self.start_date, delta_time = timedelta(group_index))
+                for e in events_to_add:
+                    ret.append(e)
                 cnt_to_Immune  = cnt_to_Immune - 1
             group_index = group_index + 1
             if self.duration.days < group_index:

@@ -4,6 +4,7 @@ import random as random
 from collections import Counter
 from datetime import timedelta
 from copy import deepcopy
+from src.seir import seir_times
 from src.seir.disease_state import DiseaseState
 
 from src.simulation.event import DayEvent
@@ -188,11 +189,9 @@ class Simulation(object):
             Selected_persons = random.sample(population, num_immuned)
             for p in Selected_persons:
                 if (p.get_age() >= min_age) and (p.get_id() not in used_persons) : 
-                    self.register_events(p.immune_and_get_events(self._date, InitialGroup.initial_group()))
+                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =0) ))
                     num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
-        for p in used_persons.values():
-            print("id:" + str(p.get_id()) +" age:"+ str(p.get_age())) 
 
         #Second set the people that aren't immune to be infected
         while num_infected > 0:
@@ -224,15 +223,15 @@ class Simulation(object):
         else:
             households = [h for h in self._world.get_all_city_households()]
         #Select houses immun 
-        cnt_house_to_emmun = int(per_to_immune * len(households))
+        cnt_house_to_immun = int(per_to_immune * len(households))
         random.shuffle(households)
-        safe_group =households[0 : cnt_house_to_emmun]
-        not_safe_group = households[cnt_house_to_emmun:]
+        safe_group =households[0 : cnt_house_to_immun]
+        not_safe_group = households[cnt_house_to_immun:]
         #Emmune people in the safe group
         for house in safe_group:
             for person in house.get_people():
                 if person.get_age() >= min_age:
-                    self.register_events(person.immune_and_get_events(self._date, InitialGroup.initial_group()))
+                    self.register_events(person.immune_and_get_events(start_date = self._date, delta_time = timedelta(days=0)))
         #Select num_infected persons from General population that was not infected(not_sage_group) and infect them 
         if num_infected > 0:
             UnsafePersons = [person for house in not_safe_group for person in house.get_people() \

@@ -35,7 +35,6 @@ def test_createInfectedPersons():
 
     my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
     my_simulation.run_simulation(7,"test_simulation",datas_to_plot = None,extensionsList = ["ImmuneByAgeExtension","EmptyExtension"] )
-    
     cnt = sum([1 for p in persons_arr if p.get_disease_state() == DiseaseState.IMMUNE])
     assert cnt == 3
     
