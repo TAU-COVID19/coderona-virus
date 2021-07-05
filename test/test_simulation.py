@@ -31,15 +31,6 @@ def test_simulation_haifa():
     job = SimpleJob("test_default_haifa", 'haifa', 1.0)
     run([job])
 
-
-def test_mini_all_country_simulation():
-    """
-    Runs a simulation on 3% of the entire country
-    """
-    job = SimpleJob("test_default_all_0.03", 'all', 0.03)
-    run([job])
-
-
 @pytest.mark.slow
 def test_all_country_simulation_slow():
     """

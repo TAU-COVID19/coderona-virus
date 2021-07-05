@@ -24,7 +24,7 @@ def test_CityGeneration():
                          to_world=True)
 
     humans = city.all_people()
-    assert abs(283637 - len(humans)) < 5
+    assert abs(283637 / len(humans) - 1) < 0.05
     assert len(city.get_all_city_communities()) == 1
     assert city.get_person_from_id(humans[0]._id) is not None
 
