@@ -35,7 +35,8 @@ INTERVENTION_TYPE_TO_COLOR = {
     SymptomaticIsolationIntervention: 'red',
     CityCurfewIntervention: 'gray',
     HouseholdIsolationIntervention: 'blue',
-    WorkplaceClosureIntervention: 'teal'
+    WorkplaceClosureIntervention: 'teal',
+    LockdownIntervention: 'pink'
 }
 
 INTERVENTION_TYPE_TO_LABEL = {
