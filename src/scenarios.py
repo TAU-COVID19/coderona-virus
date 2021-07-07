@@ -52,6 +52,19 @@ def scenario_1_interventions(compliance, ci_delay, hi_delay):
                       ]
     return interventions
 
+def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
+    lockdown_intervention = LockdownIntervention(
+        start_date=INITIAL_DATE+timedelta(0.0),
+        duration=daysdelta(4*7),
+        compliance=0.80,
+        city_name='all'
+    )
+    interventions = [
+                     lockdown_intervention
+                     ]
+    return interventions
+
+
 def scenario_21_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,

@@ -91,8 +91,9 @@ def main():
         #"paper_5": paper_5
         #"paper_6": paper_6
         #"paper_7": paper_7
-        "paper_8": paper_8
+        # "paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
+        "noam_lockdown_scenario": noam_lockdown_scenario
     }
 
     datas_to_plot = get_datas_to_plot()

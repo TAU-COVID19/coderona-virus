@@ -321,6 +321,26 @@ class CityCurfewIntervention(TimedIntervention):
             return False
         return True
 
+class LockdownIntervention(TimedIntervention):
+    """
+    Implementation of Lockdown where everyone are at home, going out just for necessities
+    """
+    __slots__ = ("city_name",)
+
+    def __init__(self, city_name, start_date: date, duration: timedelta, compliance: float):
+        super(LockdownIntervention, self).__init__(
+            start_date, duration, compliance, 'lockdown',
+            lockdown_routine
+        )
+        self.city_name = city_name
+
+    def _condition(self, x):
+        if all(env._city.get_name() != self.city_name for env in x._environments.values()):
+            return False
+        if all(env._city.get_name() == self.city_name for env in x._environments.values()):
+            return False
+        return True
+
 
 class SymptomaticIsolationIntervention(Intervention):
     """
