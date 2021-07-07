@@ -40,13 +40,14 @@ INTERVENTION_TYPE_TO_COLOR = {
 }
 
 INTERVENTION_TYPE_TO_LABEL = {
-    SocialDistancingIntervention: 'social distancing',
+    CityCurfewIntervention: 'city curfew intervention',
     ElderlyQuarantineIntervention: 'Elderly Quarantine',
+    HouseholdIsolationIntervention: 'household isolation',
+    LockdownIntervention: 'lockdown isolation',
+    SocialDistancingIntervention: 'social distancing',
     SchoolClosureIntervention: 'school closure',
     SchoolIsolationIntervention: 'school isolation',
     SymptomaticIsolationIntervention: 'symptomatic isolation',
-    CityCurfewIntervention: 'city curfew intervention',
-    HouseholdIsolationIntervention: 'household isolation',
     WorkplaceClosureIntervention: 'workplace closure'
 }
 
