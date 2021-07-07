@@ -142,10 +142,24 @@ def test_Atlit_population_generation():
     print("a65:" + str(a65))
     print("l17:" + str(l17))
     print("total:" + str(households_num))
-    assert abs((households_num / growth_factor - 1350)) < 150
+    assert abs((households_num / growth_factor - 1350)) < 1350*0.01
     #Tests that fails 
-    # assert abs((a65 / (households_num*growth_factor))*100 - 21.3) < 5
-    # assert abs((l17 / (households_num*growth_factor))*100 - 50.7) < 5
+    assert abs((a65 / (households_num*growth_factor))*100 - 21.3) < 1
+    assert abs((l17 / (households_num*growth_factor))*100 - 50.7) < 1
 
     kids_expected = [44.7,32.3,20.3,2.5,0.2]
+    kids_reality = [0,0,0,0,0,0]
     
+    for house in my_world.get_all_city_households():
+        kidCnt =0 
+        for person in house.get_people():
+            if person.get_age() < 18:
+                kidCnt+=1
+        kidCnt = min(5,kidCnt)
+        kids_reality[kidCnt] += 1
+    for i in range(len(kids_expected)):
+        kids_reality[i] = kids_reality[i] / len(my_world.get_all_city_households()) * 100
+    print(kids_reality)
+    for i in range(len(kids_reality)):
+        assert abs(kids_reality[i+1] - kids_expected[i]) < 0.1
+        
