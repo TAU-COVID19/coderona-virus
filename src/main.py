@@ -93,7 +93,9 @@ def main():
         #"paper_7": paper_7
         # "paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
-        "noam_lockdown_scenario": noam_lockdown_scenario
+        # "noam_lockdown_scenario": noam_lockdown_scenario
+        "vaccinations_scenario_general": vaccinations_scenario_general,
+        # "vaccinations_scenario_households": vaccinations_scenario_households,
     }
 
     datas_to_plot = get_datas_to_plot()
