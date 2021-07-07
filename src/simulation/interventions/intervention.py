@@ -24,6 +24,15 @@ from src.simulation.params import Params
 from src.world import Person, World
 from src.world.environments.household import Household
 
+def lockdown_routine(person: Person):
+    """
+    Create a routine change that represents a person being in lockdown.
+    Here we try to represent the changing (decreasing of weights) of the weight in all the environment, due to the lockdown and at home contacts increase.
+    :param person: Person
+    :return: routine change dict, keys are environment names, values are weight multipliers.
+    """
+    params = Params.loader()["interventions_routines"]["lockdown"]
+    return {env_name: params["all"] for env_name in person.get_routine()}
 
 def workplace_closure_routine(person: Person):
     """
