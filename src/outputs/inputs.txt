@@ -1,8 +1,0 @@
-City: test
-Scale: 1
-Initial date: 2020-02-27
-Initial infection: None
-Num days: 7
-base_infectiousness: 0.1
-
-Interventions:

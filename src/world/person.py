@@ -344,31 +344,42 @@ class Person(object):
             states_and_times = sample_seir_times(self)
         #remove the None from the end of table 
         states_and_times = states_and_times[:-1]
+        print("immune_and_get_events")
+        print("id:{} start_date:{} delta_time:{}".format(self.get_id(),start_date,delta_time.days))
+        print(states_and_times)
         #Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
         i=0
         new_states_and_times = []
+        cut_in_middle = False
         if delta_time.days ==0:
             new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
             lastState = DiseaseState.IMMUNE
         else:
-            
-            while (delta_time.days > 0) and (i < len(states_and_times)):
+            print("Enter while delta_time:{} len(states_and_times):{}".format(delta_time.days,len(states_and_times)))
+            while (i < len(states_and_times)) and (delta_time.days >= states_and_times[i][1].days):
                 next_stage_duration = min(states_and_times[i][1].days,delta_time.days)
-                if not(next_stage_duration == delta_time.days) or not(states_and_times[i][0] == DiseaseState.IMMUNE):
+                if (next_stage_duration == delta_time.days):
+                    cut_in_middle = True
+                if states_and_times[i][0] != DiseaseState.IMMUNE:
+                    print("creat new event state:{} duration:{}".format(states_and_times[i][0],next_stage_duration))
                     new_states_and_times.append(\
                         (states_and_times[i][0],timedelta(days = next_stage_duration)))
                     delta_time -= timedelta(days = next_stage_duration)
                     lastState = states_and_times[i][0]
                 i += 1
-        assert delta_time.days >= 0,'miscalculating days'
-        # if delta_time.days < 0 :
-        #     print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
-        #     print("start_date:{} ,old_delta_time:{} ,delta_time:{}".format(start_date,old_delta_time , delta_time))
-        #     print(states_and_times)
-        #     print("-----------------------")
+            assert delta_time.days >= 0,'miscalculating days'
+            # if delta_time.days < 0 :
+            #     print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
+            #     print("start_date:{} ,old_delta_time:{} ,delta_time:{}".format(start_date,old_delta_time , delta_time))
+            #     print(states_and_times)
+            #     print("-----------------------")
 
-        if not(lastState == DiseaseState.IMMUNE):
-            new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+            if (delta_time.days > 0) or (i==0) or ((lastState != DiseaseState.IMMUNE) and (cut_in_middle)):
+                new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                print("append IMMUNE")
+            elif cut_in_middle:
+                new_states_and_times[i-1][0] == DiseaseState.IMMUNE
+                print("replace to IMMUNE")
         
         #Shuold be at the end of the table
         new_states_and_times.append((DiseaseState.IMMUNE,None))

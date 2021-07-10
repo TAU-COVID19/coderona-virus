@@ -111,6 +111,8 @@ def test_school_isolation_intervention_simulation():
 
 def test_SymptomaticIsolationIntervention_Genarete_events():
     #pretesting
+    #clear output dir
+    
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
@@ -129,6 +131,8 @@ def test_SymptomaticIsolationIntervention_Genarete_events():
         generating_city_name = "test",
         generating_scale = 1)
     
+    my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[my_intervention])
+
     #test
     lst =  my_intervention.generate_events(small_world)
     #Assert results 
@@ -138,6 +142,9 @@ def test_SymptomaticIsolationIntervention_Genarete_events():
         assert isinstance(lst[i],DayEvent)
     for person in persons_arr:
         assert len(list(person.state_to_events.keys())) == (1+4)
+    
+    my_simulation.run_simulation(name="test",num_days = 60)
+    
     
 def test_ImmuneGeneralPopulationIntervention():
     #pretesting

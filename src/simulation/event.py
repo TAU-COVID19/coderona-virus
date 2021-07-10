@@ -177,6 +177,7 @@ class EmptyEffect:
         pass
 
     def apply(self, simulation):
+        print("Enter EmptyEffect.apply")
         pass
 
 
@@ -201,6 +202,7 @@ class DiseaseStateChangeEffect:
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
+        print("Enter DiseaseStateChangeEffect.apply")
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +
@@ -236,6 +238,7 @@ class DelayedEffect:
         register self.event to happen in delay_time days
         :param simulation: Simulation object
         """
+        print("DelayedEffect.apply")
         target_day = simulation._date + self._delay_time
         simulation.register_event_on_day(self._event, target_day)
 
