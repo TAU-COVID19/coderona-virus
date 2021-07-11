@@ -94,7 +94,7 @@ def main():
         # "paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
         # "noam_lockdown_scenario": noam_lockdown_scenario
-        "vaccinations_scenario_general": vaccinations_scenario_general
+        # "vaccinations_scenario_general": vaccinations_scenario_general
         # "vaccinations_scenario_households": vaccinations_scenario_households,
     }
 
@@ -150,7 +150,7 @@ def main():
                                                                             params_to_change=params_to_change,
                                                                             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                             datas_to_plot=datas_to_plot),
-                                                                num_repetitions=1))
+                                                                num_repetitions=20))
 
     # add job to make r to base infectiousness graph:
     # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
