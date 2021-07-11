@@ -118,19 +118,19 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.0]:
+    for initial_percentage_immune in [0.0,0.5]:
         for immune_source,min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
-            for initial_num_infected in [100]:
-                for city_name, scale in [("Atlit",1)]:
+            for initial_num_infected in [25, 100, 250, 500]:
+                for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:
                     for compliance in [0.8]:
                         for ci_delay in [4]:
-                            for hi_delay in [4]:
-                                    for symptomatic_probs_scale in [1]:
-                                        for scenario_name, intervention_scheme in scenarios.items():
-                                            params_to_change= {
+                            for hi_delay in [4]:                                
+                                for symptomatic_probs_scale in [1]:
+                                    for scenario_name, intervention_scheme in scenarios.items():
+                                        params_to_change= {
                                                 ('disease_parameters', 'symptomatic_given_infected_per_age'): get_rescaled_symptomatic_probs(symptomatic_probs_scale)
                                             }
-                                            full_scenario_name = generate_scenario_name(city_name,
+                                        full_scenario_name = generate_scenario_name(city_name,
                                                                                         scenario_name,
                                                                                         initial_num_infected,
                                                                                         initial_percentage_immune,
@@ -141,7 +141,7 @@ def main():
                                                                                         hi_delay,
                                                                                         symptomatic_probs_scale)
         #                                    full_scenario_name = "res"
-                                            jobs.append(RepeatJob(SimpleJob(full_scenario_name,
+                                        jobs.append(RepeatJob(SimpleJob(full_scenario_name,
                                                                             days=180,
                                                                             city_name=city_name,
                                                                             scale=scale,
@@ -150,7 +150,7 @@ def main():
                                                                             params_to_change=params_to_change,
                                                                             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                             datas_to_plot=datas_to_plot),
-                                                                num_repetitions=20))
+                                                                num_repetitions=50))
 
     # add job to make r to base infectiousness graph:
     # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
