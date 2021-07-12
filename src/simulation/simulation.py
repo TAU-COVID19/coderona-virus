@@ -156,7 +156,7 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None,min_age=0):
+    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None,min_age=0,people_per_day =1):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
@@ -187,11 +187,17 @@ class Simulation(object):
         #First set the immune persons that are above min_age
         while num_immuned > 0: #we start to count from zero therefor we need one more person
             Selected_persons = random.sample(population, num_immuned)
+            delta_days =0 
+            immuned_today =0 
             for p in Selected_persons:
                 if (p.get_age() >= min_age) and (p.get_id() not in used_persons) : 
-                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =0) ))
+                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
                     num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
+                    immuned_today +=1
+                    if immuned_today == people_per_day:
+                        delta_days += 1 
+                        immuned_today = 0
 
         #Second set the people that aren't immune to be infected
         while num_infected > 0:

@@ -39,7 +39,8 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
 
     def infect_simulation(self, sim, outdir):
         if self.immune_source == InitialImmuneType.GENERAL_POPULATION:
-            sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect,self.min_age)
+            sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, \
+            self.city_name_to_infect,self.min_age,people_per_day = self.people_per_day)
         if self.immune_source == InitialImmuneType.HOUSEHOLDS:
             sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune, \
              self.city_name_to_infect,self.min_age,people_per_day =self.people_per_day)
