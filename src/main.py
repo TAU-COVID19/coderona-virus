@@ -122,7 +122,7 @@ def main():
     for initial_percentage_immune in [0.0,0.5]:
         for immune_source,min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
             for initial_num_infected in [25, 100, 250, 500]:
-                for city_name, scale in [("Atlit",1)]:
+                for city_name, scale in [("Bene Beraq",1),("Holon",1)]:
                     for compliance in [0.8]:
                         for ci_delay in [4]:
                             for hi_delay in [4]:                                

@@ -326,7 +326,6 @@ class Person(object):
             states_and_times = sample_seir_times(self)
         #update seir times table
         self._seir_times = states_and_times  
-        print("infect_and_get_events id:{} states_and_times:{}".format(self.get_id(),states_and_times))
         return self.gen_and_register_events_from_seir_times(date, states_and_times)
     
     def immune_and_get_events(
