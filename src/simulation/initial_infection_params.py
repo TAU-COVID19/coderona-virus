@@ -41,8 +41,6 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
             sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect,self.min_age)
         if self.immune_source == InitialImmuneType.HOUSEHOLDS:
             sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect,self.min_age)
-        #TODO:: Remove AGE18PLUS
-        #TODO:: Remove immune_18_plus
         
     def __str__(self):
         if self.city_name_to_infect is None:

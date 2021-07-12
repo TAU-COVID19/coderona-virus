@@ -201,7 +201,7 @@ class Simulation(object):
                     self.register_events(p.infect_and_get_events(self._date, InitialGroup.initial_group()))
                     num_infected = num_infected-1
 
-    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0):
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0,people_per_day =0 ):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
         so that the disease can spread during the simulation.
@@ -212,6 +212,8 @@ class Simulation(object):
         (if left None, infects people from all around the World)
         :param min_age: specify the min age from which we start to infect population
         if the value is 0 we infect all the population 
+        :per_to_immune: percentage of the population that we are going to immune by housholds
+        :people_per_day: how much houses per day we should immune
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -219,27 +221,50 @@ class Simulation(object):
         if per_to_immune is None:
             per_to_immune = 0.0
         if city_name is not None:
-            households = [h for h in self._world.get_all_city_households() if h._city == city_name]
+            tmp_households = [h for h in self._world.get_all_city_households() if h._city == city_name]
         else:
-            households = [h for h in self._world.get_all_city_households()]
-        #Select houses immun 
-        cnt_house_to_immun = int(per_to_immune * len(households))
+            tmp_households = [h for h in self._world.get_all_city_households()]
+        
+        households= []
+        acc = 0 
+        for h in tmp_households:
+            cnt = len([p for p in h.get_people() if p.get_age() > min_age])
+            if cnt > 0:
+                households.append(h)
+                acc += cnt
         random.shuffle(households)
-        safe_group =households[0 : cnt_house_to_immun]
-        not_safe_group = households[cnt_house_to_immun:]
-        #Emmune people in the safe group
-        for house in safe_group:
-            for person in house.get_people():
-                if person.get_age() >= min_age:
-                    self.register_events(person.immune_and_get_events(start_date = self._date, delta_time = timedelta(days=0)))
-        #Select num_infected persons from General population that was not infected(not_sage_group) and infect them 
+
+        cnt_people_to_immun = min(acc,int(per_to_immune * self._world.num_people()))
+        
+
+        used_persons = {}
+        household_index =0 
+        days_delta =0 
+        while cnt_people_to_immun > 0:
+            cnt_people_to_immun_today  = people_per_day
+            while cnt_people_to_immun_today > 0:
+                persons_to_immune = [ p for p in households[household_index].get_people() \
+                if (p.get_age() >= min_age) and (p.get_id() not in used_persons)]
+                for i in range(min(len(persons_to_immune),cnt_people_to_immun_today)):
+                    self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                    used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
+                    cnt_people_to_immun_today -= 1
+                    cnt_people_to_immun -= 1
+                if (i == len(persons_to_immune)):
+                    household_index += 1
+                # if i == cnt_people_to_immun_today move to tomorrow
+            days_delta += 1
+
         if num_infected > 0:
-            UnsafePersons = [person for house in not_safe_group for person in house.get_people() \
-             if person.get_disease_state() == DiseaseState.SUSCEPTIBLE]
+            UnsafePersons = []
+            for i in range(household_index+1,len(households)):
+                for person in households[i].get_people():
+                    if (person.get_age() >= min_age) and (person.get_disease_state() == DiseaseState.SUSCEPTIBLE):
+                        UnsafePersons.append(person)
             people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
             for person in people_to_infect:
                 self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-    
+
     def first_people_are_done(self):
         """
         chacks whether the people infected on the first “num_r_days” days

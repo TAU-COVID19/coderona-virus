@@ -88,6 +88,9 @@ def vaccinations_scenario_households(compliance=1, ci_delay=None, hi_delay=None)
     ]
     return interventions
 
+def Empty_scenario(compliance=1, ci_delay=None, hi_delay=None):
+    return []
+
 
 def scenario_21_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(

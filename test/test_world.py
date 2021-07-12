@@ -86,7 +86,7 @@ def test_createImmunehouseholds():
         generating_scale = 1,)
 
     my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
-    my_simulation.immune_households_infect_others(num_infected = 0, infection_doc = "", per_to_immune = 1,city_name = None,min_age=18 )
+    my_simulation.immune_households_infect_others(num_infected = 0, infection_doc = "", per_to_immune = 1,city_name = None,min_age=18,people_per_day= 3 )
     my_simulation.simulate_day()
     #assert events dictionary is not empty
     cnt_immune = 0 

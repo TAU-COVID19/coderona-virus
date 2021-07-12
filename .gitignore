@@ -142,6 +142,7 @@ dmypy.json
 .vscode/
 
 # Outputs
+src/outputs/*
 outputs/*
 tasks/*
 
