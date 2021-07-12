@@ -236,7 +236,6 @@ class DelayedEffect:
         register self.event to happen in delay_time days
         :param simulation: Simulation object
         """
-        print("DelayedEffect.apply")
         target_day = simulation._date + self._delay_time
         simulation.register_event_on_day(self._event, target_day)
 
