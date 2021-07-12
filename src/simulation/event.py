@@ -177,7 +177,6 @@ class EmptyEffect:
         pass
 
     def apply(self, simulation):
-        print("Enter EmptyEffect.apply")
         pass
 
 
@@ -202,7 +201,6 @@ class DiseaseStateChangeEffect:
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
-        print("Enter DiseaseStateChangeEffect.apply")
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +

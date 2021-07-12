@@ -573,7 +573,7 @@ class ImmuneGeneralPopulationIntervention(Intervention):
                 person_index = group_index * self.people_per_day  + i
                 p  = people_to_immune[person_index]
                 events_to_add = p.immune_and_get_events(start_date = self.start_date, delta_time = timedelta(group_index))
-                print("id:{} cnt:{}".format(p.get_id(),len(events_to_add)))
+                # print("id:{} cnt:{}".format(p.get_id(),len(events_to_add)))
                 ret += events_to_add
                 cnt_to_Immune  = cnt_to_Immune - 1
             group_index = group_index + 1
@@ -598,7 +598,7 @@ class ImmuneByHouseholdIntervention(Intervention):
         self.min_age = min_age
     
     def generate_events(self, world: World):
-        print("Enter generate_events")
+        # print("Enter generate_events")
         assert self.compliance <= 1
         all_houses = []
         for h in world.get_all_city_households():
@@ -609,21 +609,21 @@ class ImmuneByHouseholdIntervention(Intervention):
         houses_to_immune = random.sample(all_houses,cnt_to_Immune)
         ret = []
         group_index = 0
-        print("cnt_to_Immune"+str(cnt_to_Immune))
+        # print("cnt_to_Immune"+str(cnt_to_Immune))
         while cnt_to_Immune > 0:
             for i in range(min(self.houses_per_day,cnt_to_Immune)):
                 house_index = group_index * self.houses_per_day  + i
-                print("gi:"+str(group_index) + "hpd:" + str(self.houses_per_day)+"house_index:" + str(house_index))
+                # print("gi:"+str(group_index) + "hpd:" + str(self.houses_per_day)+"house_index:" + str(house_index))
                 for p in houses_to_immune[house_index].get_people():
                     new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
                     new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
                     ret.append(new_event)
-                    print("Enter append p.age()"+str(p.get_age()))
+                    # print("Enter append p.age()"+str(p.get_age()))
             cnt_to_Immune  = cnt_to_Immune - 1
-            print("cnt_to_Immune:"+str(cnt_to_Immune))
+            # print("cnt_to_Immune:"+str(cnt_to_Immune))
             group_index = group_index + 1
             if self.duration.days < group_index:
-                print("break")
+                # print("break")
                 break
         return ret
 
