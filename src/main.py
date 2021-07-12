@@ -146,7 +146,7 @@ def main():
                                                                             days=180,
                                                                             city_name=city_name,
                                                                             scale=scale,
-                                                                            infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,immune_source = immune_source,min_age = min_age),
+                                                                            infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,immune_source = immune_source,min_age = min_age,people_per_day =10),
                                                                             #infection_params=SmartInitialInfectionParams(initial_num_infected, round(initial_num_infected/10)),
                                                                             params_to_change=params_to_change,
                                                                             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
