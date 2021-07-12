@@ -4,6 +4,7 @@ import random
 import os
 from copy import copy
 from collections import namedtuple
+from datetime import date, timedelta
 
 from src.simulation.event import (
     Event,
@@ -216,7 +217,7 @@ class Person(object):
         """
         return self._age - self._age % 10
 
-    def get_infection_data(self) -> InfectionData:
+    def get_infection_data(self):
         """
         gets the person's infection data, that states were and by whom he got infected.
         :return: InfectionData object
@@ -322,19 +323,47 @@ class Person(object):
     
     def immune_and_get_events(
         self,
-        date,
+        start_date,
+        delta_time,
         seir_times=None
     ):
         """
         Immune this person, create and register the events of his state changes.
-        :param date: data of reciving the injuction
+        :param start_date: date_from which we count the delta_time should be init to INIAL_DATE
+        :param delta_time: time_delta from start_Date of the simulation in which the person will be immuned
         :param seir_times: The state changes of this person (what they are and how long they last).
         If this is None, it is sampled with the distribution defined in params.json.
         :return: infection events
         """
-        assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
-        self.set_disease_state(DiseaseState.IMMUNE)
-        return []
+        # assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
+        # self.set_disease_state(DiseaseState.IMMUNE)
+        if seir_times:
+            states_and_times = seir_times
+        else:
+            states_and_times = sample_seir_times(self)
+        
+        #Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
+        i=0
+        new_states_and_times = []
+        if delta_time.days ==0:
+            new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
+        else:
+            while (delta_time.days > 0) and (i < len(states_and_times)):
+                new_states_and_times.append(\
+                    (states_and_times[i][0],timedelta(days = min(states_and_times[i][1].days,delta_time.days))))
+                delta_time -= states_and_times[i][1]
+                i += 1
+
+        # print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
+        if i <= len(states_and_times):
+            if delta_time.days > 0:
+                new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+        
+        #Shuold be at the end of the table
+        new_states_and_times.append((DiseaseState.IMMUNE,None))
+        # print(new_states_and_times)
+
+        return self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
 
 
     def add_routine_change(self, key, value):

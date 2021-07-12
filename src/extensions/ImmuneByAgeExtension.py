@@ -6,50 +6,71 @@ from src.world.environments import InitialGroup
 from functional import seq
 
 
+class ImmuneStrategy:
+    YOUNGER_TO_OLDER = 1
+    OLDER_TO_YOUNGER = 2
+    ANY_AGE = 3
+
+
 class ImmuneByAgeExtension(Simulation):
     def __init__(self, parent: Simulation):
-        self.ImmunePortion = 0.5
-        self.MinAgeToImmune = 18
-        self.MaxAgeToImmune = 99
-        self.AgeGroupYears = 10
-        self.MaxVaccinationsADay = 1000
-        self.parent = parent
+        # change the following parameters to affect the vaccination flow
+        self.target_immune_percentage = 0.5
+        self.min_age_to_immune = 18
+        self.max_age_to_immune = 100
+        self.max_people_to_immune_a_day = 5000
+        self.immune_strategy = ImmuneStrategy.YOUNGER_TO_OLDER
 
-    def start_of_day_processing(self):
-        pass
+        # internal state. do not change!
+        self.parent = parent
+        if self.immune_strategy == ImmuneStrategy.OLDER_TO_YOUNGER:
+            self.state_max_age_to_immune = self.max_age_to_immune
+            self.state_min_age_to_immune = self.max_age_to_immune - 10
+        elif self.immune_strategy == ImmuneStrategy.YOUNGER_TO_OLDER:
+            self.state_min_age_to_immune = self.min_age_to_immune
+            self.state_max_age_to_immune = self.min_age_to_immune + 10
+
+
+    def can_immune(self, state: DiseaseState) -> bool:
+        if state in (DiseaseState.INCUBATINGPOSTLATENT, DiseaseState.ASYMPTOMATICINFECTIOUS, DiseaseState.LATENT,
+                     DiseaseState.SUSCEPTIBLE):
+            return True
+        else:
+            return False
 
     def end_of_day_processing(self):
-        """
-        Immune up to 1000 people a day, each time from older to younger, group years of 10 years every time
-        when the group year is all immune, we move 10 years down the group year
-        """
+        pass
 
+
+    def start_of_day_processing(self):
         """
         if portion of population that is immune > self.ImmunePortion Do nothing
-        else immune by age group
+        else immune by the selected ImmuneStrategy
         """
-        number_of_immune_people = seq(self.parent._world.all_people()).count(
-            lambda p: ((p.get_disease_state() == DiseaseState.IMMUNE) and
-                       (p.get_disease_state() != DiseaseState.DECEASED)))
-        # tmp = [1 for p in self.parent._world.all_people() if
-        #        ((p.get_disease_state() == DiseaseState.IMMUNE) and (p.get_disease_state() != DiseaseState.DECEASED))]
-        # number_of_immune_people = sum(tmp)
-        total_number_of_not_dead = sum(
-            [1 for p in self.parent._world.all_people() if p.get_disease_state() != DiseaseState.DECEASED])
-        portion_of_immune_people = number_of_immune_people / total_number_of_not_dead
-        people_to_immune = seq([])
-        min_year_to_immune = max(self.MaxAgeToImmune - self.AgeGroupYears, self.MinAgeToImmune)
-        if self.ImmunePortion > portion_of_immune_people and self.MaxAgeToImmune > self.MinAgeToImmune:
-            people_to_immune = seq([p for p in self.parent._world.all_people() if
-                                    (p.get_age_category() >= min_year_to_immune) and
-                                    (p.get_age_category() <= self.MaxAgeToImmune) and
-                                    ((p.get_disease_state() == DiseaseState.SUSCEPTIBLE) or
-                                     (p.get_disease_state() == DiseaseState.LATENT))]
-                                   ).take(self.MaxVaccinationsADay)
-        print(f"IMMUNE: from {min_year_to_immune} to {self.MaxAgeToImmune}, {people_to_immune.len()} people ")
-        if people_to_immune.len() == 0 and self.MaxAgeToImmune >= self.MinAgeToImmune:
-            self.MaxAgeToImmune = self.MaxAgeToImmune - self.AgeGroupYears
-        for person in people_to_immune.list():
-            self.parent.register_events(
-                person.immune_and_get_events(self.parent._date + timedelta(1), InitialGroup.initial_group()))
-        print("")
+        immuned = seq(self.parent._world.all_people()).count(lambda p: p.get_disease_state() == DiseaseState.IMMUNE)
+        not_deceased = seq(self.parent._world.all_people()).count(
+            lambda p: p.get_disease_state() != DiseaseState.DECEASED)
+        immuned_percentage = immuned / not_deceased
+
+        if self.target_immune_percentage > immuned_percentage:
+            people_to_immune = [p for p in self.parent._world.all_people()
+                                if (self.can_immune(p.get_disease_state())) and
+                                (p.get_age_category() > self.state_min_age_to_immune) and
+                                (p.get_age_category() < self.state_max_age_to_immune)]
+            print(f"ImmuneByAgeExtension({self.immune_strategy}): found today {len(people_to_immune)} people " +
+                  f"between {self.state_min_age_to_immune} to {self.state_max_age_to_immune}")
+            seq(people_to_immune).take(self.max_people_to_immune_a_day).for_each(
+                lambda person: self.parent.register_events(
+                    person.immune_and_get_events(start_date=self.parent._date, delta_time=timedelta(0))))
+
+            # advance to the next age group only if you covered the current age group
+            if len(people_to_immune) <= self.max_people_to_immune_a_day:
+                if self.immune_strategy == ImmuneStrategy.OLDER_TO_YOUNGER:
+                    self.state_min_age_to_immune = max(self.state_min_age_to_immune-10, self.min_age_to_immune)
+                elif self.immune_strategy == ImmuneStrategy.YOUNGER_TO_OLDER:
+                    self.state_max_age_to_immune = min(self.state_max_age_to_immune+10, self.max_age_to_immune)
+                elif self.immune_strategy == ImmuneStrategy.ANY_AGE:
+                    pass # do nothing
+                else:
+                    assert False, "immune_strategy is Out Of Range!"
+

@@ -75,5 +75,5 @@ def test_GetCities():
         ConfigData = json.load(json_data_file)
         citiesDataPath = ConfigData['CitiesFilePath']
     lst  = get_city_list_from_dem_xls(citiesDataPath)
-    assert len(lst) == 198
+    assert len(lst) == 199
 
