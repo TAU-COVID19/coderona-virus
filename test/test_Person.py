@@ -33,7 +33,6 @@ def test_immune_and_get_events1():
         generating_scale = 1)
     
     my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[])
-    assert p.get_disease_state() == DiseaseState.SUSCEPTIBLE
     for i in range(10):
         my_simulation.simulate_day()
     events[0].apply(simulation = my_simulation)
@@ -63,8 +62,6 @@ def test_immune_and_get_events2():
         generating_scale = 1)
     
     my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[])
-    
-    assert p.get_disease_state() == DiseaseState.SUSCEPTIBLE
     for i in range(10):
         my_simulation.simulate_day()
     events[0].apply(simulation = my_simulation)
@@ -98,7 +95,6 @@ def test_immune_and_get_events3():
         generating_scale = 1)
     
     my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[])
-    assert p.get_disease_state() == DiseaseState.SUSCEPTIBLE
     for i in range(10):
         my_simulation.simulate_day()
     events[0].apply(simulation = my_simulation)
