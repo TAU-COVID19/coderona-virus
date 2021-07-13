@@ -198,6 +198,7 @@ class Person(object):
         self.is_infectious = self._disease_state.is_infectious()
         self.is_infected = self._disease_state.is_infected()
         self.is_dead = self._disease_state.is_dead()
+        # print("in _change id:{} is_susceptible:{}".format(self.get_id(),self.is_susceptible))
         self._changed = True
 
     def get_prob_to_infect_on_contact(self):
@@ -262,6 +263,7 @@ class Person(object):
         """
         assert isinstance(new_disease_state, DiseaseState)
         self._disease_state = new_disease_state
+        # print("in set_disease_state id:{} new_disease_state:{}".format(self.get_id(),new_disease_state))
         self._change()
         if new_disease_state.is_static():
             self._clear()
@@ -314,16 +316,22 @@ class Person(object):
         :return: infection events
         """
         assert self._disease_state == DiseaseState.SUSCEPTIBLE  , "person state:" + str(self._disease_state)
-        self.set_disease_state(DiseaseState.LATENT)
-        assert self._infection_data is None, \
-            "Infecting someone who is already infected"
-        self._infection_data = InfectionData(self, date, environment, infection_transmitter)
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
             states_and_times =  self._seir_times
         else:
             states_and_times = sample_seir_times(self)
+        #update self._infection_data
+        for state,date_change in states_and_times:
+            if state != DiseaseState.SUSCEPTIBLE:
+                break
+        assert self._infection_data is None, \
+            "Infecting someone who is already infected id:" + str(self.get_id())
+        self.set_disease_state(DiseaseState.LATENT)
+        self._infection_data = InfectionData(self, date + date_change, environment, infection_transmitter)
+        # print("in infect_and_get_events id:{} disease_state:{} states_and_times:{}"\
+        #     .format(self.get_id(),self.get_disease_state(),states_and_times))
         #update seir times table
         self._seir_times = states_and_times  
         return self.gen_and_register_events_from_seir_times(date, states_and_times)
@@ -344,7 +352,7 @@ class Person(object):
         """
         lastState = self._disease_state
         assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
-        # self.set_disease_state(DiseaseState.IMMUNE)
+        self.set_disease_state(DiseaseState.LATENT)
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
@@ -384,7 +392,7 @@ class Person(object):
             elif cut_in_middle:
                 new_states_and_times[i-1][0] == DiseaseState.IMMUNE
                 
-        
+        # print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
         #Shuold be at the end of the table
         new_states_and_times.append((DiseaseState.IMMUNE,None))
         # print(new_states_and_times)

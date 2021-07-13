@@ -90,6 +90,7 @@ class HomogeneousEnvironment(Environment):
                 if random.random() < infection_prob:
                     num_infections += 1
                     infection_source = infection_source_distribution.sample()
+                    # print("propagate_infection calling infect_and_get_events for id:{} date:{}".format(person.get_id(),date))
                     curr_events = person.infect_and_get_events(date, self, infection_source)
                     new_events += curr_events
 

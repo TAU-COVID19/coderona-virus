@@ -195,12 +195,14 @@ class DiseaseStateChangeEffect:
         self._person = person
         self._old_state = old_state
         self._new_state = new_state
+        # print("Creating DiseaseStateChangeEffect id:{} old:{} new:{}".format(person.get_id(),old_state,new_state))
 
     def apply(self, simulation):
         """
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
+        # print("change person:{} from:{} to:{}".format(self._person.get_id(),self._old_state,self._new_state))
         assert self._person.get_disease_state() == self._old_state, (
             str(self._person.get_disease_state()) +
             " - " + str(self._old_state) +
