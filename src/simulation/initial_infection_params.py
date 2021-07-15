@@ -28,21 +28,22 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
     Infect num_to_infect random people in city_name_to_infect
     or in the entire country if city_name_to_infect is not given
     """
-    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None,immune_source = InitialImmuneType.GENERAL_POPULATION,min_age = 0):
+    def __init__(self, num_to_infect,per_to_Immune = 0.0, city_name_to_infect=None,immune_source = InitialImmuneType.GENERAL_POPULATION,min_age = 0,people_per_day =0):
         super(NaiveInitialInfectionParams, self).__init__()
         self.num_to_infect = num_to_infect
         self.city_name_to_infect = city_name_to_infect
         self.per_to_Immune = per_to_Immune
         self.immune_source = immune_source
         self.min_age = min_age
+        self.people_per_day = people_per_day
 
     def infect_simulation(self, sim, outdir):
         if self.immune_source == InitialImmuneType.GENERAL_POPULATION:
-            sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect,self.min_age)
+            sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune, \
+            self.city_name_to_infect,self.min_age,people_per_day = self.people_per_day)
         if self.immune_source == InitialImmuneType.HOUSEHOLDS:
-            sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune, self.city_name_to_infect,self.min_age)
-        #TODO:: Remove AGE18PLUS
-        #TODO:: Remove immune_18_plus
+            sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune, \
+             self.city_name_to_infect,self.min_age,people_per_day =self.people_per_day)
         
     def __str__(self):
         if self.city_name_to_infect is None:

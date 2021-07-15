@@ -1,6 +1,4 @@
 import datetime
-from src.seir import DiseaseState
-
 
 class Trigger:
     """
@@ -197,19 +195,20 @@ class DiseaseStateChangeEffect:
         self._person = person
         self._old_state = old_state
         self._new_state = new_state
+        # print("Creating DiseaseStateChangeEffect id:{} old:{} new:{}".format(person.get_id(),old_state,new_state))
 
     def apply(self, simulation):
         """
         Change the disease state from old_state to new_state
         :param simulation: Simulation object
         """
-        if (self._person.get_disease_state() != DiseaseState.IMMUNE):
-            # assert self._person.get_disease_state() == self._old_state, (
-            #     str(self._person.get_disease_state()) +
-            #     " - " + str(self._old_state) +
-            #     " of id " + str(self._person._id) + " (new_state=" + str(self._new_state) + ")"
-            # )
-            self._person.set_disease_state(self._new_state)
+        # print("change person:{} from:{} to:{}".format(self._person.get_id(),self._old_state,self._new_state))
+        assert self._person.get_disease_state() == self._old_state, (
+            str(self._person.get_disease_state()) +
+            " - " + str(self._old_state) +
+            " of id " + str(self._person._id)
+        )
+        self._person.set_disease_state(self._new_state)
 
     def get_person(self):
         return self._person
@@ -405,11 +404,10 @@ class Event(_Hookable):
         """
         if not self.trigger.trigger(simulation):
             return
-        # assert not self.is_applied
-        if not self.is_applied:
-            self.is_applied = True
-            self.effect.apply(simulation)
-            self.hooks_apply(simulation)
+        assert not self.is_applied
+        self.is_applied = True
+        self.effect.apply(simulation)
+        self.hooks_apply(simulation)
 
 
 class DayEvent(Event):

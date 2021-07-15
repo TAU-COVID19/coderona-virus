@@ -7,6 +7,5 @@ sanic
 aiofiles
 jinja2
 tqdm
-flask
 functional
 

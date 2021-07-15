@@ -53,6 +53,46 @@ def scenario_1_interventions(compliance, ci_delay, hi_delay):
                       ]
     return interventions
 
+def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
+    lockdown_intervention = LockdownIntervention(
+        start_date=INITIAL_DATE+timedelta(0.0),
+        duration=daysdelta(4*7),
+        compliance=0.80,
+        city_name='all'
+    )
+    interventions = [
+                     lockdown_intervention
+                     ]
+    return interventions
+
+def vaccinations_scenario_general(compliance=1, ci_delay=None, hi_delay=None):
+    vaccinations = ImmuneGeneralPopulationIntervention(
+        compliance=compliance,
+        start_date=INITIAL_DATE,
+        duration=daysdelta(16*7),
+        people_per_day=100,
+        min_age=18)
+    interventions = [
+        vaccinations
+    ]
+    return interventions
+
+def vaccinations_scenario_households(compliance=1, ci_delay=None, hi_delay=None):
+    vaccinations = ImmuneByHouseholdIntervention(
+        compliance=compliance,
+        start_date=INITIAL_DATE,
+        duration=daysdelta(16*7),
+        houses_per_day=20,
+        min_age=18)
+    interventions = [
+        vaccinations
+    ]
+    return interventions
+
+def Empty_scenario(compliance=1, ci_delay=None, hi_delay=None):
+    return []
+
+
 def scenario_21_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
@@ -1799,29 +1839,6 @@ def vaccinations_scenario_general(compliance=1, ci_delay=None, hi_delay=None):
     ]
     return interventions
 
-def vaccinations_scenario_households(compliance=1, ci_delay=None, hi_delay=None):
-    vaccinations = ImmuneByHouseholdIntervention(
-        compliance=compliance,
-        start_date=INITIAL_DATE,
-        duration=daysdelta(16*7),
-        houses_per_day=20,
-        min_age=18)
-    interventions = [
-        vaccinations
-    ]
-    return interventions
-
-def noam_lockdown_scenario(compliance=1, ci_delay=None, hi_delay=None):
-    lockdown_intervention = LockdownIntervention(
-        start_date=INITIAL_DATE+timedelta(days=30),
-        duration=daysdelta(3*7),
-        compliance=0.80,
-        city_name='all'
-    )
-    interventions = [
-                     lockdown_intervention
-                     ]
-    return interventions
 
 def paper_2(compliance, ci_delay, hi_delay):
     interention_start_delay = timedelta(days=21)

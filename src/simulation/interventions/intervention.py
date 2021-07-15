@@ -3,7 +3,7 @@ import random
 import itertools
 from datetime import date, timedelta
 
-from src.seir import DiseaseState
+from src.seir import DiseaseState, seir_times
 from src.simulation.event import (
     AddRoutineChangeEffect,
     AfterTrigger,
@@ -24,6 +24,15 @@ from src.simulation.params import Params
 from src.world import Person, World
 from src.world.environments.household import Household
 
+def lockdown_routine(person: Person):
+    """
+    Create a routine change that represents a person being in lockdown.
+    Here we try to represent the changing (decreasing of weights) of the weight in all the environment, due to the lockdown and at home contacts increase.
+    :param person: Person
+    :return: routine change dict, keys are environment names, values are weight multipliers.
+    """
+    params = Params.loader()["interventions_routines"]["lockdown"]
+    return {env_name: params["all"] for env_name in person.get_routine()}
 
 def workplace_closure_routine(person: Person):
     """
@@ -300,25 +309,6 @@ class ElderlyQuarantineIntervention(TimedIntervention):
     def _condition(self, x):
         return x.get_age() >= self._min_age
 
-class LockdownIntervention(TimedIntervention):
-    """
-    Implementation of Lockdown where everyone are at home, going out just for necessities
-    """
-    __slots__ = ("city_name",)
-
-    def __init__(self, city_name, start_date: date, duration: timedelta, compliance: float):
-        super(LockdownIntervention, self).__init__(
-            start_date, duration, compliance, 'lockdown',
-            lockdown_routine
-        )
-        self.city_name = city_name
-
-    def _condition(self, x):
-        if all(env._city.get_name() != self.city_name for env in x._environments.values()):
-            return False
-        if all(env._city.get_name() == self.city_name for env in x._environments.values()):
-            return False
-        return True
 
 class CityCurfewIntervention(TimedIntervention):
     """
@@ -330,6 +320,26 @@ class CityCurfewIntervention(TimedIntervention):
         super(CityCurfewIntervention, self).__init__(
             start_date, duration, compliance, 'city_curfew',
             city_curfew_routine, args=city_name
+        )
+        self.city_name = city_name
+
+    def _condition(self, x):
+        if all(env._city.get_name() != self.city_name for env in x._environments.values()):
+            return False
+        if all(env._city.get_name() == self.city_name for env in x._environments.values()):
+            return False
+        return True
+
+class LockdownIntervention(TimedIntervention):
+    """
+    Implementation of Lockdown where everyone are at home, going out just for necessities
+    """
+    __slots__ = ("city_name",)
+
+    def __init__(self, city_name, start_date: date, duration: timedelta, compliance: float):
+        super(LockdownIntervention, self).__init__(
+            start_date, duration, compliance, 'lockdown',
+            lockdown_routine
         )
         self.city_name = city_name
 
@@ -562,12 +572,9 @@ class ImmuneGeneralPopulationIntervention(Intervention):
             for i in range(min(self.people_per_day,cnt_to_Immune)):
                 person_index = group_index * self.people_per_day  + i
                 p  = people_to_immune[person_index]
-                # new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
-                # new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
-                # ret.append(new_event)
                 events_to_add = p.immune_and_get_events(start_date = self.start_date, delta_time = timedelta(group_index))
-                for e in events_to_add:
-                    ret.append(e)
+                # print("id:{} cnt:{}".format(p.get_id(),len(events_to_add)))
+                ret += events_to_add
                 cnt_to_Immune  = cnt_to_Immune - 1
             group_index = group_index + 1
             if self.duration.days < group_index:
@@ -591,7 +598,7 @@ class ImmuneByHouseholdIntervention(Intervention):
         self.min_age = min_age
     
     def generate_events(self, world: World):
-        print("Enter generate_events")
+        # print("Enter generate_events")
         assert self.compliance <= 1
         all_houses = []
         for h in world.get_all_city_households():
@@ -602,21 +609,21 @@ class ImmuneByHouseholdIntervention(Intervention):
         houses_to_immune = random.sample(all_houses,cnt_to_Immune)
         ret = []
         group_index = 0
-        print("cnt_to_Immune"+str(cnt_to_Immune))
+        # print("cnt_to_Immune"+str(cnt_to_Immune))
         while cnt_to_Immune > 0:
             for i in range(min(self.houses_per_day,cnt_to_Immune)):
                 house_index = group_index * self.houses_per_day  + i
-                print("gi:"+str(group_index) + "hpd:" + str(self.houses_per_day)+"house_index:" + str(house_index))
+                # print("gi:"+str(group_index) + "hpd:" + str(self.houses_per_day)+"house_index:" + str(house_index))
                 for p in houses_to_immune[house_index].get_people():
                     new_effect = DiseaseStateChangeEffect(person = p,old_state = p.get_disease_state() ,new_state = DiseaseState.IMMUNE)
                     new_event = DayEvent(date = self.start_date + timedelta(group_index),effect = new_effect)
                     ret.append(new_event)
-                    print("Enter append p.age()"+str(p.get_age()))
+                    # print("Enter append p.age()"+str(p.get_age()))
             cnt_to_Immune  = cnt_to_Immune - 1
-            print("cnt_to_Immune:"+str(cnt_to_Immune))
+            # print("cnt_to_Immune:"+str(cnt_to_Immune))
             group_index = group_index + 1
             if self.duration.days < group_index:
-                print("break")
+                # print("break")
                 break
         return ret
 

@@ -46,6 +46,7 @@ class Person(object):
         '_infection_data',
         '_num_infections',
         'last_state',
+        '_seir_times',
     )
     num_people_so_far = 0
 
@@ -91,6 +92,8 @@ class Person(object):
         self.routine_change_multiplicities = {}
         self.routine_changes = {}
         self._infection_data = None
+        # Table that currespond to seir times and events so it will be easier to mange
+        self._seir_times= None
         self._num_infections = 0
         #if StartAsRecovered:
         #    self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
@@ -195,6 +198,7 @@ class Person(object):
         self.is_infectious = self._disease_state.is_infectious()
         self.is_infected = self._disease_state.is_infected()
         self.is_dead = self._disease_state.is_dead()
+        # print("in _change id:{} is_susceptible:{}".format(self.get_id(),self.is_susceptible))
         self._changed = True
 
     def get_prob_to_infect_on_contact(self):
@@ -259,6 +263,7 @@ class Person(object):
         """
         assert isinstance(new_disease_state, DiseaseState)
         self._disease_state = new_disease_state
+        # print("in set_disease_state id:{} new_disease_state:{}".format(self.get_id(),new_disease_state))
         self._change()
         if new_disease_state.is_static():
             self._clear()
@@ -311,14 +316,24 @@ class Person(object):
         :return: infection events
         """
         assert self._disease_state == DiseaseState.SUSCEPTIBLE  , "person state:" + str(self._disease_state)
-        self.set_disease_state(DiseaseState.LATENT)
-        assert self._infection_data is None, \
-            "Infecting someone who is already infected"
-        self._infection_data = InfectionData(self, date, environment, infection_transmitter)
         if seir_times:
             states_and_times = seir_times
+        elif self._seir_times:
+            states_and_times =  self._seir_times
         else:
             states_and_times = sample_seir_times(self)
+        #update self._infection_data
+        for state,date_change in states_and_times:
+            if state != DiseaseState.SUSCEPTIBLE:
+                break
+        assert self._infection_data is None, \
+            "Infecting someone who is already infected id:" + str(self.get_id())
+        self.set_disease_state(DiseaseState.LATENT)
+        self._infection_data = InfectionData(self, date + date_change, environment, infection_transmitter)
+        # print("in infect_and_get_events id:{} disease_state:{} states_and_times:{}"\
+        #     .format(self.get_id(),self.get_disease_state(),states_and_times))
+        #update seir times table
+        self._seir_times = states_and_times  
         return self.gen_and_register_events_from_seir_times(date, states_and_times)
     
     def immune_and_get_events(
@@ -335,34 +350,54 @@ class Person(object):
         If this is None, it is sampled with the distribution defined in params.json.
         :return: infection events
         """
-        # assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
-        # self.set_disease_state(DiseaseState.IMMUNE)
+        lastState = self._disease_state
+        assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
+        self.set_disease_state(DiseaseState.LATENT)
         if seir_times:
             states_and_times = seir_times
+        elif self._seir_times:
+            states_and_times =  self._seir_times
         else:
             states_and_times = sample_seir_times(self)
-        
+        #remove the None from the end of table 
+        states_and_times = states_and_times[:-1]
         #Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
         i=0
         new_states_and_times = []
+        cut_in_middle = False
         if delta_time.days ==0:
             new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
+            lastState = DiseaseState.IMMUNE
         else:
-            while (delta_time.days > 0) and (i < len(states_and_times)):
-                new_states_and_times.append(\
-                    (states_and_times[i][0],timedelta(days = min(states_and_times[i][1].days,delta_time.days))))
-                delta_time -= states_and_times[i][1]
+    
+            while (i < len(states_and_times)) and (delta_time.days >= states_and_times[i][1].days):
+                next_stage_duration = min(states_and_times[i][1].days,delta_time.days)
+                if (next_stage_duration == delta_time.days):
+                    cut_in_middle = True
+                if states_and_times[i][0] != DiseaseState.IMMUNE:
+                    new_states_and_times.append(\
+                        (states_and_times[i][0],timedelta(days = next_stage_duration)))
+                    delta_time -= timedelta(days = next_stage_duration)
+                    lastState = states_and_times[i][0]
                 i += 1
+            assert delta_time.days >= 0,'miscalculating days'
+            # if delta_time.days < 0 :
+            #     print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
+            #     print("start_date:{} ,old_delta_time:{} ,delta_time:{}".format(start_date,old_delta_time , delta_time))
+            #     print(states_and_times)
+            #     print("-----------------------")
 
-        # print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
-        if i <= len(states_and_times):
-            if delta_time.days > 0:
+            if (delta_time.days > 0) or (i==0) or ((lastState != DiseaseState.IMMUNE) and (cut_in_middle)):
                 new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
-        
+            elif cut_in_middle:
+                new_states_and_times[i-1][0] == DiseaseState.IMMUNE
+                
+        # print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
         #Shuold be at the end of the table
         new_states_and_times.append((DiseaseState.IMMUNE,None))
         # print(new_states_and_times)
-
+        #Update person seir_times
+        self._seir_times = new_states_and_times
         return self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
 
 
