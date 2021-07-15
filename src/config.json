@@ -2,5 +2,5 @@
   "CitiesFilePath": "../../../Assets/CitiesDataChickago.xls",
   "ParamsFilePath": "../Assets/params.json",
   "CPU_percent": "0.9",
-  "ExtensionsNamelst": []
+  "ExtensionsNamelst": ["ImmuneByAgeExtension"]
 }
