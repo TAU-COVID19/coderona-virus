@@ -15,7 +15,7 @@ class ImmuneStrategy:
 class ImmuneByAgeExtension(Simulation):
     def __init__(self, parent: Simulation):
         # change the following parameters to affect the vaccination flow
-        self.target_immune_percentage = 0.5
+        self.target_immune_percentage = 0.9
         self.min_age_to_immune = 18
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = 5000
