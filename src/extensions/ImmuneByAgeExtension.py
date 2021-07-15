@@ -19,7 +19,7 @@ class ImmuneByAgeExtension(Simulation):
         self.min_age_to_immune = 18
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = 5000
-        self.immune_strategy = ImmuneStrategy.YOUNGER_TO_OLDER
+        self.immune_strategy = ImmuneStrategy.ANY_AGE
 
         # internal state. do not change!
         self.parent = parent
@@ -29,6 +29,10 @@ class ImmuneByAgeExtension(Simulation):
         elif self.immune_strategy == ImmuneStrategy.YOUNGER_TO_OLDER:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.min_age_to_immune + 10
+        else:
+            self.state_min_age_to_immune = self.min_age_to_immune
+            self.state_max_age_to_immune = self.max_age_to_immune
+
 
 
     def can_immune(self, state: DiseaseState) -> bool:
