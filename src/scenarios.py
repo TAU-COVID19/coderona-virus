@@ -68,7 +68,7 @@ def vaccinations_scenario_general(compliance=1, ci_delay=None, hi_delay=None):
     vaccinations = ImmuneGeneralPopulationIntervention(
         compliance=compliance,
         start_date=INITIAL_DATE,
-        duration=daysdelta(16*7),
+        duration=daysdelta(8*7),
         people_per_day=100,
         min_age=18)
     interventions = [
@@ -80,7 +80,7 @@ def vaccinations_scenario_households(compliance=1, ci_delay=None, hi_delay=None)
     vaccinations = ImmuneByHouseholdIntervention(
         compliance=compliance,
         start_date=INITIAL_DATE,
-        duration=daysdelta(16*7),
+        duration=daysdelta(8*7),
         houses_per_day=20,
         min_age=18)
     interventions = [

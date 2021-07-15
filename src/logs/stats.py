@@ -842,7 +842,8 @@ def make_age_and_state_datas_to_plot(
                 DiseaseState.ASYMPTOMATICINFECTIOUS
             )
          ),
-        ("susceptible", (DiseaseState.SUSCEPTIBLE,))
+        ("susceptible", (DiseaseState.SUSCEPTIBLE,)),
+        ("Immune", (DiseaseState.IMMUNE,)),
     ),
     additional_props=None
 ):
