@@ -906,7 +906,7 @@ def make_age_and_state_datas_to_plot(
     if additional_props is None:
         additional_props = {}
     colors = ['r', 'g', 'y', 'b', 'c', "m"]
-    lines = ["-", "--", "-.", ":", "-*-"]
+    lines = ["-", "--", "-.", ":"]
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:

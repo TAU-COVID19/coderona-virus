@@ -19,7 +19,7 @@ class ImmuneByAgeExtension(Simulation):
         self.min_age_to_immune = 18
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = 5000
-        self.immune_strategy = ImmuneStrategy.ANY_AGE
+        self.immune_strategy = ImmuneStrategy.OLDER_TO_YOUNGER
 
         # internal state. do not change!
         self.parent = parent
