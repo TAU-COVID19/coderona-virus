@@ -125,19 +125,12 @@ def main():
     # if caching option is on
 
     jobs = []
-<<<<<<< HEAD
-    for initial_percentage_immune in [0.0]:
-        for people_per_day in [10]:
-            for immune_source,min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [100]:
-                    for city_name, scale in [("Atlit",1)]:
-=======
-    for initial_percentage_immune in [0.5]:
+
+    for initial_percentage_immune in  [0.0,0.5]:
         for people_per_day in [100]:
             for immune_source,min_age in [(InitialImmuneType.GENERAL_POPULATION,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [500]:
-                    for city_name, scale in [("Holon",1)]:
->>>>>>> b29b43ac212387606129fb8053d7c174052e70be
+                for initial_num_infected in [25, 100, 250, 500]:
+                    for city_name, scale in [("Holon",1),("Bene Beraq",1)]:
                         for compliance in [0.8]:
                             for ci_delay in [4]:
                                 for hi_delay in [4]:                                
@@ -158,7 +151,7 @@ def main():
                                                                                             symptomatic_probs_scale)
             #                                    full_scenario_name = "res"
                                             jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                days=40,
+                                                                                days=180,
                                                                                 city_name=city_name,
                                                                                 scale=scale,
                                                                                 infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,immune_source = immune_source,min_age = min_age,people_per_day =people_per_day),
@@ -166,7 +159,7 @@ def main():
                                                                                 params_to_change=params_to_change,
                                                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                                 datas_to_plot=datas_to_plot),
-                                                                    num_repetitions=1))
+                                                                    num_repetitions=50))
 
     # add job to make r to base infectiousness graph:
     # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
