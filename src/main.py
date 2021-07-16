@@ -43,6 +43,9 @@ def get_datas_to_plot():
         "susceptible": [
             DiseaseState.SUSCEPTIBLE
         ],
+        "Immuned": [
+            DiseaseState.IMMUNE
+        ],
         "deceased": [
             DiseaseState.DECEASED
         ],
@@ -122,11 +125,19 @@ def main():
     # if caching option is on
 
     jobs = []
+<<<<<<< HEAD
     for initial_percentage_immune in [0.0]:
         for people_per_day in [10]:
             for immune_source,min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:
                     for city_name, scale in [("Atlit",1)]:
+=======
+    for initial_percentage_immune in [0.5]:
+        for people_per_day in [100]:
+            for immune_source,min_age in [(InitialImmuneType.GENERAL_POPULATION,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
+                for initial_num_infected in [500]:
+                    for city_name, scale in [("Holon",1)]:
+>>>>>>> b29b43ac212387606129fb8053d7c174052e70be
                         for compliance in [0.8]:
                             for ci_delay in [4]:
                                 for hi_delay in [4]:                                
