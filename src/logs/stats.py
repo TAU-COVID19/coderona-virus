@@ -859,7 +859,7 @@ def make_age_and_state_datas_to_plot(
     if additional_props is None:
         additional_props = {}
     colors = ['r', 'g', 'y', 'b', 'c']
-    lines = [(0,(1,10)), (0,(1,1)), (0,(5,10)),(0,(5,1)),(0,(3,10,1,10,1,10))]
+    lines = [(0,(1,10)), (0,(1,1)), (0,(5,10)),(0,(5,1)),(0,(3,1,1,1,1,1))]
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
