@@ -29,7 +29,7 @@ def test_propagate_infection(params_path):
                 p._disease_state = DiseaseState.SUSCEPTIBLE
             p._change()
             env.sign_up_for_today(p, w)
-        num_of_infections = len(env.propagate_infection(date(2020,12,1)))
+        num_of_infections = len(env.propagate_infection(date(year = 2020,month = 12,day = 1)))
         infections.append(num_of_infections)
         total += num_of_infections
     avg = total/loops
