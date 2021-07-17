@@ -21,7 +21,7 @@ def test_immune_and_get_events1():
     p = Person(30)
     events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  15), \
         ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.IMMUNE,timedelta(21))))
-    print(events)
+
     assert len(events) == 2
     
     persons_arr = [p]
@@ -107,7 +107,7 @@ def test_immune_and_get_events3():
     for i in range(5):
         my_simulation.simulate_day()
     events[2].apply(simulation = my_simulation)
-    assert p.get_disease_state() == DiseaseState.ASYMPTOMATICINFECTIOUS
+    assert p.get_disease_state() == DiseaseState.SUSCEPTIBLE
     
 
 def test_immune_and_get_events4():
@@ -180,3 +180,30 @@ def test_immune_and_get_events5():
         my_simulation.simulate_day()
     events[2].apply(simulation = my_simulation)
     assert p.get_disease_state() == DiseaseState.DECEASED
+
+def test_immune_and_get_events6():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    p = Person(30)
+    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  0), \
+        ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.IMMUNE,timedelta(21)),(DiseaseState.IMMUNE,None)))
+
+    assert len(events) == 1
+    
+    persons_arr = [p]
+    env_arr = []
+    small_world = world.World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+    
+    my_simulation = Simulation(world = small_world, initial_date= INITIAL_DATE,interventions=[])
+    events[0].apply(simulation = my_simulation)
+    assert p.get_disease_state() == DiseaseState.IMMUNE
+    assert len(p._seir_times)==2

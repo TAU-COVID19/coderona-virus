@@ -363,12 +363,14 @@ class Person(object):
         alt_state = states_and_times[-1]
         states_and_times = states_and_times[:-1]
         #Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
+        # only if he should get immuned
         i=0
         new_states_and_times = []
         cut_in_middle = False
         zero_days = (delta_time.days ==0)
-        if zero_days ==0:
+        if zero_days :
             new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
+            new_states_and_times.append((DiseaseState.IMMUNE,None))
             lastState = DiseaseState.IMMUNE
         else:
             while (i < len(states_and_times)) and (delta_time.days >= states_and_times[i][1].days):
@@ -401,7 +403,7 @@ class Person(object):
                 new_states_and_times.append((DiseaseState.IMMUNE,None))
             else:
                 new_states_and_times.append(alt_state)
-        # print(new_states_and_times)
+        print(new_states_and_times)
         #Update person seir_times
         self._seir_times = new_states_and_times
         return self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
