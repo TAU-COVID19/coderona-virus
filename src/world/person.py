@@ -359,20 +359,21 @@ class Person(object):
             states_and_times =  self._seir_times
         else:
             states_and_times = sample_seir_times(self)
-        #remove the None from the end of table 
+        #alt_state (alternative state) in case the person won't be immuned
+        alt_state = states_and_times[-1]
         states_and_times = states_and_times[:-1]
         #Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
         i=0
         new_states_and_times = []
         cut_in_middle = False
-        if delta_time.days ==0:
+        zero_days = (delta_time.days ==0)
+        if zero_days ==0:
             new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
             lastState = DiseaseState.IMMUNE
         else:
-    
             while (i < len(states_and_times)) and (delta_time.days >= states_and_times[i][1].days):
                 next_stage_duration = min(states_and_times[i][1].days,delta_time.days)
-                if (next_stage_duration == delta_time.days):
+                if (lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]) and (next_stage_duration == delta_time.days):
                     cut_in_middle = True
                 if states_and_times[i][0] != DiseaseState.IMMUNE:
                     new_states_and_times.append(\
@@ -386,15 +387,20 @@ class Person(object):
             #     print("start_date:{} ,old_delta_time:{} ,delta_time:{}".format(start_date,old_delta_time , delta_time))
             #     print(states_and_times)
             #     print("-----------------------")
-
-            if (delta_time.days > 0) or (i==0) or ((lastState != DiseaseState.IMMUNE) and (cut_in_middle)):
-                new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
-            elif cut_in_middle:
-                new_states_and_times[i-1][0] == DiseaseState.IMMUNE
+            if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
+                if (delta_time.days > 0) or (i==0) or (cut_in_middle):
+                    new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                elif cut_in_middle:
+                    new_states_and_times[i-1][0] == DiseaseState.IMMUNE
                 
-        # print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
-        #Shuold be at the end of the table
-        new_states_and_times.append((DiseaseState.IMMUNE,None))
+        #print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
+        #At the End of the table we put immune only if the person was susptible or latent 
+        # otherwise he continues his life regularly
+        if (not(zero_days)):
+            if (lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]):
+                new_states_and_times.append((DiseaseState.IMMUNE,None))
+            else:
+                new_states_and_times.append(alt_state)
         # print(new_states_and_times)
         #Update person seir_times
         self._seir_times = new_states_and_times
