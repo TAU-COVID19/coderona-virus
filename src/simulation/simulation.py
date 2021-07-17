@@ -179,7 +179,11 @@ class Simulation(object):
         else:
             population = [p for p in self._world.all_people()]
 
-        num_immuned = int(round(len(population)*per_to_immune))
+        #Doing best effort to infect and immune the people in our world
+        #after talking to Noam we first infect the ones we can and immune the rest
+        num_infected = min(num_infected ,len(population))
+        tmp_num_immuned = int(round(len(population)*per_to_immune))
+        num_immuned = min(len(population) - num_infected,tmp_num_immuned)
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
         adults = [p for p in population if p.get_age() > min_age]
@@ -234,23 +238,33 @@ class Simulation(object):
             tmp_households = [h for h in self._world.get_all_city_households()]
         
         households= []
-        acc = 0 
+        adults_cnt = 0 
         for h in tmp_households:
             cnt = len([p for p in h.get_people() if p.get_age() > min_age])
             if cnt > 0:
                 households.append(h)
-                acc += cnt
+                adults_cnt += cnt
         random.shuffle(households)
 
-        cnt_people_to_immun = min(acc,int(per_to_immune * self._world.num_people()))
+        num_infected = min(self._world.num_people(),num_infected)
+        cnt_people_to_immun = min(adults_cnt,int(per_to_immune * self._world.num_people()))
         
-
         used_persons = {}
         household_index =0 
         days_delta =0 
-        while cnt_people_to_immun > 0:
+        
+        if num_infected > 0:
+            UnsafePersons = [p for p in self._world.all_people()]
+            people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
+            for person in people_to_infect:
+                # print("calling infect_and_get_events from immune_households_infect_others for id:{}".format(person.get_id()))
+                self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
+                used_persons[person.get_id()] = person
+                # print("Infecting person id:{} on date:{}".format(person.get_id(),self._date))
+        
+        while (cnt_people_to_immun > 0) and (people_per_day > 0)and (household_index < len(households)):
             cnt_people_to_immun_today  = people_per_day
-            while cnt_people_to_immun_today > 0:
+            while (cnt_people_to_immun_today > 0) and (household_index < len(households)):
                 persons_to_immune = [ p for p in households[household_index].get_people() \
                     if (p.get_age() >= min_age) and (p.get_id() not in used_persons)]
                 cnt_immune_in_house =0
@@ -266,14 +280,7 @@ class Simulation(object):
                 # if i == cnt_people_to_immun_today move to tomorrow
             days_delta += 1
 
-        if num_infected > 0:
-            UnsafePersons = [p for p in self._world.all_people() if p.get_id() not in used_persons]
-            people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
-            for person in people_to_infect:
-                # print("calling infect_and_get_events from immune_households_infect_others for id:{}".format(person.get_id()))
-                self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
-                used_persons[person.get_id()] = person
-                # print("Infecting person id:{} on date:{}".format(person.get_id(),self._date))
+        
 
     def first_people_are_done(self):
         """
