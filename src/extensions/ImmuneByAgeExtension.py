@@ -80,6 +80,8 @@ class ImmuneByAgeExtension(Simulation):
                                          if (self.can_immune(p.get_disease_state())) and
                                          (p.get_age_category() > self.state_min_age_to_immune) and
                                          (p.get_age_category() < self.state_max_age_to_immune)]
+                    if len(people_to_immune) > self.max_people_to_immune_a_day:
+                        break
             else:
                 people_to_immune = [p for p in self.parent._world.all_people()
                                     if (self.can_immune(p.get_disease_state())) and

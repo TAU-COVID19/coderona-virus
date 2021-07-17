@@ -725,6 +725,7 @@ class Statistics(object):
         assert all([yscale == yscales[0] for yscale in yscales]), "All yscales must be equal!"
         yscale = yscales[0]
         plt.clf()
+        plt.figure(figsize=(10, 10), dpi=80)
         if is_dates:
             npdates = [mdates.date2num(d) for d in dates]
         else:
@@ -757,13 +758,13 @@ class Statistics(object):
         if is_dates:
             fig = plt.gcf()
             fig.autofmt_xdate()
-            fig.set_size_inches(11,8)
+            # fig.set_size_inches(11,8)
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
-        plt.legend()
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3, fancybox=True, shadow=True)
         plt.yscale(yscale)
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
         if len(dates) > 1:
-            plt.savefig(svg_filename)
+            plt.savefig(svg_filename, bbox_inches="tight")
         with open(csv_filename, 'w') as f:
             if is_dates:
                 date_strings = [d.strftime("%d/%m/%y") for d in dates]
@@ -793,7 +794,7 @@ class Statistics(object):
         assert all([yscale == yscales[0] for yscale in yscales]), "All yscales must be equal!"
         yscale = yscales[0]
         plt.clf()
-        plt.tight_layout()
+        plt.figure(figsize=(10, 10), dpi=80)
         if is_dates:
             npdates = [mdates.date2num(d) for d in dates]
         else:
@@ -819,11 +820,11 @@ class Statistics(object):
         if is_dates:
             plt.gcf().autofmt_xdate()
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
-        plt.legend()
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3, fancybox=True, shadow=True)
         plt.yscale(yscale)
         plt.title(os.path.basename(image_path))
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
-        plt.savefig(svg_filename)
+        plt.savefig(svg_filename, bbox_inches="tight")
         with open(csv_filename, 'w') as f:
             if is_dates:
                 date_strings = ["Dates:"] + [d.strftime("%d/%m/%y") for d in dates]
@@ -907,7 +908,7 @@ def make_age_and_state_datas_to_plot(
     if additional_props is None:
         additional_props = {}
     colors = ['r', 'g', 'y', 'b', 'c', "m"]
-    lines = ["-", "--", "-.", ":"]
+    lines = [(0,(10,0)), (0,(1,1)), (0,(5,10)),(0,(5,1)),(0,(3,1,1,1,1,1))]
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
