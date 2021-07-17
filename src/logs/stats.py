@@ -331,20 +331,20 @@ class Statistics(object):
         if avg_props is None:
             avg_props = {}
         if 'label' not in avg_props:
-            avg_props['label'] = "avg_r0"
+            avg_props['label'] = "base reproduction number r"
 
         if smoothed_props is None:
             smoothed_props = {}
         if 'label' not in smoothed_props:
-            smoothed_props['label'] = "smoothed_avg_r0"
+            smoothed_props['label'] = "smoothed base reproduction number r"
 
         r_effective_props = {}
         if 'label' not in r_effective_props:
-            r_effective_props['label'] = "r0_effective"
+            r_effective_props['label'] = "r effective"
 
         instantaneous_r_props = {}
         if 'label' not in instantaneous_r_props:
-            instantaneous_r_props['label'] = "instantaneous_r"
+            instantaneous_r_props['label'] = "instantaneous r"
 
         datas = [
             {'data': self._r0_data['smoothed_avg_r0'], 'props': smoothed_props},
@@ -352,7 +352,7 @@ class Statistics(object):
             # {'data': self._r0_data['estimated_r0'], 'props': r_effective_props},
             {'data': self._r0_data['instantaneous_r'], 'props': instantaneous_r_props},
         ]
-        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes(), y_axes_label="r0")
+        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes(), y_axes_label="r")
 
     def sum_days_data(self, property_to_count, is_integral, infection_data=None):
         """
@@ -907,8 +907,8 @@ def make_age_and_state_datas_to_plot(
     """
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c', "m"]
-    lines = [(0,(10,0)), (0,(1,1)), (0,(5,10)),(0,(5,1)),(0,(3,1,1,1,1,1))]
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
+    lines = [(0,(5,10)), (0,(1,1)), (0,(5,1)),(0,(3,1,1,1,1,1)), (0,(10,0))]
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
@@ -937,7 +937,7 @@ def make_infections_age_datas_to_plot(
 ):
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
@@ -964,7 +964,7 @@ def make_infections_infector_state_datas_to_plot(
 ):
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     ret = []
     color_cycle = cycle(colors)
     for label, dis_group in disease_state_groups:
@@ -997,7 +997,7 @@ def make_infections_environment_datas_to_plot(
     """
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     ret = []
     color_cycle = cycle(colors)
     for label, env_group in environments_groups:
@@ -1175,7 +1175,7 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
         ]
 
         smoothed_r0_avg_with_date_range = [
-            (s.get_r0_data()['smoothed_avg_r0'], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
+            (s.get_r0_data()['smoothed r'], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
             for s in all_stats if s is not None
         ]
         longest_date_range = max_date_range(all_stats, max_num_days=max_num_days)
@@ -1192,7 +1192,7 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
     std_data = []
     confidence_data = []
     for day in range(max_num_days + 1):
-        props = {'label': "smoothed_avg_r0"}
+        props = {'label': "smoothed r"}
         exp_data.append({
             'data': [elem[0][day] for elem in data],
             'props': props
