@@ -88,9 +88,9 @@ def main():
         # "grant_time1" : grant_time1,
         # "grant_time2" : grant_time2
         # "paper_1" : paper_1
-        "paper_2" : paper_2
+        #"paper_2" : paper_2
         # "noam_lockdown_scenario": noam_lockdown_scenario,
-        #"no_interventions": no_interventions,
+        "no_interventions": no_interventions,
         # "paper_3" : paper_3
         # "paper_4" : paper_4
         # "paper_5": paper_5
@@ -122,11 +122,11 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.5]:  # [0.0,0.5]:
-        for people_per_day in [1000]:
-            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION,18)]:  # [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.GENERAL_POPULATION]:  #the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [100]:  # [25, 100, 250, 500]:
-                    for city_name, scale in [("Holon",1)]:  # [("Holon",1), ("Bene Beraq",1)]:
+    for initial_percentage_immune in [0.0]:  # [0.0,0.5]:
+        for people_per_day in [0]:
+            for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:  # [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.GENERAL_POPULATION]:  #the options are:GENERAL_POPULATION,HOUSEHOLDS
+                for initial_num_infected in [500]:  # [25, 100, 250, 500]:
+                    for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:  # [("Holon",1), ("Bene Beraq",1)]:
                         for compliance in [1]:
                             for ci_delay in [4]:
                                 for hi_delay in [4]:
@@ -146,14 +146,14 @@ def main():
                                                                                             hi_delay,
                                                                                             symptomatic_probs_scale)
                                                 jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                days=20,
+                                                                                days=150,
                                                                                 city_name=city_name,
                                                                                 scale=scale,
                                                                                 infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,immune_source = immune_source,min_age = min_age,people_per_day =people_per_day),
                                                                                 params_to_change=params_to_change,
                                                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                                 datas_to_plot=datas_to_plot),
-                                                                    num_repetitions=2))
+                                                                    num_repetitions=70))
 
                                         # # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(

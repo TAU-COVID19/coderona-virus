@@ -890,7 +890,8 @@ def make_age_and_state_datas_to_plot(
                 DiseaseState.ASYMPTOMATICINFECTIOUS
             )
          ),
-        ("susceptible", (DiseaseState.SUSCEPTIBLE,))
+        ("susceptible", (DiseaseState.SUSCEPTIBLE,)),
+        ("Immune", (DiseaseState.IMMUNE,))
     ),
     additional_props=None
 ):
@@ -905,8 +906,8 @@ def make_age_and_state_datas_to_plot(
     """
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'k']
-    lines = ["-", "--", "-.", ":", "-"]
+    colors = ['r', 'g', 'y', 'b', 'c', "m"]
+    lines = ["-", "--", "-.", ":"]
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
