@@ -19,7 +19,7 @@ class HomogeneousEnvironment(Environment):
         '_contact_prob_between_each_two_people'
     )
 
-    def __init__(self, contact_prob_between_each_two_people, full_name=None):
+    def __init__(self, contact_prob_between_each_two_people : float, full_name=None):
         if full_name is None:
             full_name = self.name
         super(HomogeneousEnvironment, self).__init__(full_name)

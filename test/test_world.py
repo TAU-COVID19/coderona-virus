@@ -102,6 +102,41 @@ def test_createInfectedPersons2():
             cnt_immune = cnt_immune + 1
     assert cnt_immune == 5
 
+def test_createInfectedPersonsBestEffort():
+    """
+    Test that when the population size is less then the amount of people that had been chosen to be infected,
+    the simulation doesn't crash 
+    """
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    ageList  = [random.randint(19,40) for i in range(10)]    
+    PersonList = list(map(Person, ageList))
+
+    env_arr = []
+    my_world = World(
+        all_people = PersonList,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.infect_random_set(num_infected = 20, infection_doc = "", per_to_immune = 0,city_name = None,min_age=18,people_per_day =0)
+    my_simulation.simulate_day()
+    cnt_immune = 0 
+    cnt_sick = 0 
+    for person in my_world.all_people():
+        if person.get_disease_state() == DiseaseState.IMMUNE:
+            cnt_immune += 1
+        else:
+            cnt_sick += 1
+    assert cnt_immune == 0
+    assert cnt_sick == 10
+
 
 def test_createImmunehouseholds():
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
