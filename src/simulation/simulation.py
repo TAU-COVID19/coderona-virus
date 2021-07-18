@@ -187,24 +187,9 @@ class Simulation(object):
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
         adults = [p for p in population if p.get_age() > min_age]
-        num_immuned = min(len(adults),num_immuned )
+        used_adults =0 
         used_persons = {}
-        #First set the immune persons that are above min_age
-        while num_immuned > 0: #we start to count from zero therefor we need one more person
-            Selected_persons = random.sample(adults, num_immuned)
-            delta_days =0 
-            immuned_today =0 
-            for p in Selected_persons:
-                if (p.get_id() not in used_persons) : 
-                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
-                    num_immuned = num_immuned-1
-                    used_persons[p.get_id()] = p
-                    immuned_today +=1
-                    if immuned_today == people_per_day:
-                        delta_days += 1 
-                        immuned_today = 0
-
-        #Second set the people that aren't immune to be infected
+        #First set the people that aren't immune to be infected
         while num_infected > 0:
             Selected_persons = random.sample(population, num_infected)
             for p in Selected_persons:
@@ -212,7 +197,27 @@ class Simulation(object):
                     self.register_events(p.infect_and_get_events(self._date, InitialGroup.initial_group()))
                     num_infected = num_infected-1
                     used_persons[p.get_id()]=p
+                    if p.get_age() > 0:
+                        used_adults += 1
 
+        num_immuned = min(len(adults)-used_adults,num_immuned )
+        #Second set- immune persons that are above min_age and we are able to immune
+        while num_immuned > 0: #we start to count from zero therefor we need one more person
+            Selected_persons = random.sample(adults, num_immuned)
+            delta_days =0 
+            immuned_today =0 
+            for p in Selected_persons:
+                if (p.get_id() not in used_persons) : 
+                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
+                    print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
+                    num_immuned = num_immuned-1
+                    used_persons[p.get_id()] = p
+                    immuned_today +=1
+                    if immuned_today == people_per_day:
+                        delta_days += 1 
+                        immuned_today = 0
+
+        
     def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0,people_per_day =0 ):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
