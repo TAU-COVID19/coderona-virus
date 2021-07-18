@@ -368,32 +368,51 @@ class Person(object):
         new_states_and_times = []
         cut_in_middle = False
         zero_days = (delta_time.days ==0)
+
+        append_rest_of_table = False
         if zero_days :
             new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
             new_states_and_times.append((DiseaseState.IMMUNE,None))
             lastState = DiseaseState.IMMUNE
         else:
-            while (i < len(states_and_times)) and (delta_time.days >= states_and_times[i][1].days):
-                next_stage_duration = min(states_and_times[i][1].days,delta_time.days)
-                if (lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]) and (next_stage_duration == delta_time.days):
-                    cut_in_middle = True
-                if states_and_times[i][0] != DiseaseState.IMMUNE:
+            while i < len(states_and_times):
+                if delta_time.days >= states_and_times[i][1].days : 
                     new_states_and_times.append(\
-                        (states_and_times[i][0],timedelta(days = next_stage_duration)))
-                    delta_time -= timedelta(days = next_stage_duration)
+                        (states_and_times[i][0],timedelta(days = states_and_times[i][1].days)))
+                    delta_time -= timedelta(days = states_and_times[i][1].days)
                     lastState = states_and_times[i][0]
                 i += 1
+            if delta_time.days > 0:
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT,DiseaseState.IMMUNE]:
+                    new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                else: 
+                    append_rest_of_table = True
+                delta_time -= timedelta(delta_time.days)
+            elif delta_time.days == 0:
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
+                    new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                elif len(new_states_and_times) < len(states_and_times):
+                    i -= 1
+                    append_rest_of_table = True
+            elif delta_time.days < 0:
+                cut_in_middle = True
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
+                    new_states_and_times[i-1][0] == DiseaseState.IMMUNE
+                    lastState = DiseaseState.IMMUNE
+                else:
+                    #add the rest of the table don't change a thing
+                    append_rest_of_table = True
+
             assert delta_time.days >= 0,'miscalculating days'
             # if delta_time.days < 0 :
             #     print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
             #     print("start_date:{} ,old_delta_time:{} ,delta_time:{}".format(start_date,old_delta_time , delta_time))
             #     print(states_and_times)
             #     print("-----------------------")
-            if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
-                if (delta_time.days > 0) or (i==0) or (cut_in_middle):
-                    new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
-                elif cut_in_middle:
-                    new_states_and_times[i-1][0] == DiseaseState.IMMUNE
+            if append_rest_of_table:
+                while i < len(states_and_times):
+                    new_states_and_times.append((states_and_times[i][0],timedelta(days = states_and_times[i][1].days)))
+                    i += 1
                 
         #print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
         #At the End of the table we put immune only if the person was susptible or latent 
@@ -403,7 +422,7 @@ class Person(object):
                 new_states_and_times.append((DiseaseState.IMMUNE,None))
             else:
                 new_states_and_times.append(alt_state)
-        print(new_states_and_times)
+        # print(new_states_and_times)
         #Update person seir_times
         self._seir_times = new_states_and_times
         return self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
