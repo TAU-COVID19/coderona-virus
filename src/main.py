@@ -19,8 +19,8 @@ seed.set_random_seed()
 log = logging.getLogger(__name__)
 
 
-def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_source,min_age, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
-    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}" + \
+def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_complience_at_start,immune_source,min_age, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
+    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}_immune_complience_at_start_{immune_complience_at_start}" + \
     f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}_computerName_{gethostname()}" + \
     f"_immune_source_{immune_source}_min_age_{min_age}"
 
@@ -126,7 +126,7 @@ def main():
 
     jobs = []
 
-    for initial_percentage_immune in  [0.0,0.5]:
+    for initial_percentage_immune,Immune_compliance_at_start in  [(0.0,1),(0.5,1)]:
         for people_per_day in [100]:
             for immune_source,min_age in [(InitialImmuneType.GENERAL_POPULATION,18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [25, 100, 250, 500]:
@@ -143,6 +143,7 @@ def main():
                                                                                             scenario_name,
                                                                                             initial_num_infected,
                                                                                             initial_percentage_immune,
+                                                                                            Immune_compliance_at_start,
                                                                                             immune_source,
                                                                                             min_age,
                                                                                             compliance,
@@ -154,7 +155,8 @@ def main():
                                                                                 days=180,
                                                                                 city_name=city_name,
                                                                                 scale=scale,
-                                                                                infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,immune_source = immune_source,min_age = min_age,people_per_day =people_per_day),
+                                                                                infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,\
+                                                                                     Immune_compliance = Immune_compliance_at_start,immune_source = immune_source,min_age = min_age,people_per_day =people_per_day),
                                                                                 #infection_params=SmartInitialInfectionParams(initial_num_infected, round(initial_num_infected/10)),
                                                                                 params_to_change=params_to_change,
                                                                                 interventions=intervention_scheme(compliance, ci_delay, hi_delay),

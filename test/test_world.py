@@ -77,6 +77,38 @@ def test_createInfectedPersons2():
             cnt_immune = cnt_immune + 1
     assert cnt_immune <= 5
 
+#Test the amount of the  created Immune that not complied with the immune
+def test_createInfectedPersons3():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    kids = [random.randint(0,17) for i in range(5)]    
+    adults  = [random.randint(19,40) for i in range(5)]    
+    ageList = kids + adults 
+    PersonList = list(map(Person, ageList))
+
+    env_arr = []
+    my_world = World(
+        all_people = PersonList,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.infect_random_set(num_infected = 0, infection_doc = "", per_to_immune = 0.5,Immune_compliance = 0,city_name = None,min_age=18,people_per_day =5)
+    my_simulation.simulate_day()
+    #assert events dictionary is not empty
+    cnt_immune = 0 
+    for person in my_world.all_people():
+        if person.get_disease_state() == DiseaseState.IMMUNE:
+            cnt_immune = cnt_immune + 1
+    assert cnt_immune == 0
+    
+
 def test_createInfectedPersonsBestEffort():
     """
     Test that when the population size is less then the amount of people that had been chosen to be infected,
@@ -259,7 +291,57 @@ def test_createImmunehouseholds2():
         if person.get_disease_state() == DiseaseState.IMMUNE:
             cnt_immune = cnt_immune + 1
     assert cnt_immune <= 3
+
+def test_createImmunehouseholds3():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    #create diff enviroments
+    KidsHouse = Household(city = None,contact_prob_between_each_two_people=1)
+    AdultsHouse = Household(city = None,contact_prob_between_each_two_people=1)
+    MixedHouse = Household(city = None,contact_prob_between_each_two_people=1)
+
+    kidsAges = [random.randint(0,17) for i in range(4)]    
+    adultsAges  = [random.randint(19,40) for i in range(3)]    
+    KidsLst  = list(map(Person, kidsAges))
+    adultsLst = list(map(Person, adultsAges))
+    persons_arr = KidsLst + adultsLst
+
+    #register people to diff env
+    KidsHouse.sign_up_for_today(KidsLst[0],1)
+    KidsHouse.sign_up_for_today(KidsLst[1],1)
+
+    AdultsHouse.sign_up_for_today(adultsLst[0],1)
+    AdultsHouse.sign_up_for_today(adultsLst[1],1)
+
+    MixedHouse.sign_up_for_today(adultsLst[2],1)
+    MixedHouse.sign_up_for_today(KidsLst[2],1)
+    MixedHouse.sign_up_for_today(KidsLst[3],1)
     
+    assert len(KidsHouse.get_people()) == 2
+    assert len(AdultsHouse.get_people()) == 2
+    assert len(MixedHouse.get_people()) == 3
+
+    env_arr = [KidsHouse,AdultsHouse,MixedHouse]
+    my_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1,)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.immune_households_infect_others(num_infected = 0, infection_doc = "", per_to_immune = 1,Immune_compliance= 0 ,city_name = None,min_age=18,people_per_day= 3 )
+    my_simulation.simulate_day()
+    #assert events dictionary is not empty
+    cnt_immune = 0 
+    for person in my_world.all_people():
+        if person.get_disease_state() == DiseaseState.IMMUNE:
+            cnt_immune = cnt_immune + 1
+    assert cnt_immune == 0
+
 def test_createInfectedPersonsByHouseHoldBestEffort():
     """
     Test that when the population size is less then the amount of people that had been chosen to be infected by households,

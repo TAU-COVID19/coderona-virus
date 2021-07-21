@@ -156,7 +156,7 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None,min_age=0,people_per_day =1):
+    def infect_random_set(self,num_infected :int, infection_doc :str, per_to_immune=None,Immune_compliance :float =1, city_name=None,min_age=0,people_per_day =1):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
@@ -165,9 +165,12 @@ class Simulation(object):
         (written to the inputs.txt file)
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
-        :param min_age: specify the min age from which we start to infect population
-        if the value is 0 we infect all the population 
+        :param min_age: int specify the min age from which we start to infect population
+        if the value is 0 we infect all the population \
+        :param: Immune_compliance float. Simulate the state in which we aske some percentage of the population
+        to get immune but only some of them agreed
         """
+        assert Immune_compliance >= 0, "Immune_compliance can not be negative"
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
         self.initial_infection_doc = infection_doc
@@ -182,7 +185,7 @@ class Simulation(object):
         #Doing best effort to infect and immune the people in our world
         #after talking to Noam we first infect the ones we can and immune the rest
         num_infected = min(num_infected ,len(population))
-        tmp_num_immuned = int(round(len(population)*per_to_immune))
+        tmp_num_immuned = int(round(len(population) * per_to_immune * Immune_compliance))
         num_immuned = min(len(population) - num_infected,tmp_num_immuned)
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
@@ -209,7 +212,7 @@ class Simulation(object):
             for p in Selected_persons:
                 if (p.get_id() not in used_persons) : 
                     self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
-                    print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
+                    # print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
                     num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
                     immuned_today +=1
@@ -218,7 +221,7 @@ class Simulation(object):
                         immuned_today = 0
 
         
-    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0,people_per_day =0 ):
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0,Immune_compliance:float =1, city_name=None,min_age = 0,people_per_day =0 ):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
         so that the disease can spread during the simulation.
@@ -231,6 +234,8 @@ class Simulation(object):
         if the value is 0 we infect all the population 
         :per_to_immune: percentage of the population that we are going to immune by housholds
         :people_per_day: how much houses per day we should immune
+        :param: Immune_compliance float. Simulate the state in which we aske some percentage of the population
+        to get immune but only some of them agreed
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -252,8 +257,8 @@ class Simulation(object):
         random.shuffle(households)
 
         num_infected = min(self._world.num_people(),num_infected)
-        cnt_people_to_immun = min(adults_cnt,int(per_to_immune * self._world.num_people()))
-        
+        #Immune only some percentage of adults, that agreed to be immuned
+        cnt_people_to_immun = adults_cnt * per_to_immune *  Immune_compliance 
         used_persons = {}
         household_index =0 
         days_delta =0 
