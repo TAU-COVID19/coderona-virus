@@ -367,7 +367,7 @@ class Person(object):
         i=0
         new_states_and_times = []
         cut_in_middle = False
-        zero_days = (delta_time.days ==0)
+        zero_days = (delta_time.days ==0) and (seir_times[0][0] in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT])
 
         append_rest_of_table = False
         if zero_days :
