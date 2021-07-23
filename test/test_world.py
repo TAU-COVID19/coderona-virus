@@ -4,7 +4,7 @@ import random
 from src.run_utils import INITIAL_DATE 
 from src.seir import DiseaseState
 from src.simulation.params import Params
-from src.simulation.simulation import Simulation
+from src.simulation.simulation import ORDER, Simulation
 from src.world import Person
 from src.world.environments.household import Household
 from src.world.population_generation import population_loader
@@ -107,7 +107,78 @@ def test_createInfectedPersons3():
         if person.get_disease_state() == DiseaseState.IMMUNE:
             cnt_immune = cnt_immune + 1
     assert cnt_immune == 0
-    
+
+def test_createInfectedPersonsOredredDESCENDING():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    kids = [0,4,8,12,16]    
+    adults  = [25,29,33]    
+    ageList = kids + adults 
+    youngest = Person(21)
+    Oldest = Person(37)
+    PersonList = list(map(Person, ageList))
+    PersonList = PersonList + [youngest , Oldest] 
+
+    env_arr = []
+    my_world = World(
+        all_people = PersonList,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.infect_random_set(num_infected = 0, infection_doc = "", per_to_immune = 0.5,order= ORDER.DESCENDING,city_name = None,min_age=18,people_per_day =1)
+    my_simulation.simulate_day()
+    assert Oldest.get_disease_state() == DiseaseState.IMMUNE
+    #Can't check day by day lots of noise with seir times
+    for _ in range(4):
+        my_simulation.simulate_day()
+    cnt_immune =0 
+    for person in my_world.all_people():
+        if person.get_disease_state() == DiseaseState.IMMUNE:
+            cnt_immune = cnt_immune + 1
+    assert cnt_immune <= 5
+
+def test_createInfectedPersonsOredredASCENDING():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    kids = [0,4,8,12,16]    
+    adults  = [25,29,33]    
+    ageList = kids + adults 
+    youngest = Person(21)
+    Oldest = Person(37)
+    PersonList = list(map(Person, ageList))
+    PersonList = PersonList + [youngest , Oldest] 
+
+    env_arr = []
+    my_world = World(
+        all_people = PersonList,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.infect_random_set(num_infected = 0, infection_doc = "", per_to_immune = 0.5,order= ORDER.ASCENDING,city_name = None,min_age=18,people_per_day =1)
+    my_simulation.simulate_day()
+    assert youngest.get_disease_state() == DiseaseState.IMMUNE
+    #Can't check day by day lots of noise with seir times
+    for _ in range(4):
+        my_simulation.simulate_day()
+    cnt_immune =0 
+    for person in my_world.all_people():
+        if person.get_disease_state() == DiseaseState.IMMUNE:
+            cnt_immune = cnt_immune + 1
+    assert cnt_immune <= 5
 
 def test_createInfectedPersonsBestEffort():
     """

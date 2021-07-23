@@ -1,12 +1,13 @@
+from copy import deepcopy
+from collections import Counter
+from enum import Enum
+from functools import cmp_to_key
 import logging
 import os
 import random as random
-from collections import Counter
 from datetime import timedelta
-from copy import deepcopy
 from src.seir import seir_times
 from src.seir.disease_state import DiseaseState
-
 from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
@@ -15,7 +16,11 @@ from src.world.environments import InitialGroup
 
 log = logging.getLogger(__name__)
 
-
+class ORDER(Enum):
+    NONE =0,
+    ASCENDING=1,
+    DESCENDING=2,
+    
 class Simulation(object):
     """
     An object which runs a single simulation, holding a world,
@@ -156,13 +161,27 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self,num_infected :int, infection_doc :str, per_to_immune=None,Immune_compliance :float =1, city_name=None,min_age=0,people_per_day =1):
+    def person_comperator_ASCENDING(self,a:Person,b:Person):
+        """
+        Compare persons by their age for ASCENDING sort
+        """
+        return a.get_age() - b.get_age()
+    
+    def person_comperator_DESCENDING(self,a:Person,b:Person):
+        """
+        Compare persons by their age for DESCENDING sort
+        """
+        return b.get_age() - a.get_age()
+
+    def infect_random_set(self,num_infected :int, infection_doc :str, per_to_immune=0.0,Immune_compliance :float =1,order:ORDER = ORDER.NONE, city_name=None,min_age=0,people_per_day =1):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
         :param num_infected: int number of infected to make
+        :param per_to_immune: percent from the total population that should get immuned
         :param infection_doc: str to doc the infection data
         (written to the inputs.txt file)
+        param oredr: specify if we order asending to descending the ages oof the persons that will get immuned 
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
         :param min_age: int specify the min age from which we start to infect population
@@ -204,9 +223,16 @@ class Simulation(object):
                         used_adults += 1
 
         num_immuned = min(len(adults)-used_adults,num_immuned )
+        if order == ORDER.ASCENDING:
+            adults = sorted(adults,key = cmp_to_key(self.person_comperator_ASCENDING))
+        elif order == ORDER.DESCENDING:
+            adults = sorted(adults,key = cmp_to_key(self.person_comperator_DESCENDING))
+        else:
+            adults = random.sample(adults,len(adults))
         #Second set- immune persons that are above min_age and we are able to immune
-        while num_immuned > 0: #we start to count from zero therefor we need one more person
-            Selected_persons = random.sample(adults, num_immuned)
+        Immuned_until_now =0 
+        while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
+            Selected_persons = adults[Immuned_until_now:]
             delta_days =0 
             immuned_today =0 
             for p in Selected_persons:
@@ -215,13 +241,14 @@ class Simulation(object):
                     # print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
                     num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
-                    immuned_today +=1
+                    immuned_today += 1
+                    Immuned_until_now += 1
                     if immuned_today == people_per_day:
                         delta_days += 1 
                         immuned_today = 0
 
         
-    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0,Immune_compliance:float =1, city_name=None,min_age = 0,people_per_day =0 ):
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0,Immune_compliance:float =1,Sort_order:ORDER = ORDER.NONE, city_name=None,min_age = 0,people_per_day =0 ):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
         so that the disease can spread during the simulation.
