@@ -1,10 +1,11 @@
 import os
 import json
 import random
+from functools import cmp_to_key
 from src.run_utils import INITIAL_DATE 
 from src.seir import DiseaseState
 from src.simulation.params import Params
-from src.simulation.simulation import ORDER, Simulation
+from src.simulation.simulation import Simulation,ORDER, person_comperator_ASCENDING, person_comperator_DESCENDING,house_comperator_ASCENDING,house_comperator_DESCENDING
 from src.world import Person
 from src.world.environments.household import Household
 from src.world.population_generation import population_loader
@@ -107,6 +108,31 @@ def test_createInfectedPersons3():
         if person.get_disease_state() == DiseaseState.IMMUNE:
             cnt_immune = cnt_immune + 1
     assert cnt_immune == 0
+def test_sortPersonsAsending():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    persons_arr = [Person(random.randint(0,99)) for _ in range(20)]
+    persons_arr = sorted(persons_arr,key = cmp_to_key(person_comperator_ASCENDING))
+    for i in range (1,20):
+        assert persons_arr[i-1].get_age() <= persons_arr[i].get_age()
+
+def test_sortPersonsDescending():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    persons_arr = [Person(random.randint(0,99)) for _ in range(20)]
+    persons_arr = sorted(persons_arr,key = cmp_to_key(person_comperator_DESCENDING))
+    for i in range (1,20):
+        assert persons_arr[i-1].get_age() >= persons_arr[i].get_age()
 
 def test_createInfectedPersonsOredredDESCENDING():
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
@@ -307,6 +333,51 @@ def test_createImmunehouseholds2():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     #create diff enviroments
+    house1 = Household(city = None,contact_prob_between_each_two_people=1)
+    house2 = Household(city = None,contact_prob_between_each_two_people=1)
+
+    house1Ages = [98,95,5]    
+    house2Ages  = [94,6]    
+    house1Lst  = list(map(Person, house1Ages))
+    house2Lst = list(map(Person, house2Ages))
+    persons_arr = house1Lst + house2Lst
+
+    #register people to diff env
+    house1.sign_up_for_today(house1Lst[0],1)
+    house1.sign_up_for_today(house1Lst[1],1)
+    house1.sign_up_for_today(house1Lst[2],1)
+
+    house2.sign_up_for_today(house2Lst[0],1)
+    house2.sign_up_for_today(house2Lst[1],1)
+
+    assert len(house1.get_people()) == 3
+    assert len(house2.get_people()) == 2
+    
+    env_arr = [house1,house2]
+    my_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1,)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.immune_households_infect_others(num_infected = 0, infection_doc = "", per_to_immune = 0.6,Sort_order=ORDER.DESCENDING ,city_name = None,min_age=18,people_per_day= 3 )
+    my_simulation.simulate_day()
+    #assert events dictionary is not empty
+    cnt_immune = 0 
+    for person in my_world.all_people():
+        if (person.get_age() in [94,95,98]) and (person.get_disease_state() == DiseaseState.IMMUNE):
+            cnt_immune = cnt_immune + 1
+    assert cnt_immune == 3
+
+def test_createImmunehouseholds3():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    #create diff enviroments
     KidsHouse = Household(city = None,contact_prob_between_each_two_people=1)
     AdultsHouse = Household(city = None,contact_prob_between_each_two_people=1)
     MixedHouse = Household(city = None,contact_prob_between_each_two_people=1)
@@ -363,7 +434,7 @@ def test_createImmunehouseholds2():
             cnt_immune = cnt_immune + 1
     assert cnt_immune <= 3
 
-def test_createImmunehouseholds3():
+def test_createImmunehouseholds4():
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
@@ -526,3 +597,42 @@ def test_createInfectedPersonsByHouseHoldBestEffort2():
             cnt_sick += 1
     assert cnt_immune == 3
     assert cnt_sick == 0
+
+def test_sortHouseholdsAscendingandAndDescending():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    #create diff enviroments
+    house1 = Household(city = None,contact_prob_between_each_two_people=1)
+    house2 = Household(city = None,contact_prob_between_each_two_people=1)
+    
+    house1Ages  = [98,95,5]    
+    house2Ages  = [94,6]    
+    
+    house1Lst = list(map(Person, house1Ages))
+    house2Lst = list(map(Person, house2Ages))
+    
+    #register people to diff env
+    house1.sign_up_for_today(house1Lst[0],1)
+    house1.sign_up_for_today(house1Lst[1],1)
+    house1.sign_up_for_today(house1Lst[2],1)
+
+    house2.sign_up_for_today(house2Lst[0],1)
+    house2.sign_up_for_today(house2Lst[1],1)
+
+    assert len(house1.get_people()) == 3
+    assert len(house2.get_people()) == 2
+ 
+    houses = []
+    houses.append(house1)
+    houses.append(house2)
+    
+    houses = sorted(houses,key = cmp_to_key(house_comperator_ASCENDING))
+    assert 5 in [p.get_age() for p in houses[0].get_people()]
+
+    houses = sorted(houses,key = cmp_to_key(house_comperator_DESCENDING))
+    assert 98 in [p.get_age() for p in houses[0].get_people()]
+
