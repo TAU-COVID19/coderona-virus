@@ -320,7 +320,7 @@ class Simulation(object):
 
         num_infected = min(self._world.num_people(),num_infected)
         #Immune only some percentage of adults, that agreed to be immuned
-        cnt_people_to_immun = adults_cnt * per_to_immune *  Immune_compliance 
+        cnt_people_to_immun = int(self._world.num_people() * per_to_immune *  Immune_compliance )
         used_persons = {}
         household_index =0 
         days_delta =0 
@@ -342,6 +342,7 @@ class Simulation(object):
                 if Sort_order == ORDER.NONE:
                     cnt_immune_in_house =0
                     for i in range(min(len(persons_to_immune),cnt_people_to_immun_today)):
+                        print("immuning person age:{}".format(persons_to_immune[i].get_age()))
                         self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
                         used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
                         # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
@@ -354,6 +355,7 @@ class Simulation(object):
                     i=0
                     cnt_immune_in_house =0
                     while i < min(len(persons_to_immune),cnt_people_to_immun_today):
+                        print("immuning person age:{}".format(persons_to_immune[i].get_age()))
                         self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
                         used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
                         # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
@@ -368,6 +370,7 @@ class Simulation(object):
                                 cnt_people_to_immun_today -= 1
                                 cnt_people_to_immun -= 1
                                 cnt_immune_in_house += 1 
+                                i += 1
                         if cnt_immune_in_house == len(persons_to_immune):
                             household_index += 1
             days_delta += 1

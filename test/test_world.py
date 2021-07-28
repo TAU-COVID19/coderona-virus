@@ -336,7 +336,7 @@ def test_createImmunehouseholds2():
     house1 = Household(city = None,contact_prob_between_each_two_people=1)
     house2 = Household(city = None,contact_prob_between_each_two_people=1)
 
-    house1Ages = [98,95,5]    
+    house1Ages = [98,93,5]    
     house2Ages  = [94,6]    
     house1Lst  = list(map(Person, house1Ages))
     house2Lst = list(map(Person, house2Ages))
@@ -366,7 +366,7 @@ def test_createImmunehouseholds2():
     #assert events dictionary is not empty
     cnt_immune = 0 
     for person in my_world.all_people():
-        if (person.get_age() in [94,95,98]) and (person.get_disease_state() == DiseaseState.IMMUNE):
+        if (person.get_age() in [94,93,98]) and (person.get_disease_state() == DiseaseState.IMMUNE):
             cnt_immune = cnt_immune + 1
     assert cnt_immune == 3
 
