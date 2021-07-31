@@ -239,7 +239,7 @@ def scenario_23_interventions(compliance, ci_delay, hi_delay):
     )
     household_intervention = HouseholdIsolationIntervention(
         start_date=INITIAL_DATE,
-        duration=timedelta(60),
+        duration=timedelta(360),
         compliance=compliance,
         delay_on_enter=hi_delay
     )

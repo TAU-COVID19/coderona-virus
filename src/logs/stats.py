@@ -1087,7 +1087,7 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
     takes dumps of Statistics and compute the mean and confidence for r as function of time
     the typical input is files from multiple runs of the same simulation
     """
-    colors = ['r', 'g', 'y', 'b', 'c', "m"]
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     color_cycle = cycle(colors)
 
     all_stats = [
