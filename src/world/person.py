@@ -47,6 +47,7 @@ class Person(object):
         '_num_infections',
         'last_state',
         '_seir_times',
+        '_minimum_infectiousness_age',
     )
     num_people_so_far = 0
 
@@ -65,8 +66,8 @@ class Person(object):
         self._environments = {env.name: env for env in environments}
         self._current_routine = {env_name: 1 for env_name in self._environments}
         params = Params.loader()['person']
-        minimum_infectiousness_age = params['minimum_infectiousness_age']
-        if age <= minimum_infectiousness_age:
+        self._minimum_infectiousness_age = params['minimum_infectiousness_age']
+        if age <= self._minimum_infectiousness_age:
             self._infectiousness_prob = 0.0
         else:
             self._infectiousness_prob = \
@@ -320,6 +321,9 @@ class Person(object):
         :return: infection events
         """
         assert self._disease_state == DiseaseState.SUSCEPTIBLE, "person state:" + str(self._disease_state)
+        if self._age <= self._minimum_infectiousness_age:
+            return []
+
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
