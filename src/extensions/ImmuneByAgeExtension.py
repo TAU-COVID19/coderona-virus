@@ -22,8 +22,6 @@ class ImmuneStrategy:
             return "YOUNGER_TO_OLDER"
         elif self.strategy == self.OLDER_TO_YOUNGER:
             return "OLDER_TO_YOUNGER"
-        elif self.strategy == self.OLDER_TO_YOUNGER:
-            return "OLDER_TO_YOUNGER"
         else:
             return "ANY_AGE"
 
@@ -36,7 +34,7 @@ class ImmuneByAgeExtension(Simulation):
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = 800
         self.immune_by_households = False # set to False, will Not immune all family members first
-        self.immune_strategy: ImmuneStrategy = ImmuneStrategy(ImmuneStrategy.OLDER_TO_YOUNGER)
+        self.immune_strategy: ImmuneStrategy = ImmuneStrategy(ImmuneStrategy.YOUNGER_TO_OLDER)
 
         # internal state. do not change!
         self.parent = parent
