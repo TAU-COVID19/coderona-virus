@@ -65,12 +65,16 @@ class Person(object):
         self._environments = {env.name: env for env in environments}
         self._current_routine = {env_name: 1 for env_name in self._environments}
         params = Params.loader()['person']
-        self._infectiousness_prob = \
-            min(params['base_infectiousness'] * \
-                _np.random.gamma(
-                    params['individual_infectiousness_gamma_shape'],
-                    params['individual_infectiousness_gamma_scale']
-                ), 1)
+        minimum_infectiousness_age = params['minimum_infectiousness_age']
+        if age <= minimum_infectiousness_age:
+            self._infectiousness_prob = 0.0
+        else:
+            self._infectiousness_prob = \
+                min(params['base_infectiousness'] * \
+                    _np.random.gamma(
+                        params['individual_infectiousness_gamma_shape'],
+                        params['individual_infectiousness_gamma_scale']
+                    ), 1)
         # if StartAsRecovered:
         #   self._disease_state = DiseaseState.IMMUNE
         #   self.is_susceptible = False

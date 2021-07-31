@@ -693,8 +693,8 @@ class Statistics(object):
         """
         csv_filename = "{}.csv".format(clean_filename)
         svg_filename = "{}.svg".format(clean_filename)
-        assert not os.path.exists(svg_filename), "File {} already exists!".format(svg_filename)
-        assert not os.path.exists(csv_filename), "File {} already exists!".format(csv_filename)
+        #assert not os.path.exists(svg_filename), "File {} already exists!".format(svg_filename)
+        #assert not os.path.exists(csv_filename), "File {} already exists!".format(csv_filename)
         return csv_filename, svg_filename
 
     @staticmethod
@@ -777,7 +777,7 @@ class Statistics(object):
                 f.write(",".join([data['props']['label']] + data_strings))
 
     @staticmethod
-    def plot_with_err(image_path, dates, datas, datas_error, background_stripes=None, is_dates=True):
+    def plot_with_err(image_path, dates, datas, datas_error, background_stripes=None, is_dates=True, clear_graph=True):
         """
         same as plot, but with datas_error which is an "error" for each data and each date.
         Can be used for plotting std or confidence.
@@ -793,8 +793,9 @@ class Statistics(object):
                 yscales.append('linear')
         assert all([yscale == yscales[0] for yscale in yscales]), "All yscales must be equal!"
         yscale = yscales[0]
-        plt.clf()
-        plt.figure(figsize=(10, 10), dpi=80)
+        if clear_graph:
+            plt.clf()
+            plt.figure(figsize=(10, 10), dpi=80)
         if is_dates:
             npdates = [mdates.date2num(d) for d in dates]
         else:
@@ -820,9 +821,9 @@ class Statistics(object):
         if is_dates:
             plt.gcf().autofmt_xdate()
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
+        plt.title(os.path.basename(image_path))
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3, fancybox=True, shadow=True)
         plt.yscale(yscale)
-        plt.title(os.path.basename(image_path))
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
         plt.savefig(svg_filename, bbox_inches="tight")
         with open(csv_filename, 'w') as f:
@@ -1078,7 +1079,7 @@ def get_mean_and_confidence_from_statistics(stats_files, datas_to_plot, name, ou
             'samples': aligned_data,
             'props': data_to_plot.props
         })
-    compute_and_plot_mean_stddev_confidence(longest_date_range, list_of_samples_with_props, outdir, name)
+    compute_and_plot_mean_stddev_confidence(longest_date_range, [list_of_samples_with_props], outdir, name)
 
 
 def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
@@ -1086,11 +1087,16 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
     takes dumps of Statistics and compute the mean and confidence for r as function of time
     the typical input is files from multiple runs of the same simulation
     """
+    colors = ['r', 'g', 'y', 'b', 'c', "m"]
+    color_cycle = cycle(colors)
+
     all_stats = [
         Statistics.load(file_name) for file_name in
         stats_files
     ]
     longest_date_range = max_date_range(all_stats)
+
+    to_plot_array = []
 
     for key in ["smoothed_avg_r0", "avg_r0", "instantaneous_r"]:
         smoothed_r0_avg_with_date_range = [
@@ -1101,11 +1107,12 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
         to_plot = [
             {
                 'samples': aligned_data,
-                'props': {'label': key}
+                'props': {'label': key, 'color': next(color_cycle)}
              }
         ]
-        compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot, outdir, name + "_r_data_" + key,
-                                                all_stats[0].make_background_stripes())
+        to_plot_array.append(to_plot)
+    compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot_array, outdir, name + "_r_data_" + key,
+                                            all_stats[0].make_background_stripes())
 
 
 def get_multiple_stats_summary_file(stats_files, name, outdir, shortened=False):
@@ -1133,33 +1140,37 @@ def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_prop
     exp_data = []
     std_data = []
     confidence_data = []
-    for samples_with_props in list_of_all_samples_with_props:
-        samples = samples_with_props['samples']
-        props = samples_with_props['props']
-        std_conf_props = props.copy()
-        std_conf_props.pop('label')
-        expectation = [apply_unless_all_nans(nanmean, nums) for nums in zip(*samples)]
-        std = [apply_unless_all_nans(nanstd, nums) for nums in zip(*samples)]
-        confidence = [
-            apply_unless_all_nans(nanstd, nums) / sqrt(apply_unless_all_nans(len, nums))
-            for nums in zip(*samples)
-        ]
+    first_graph = True
+    for r_graphs in list_of_all_samples_with_props:
+        for samples_with_props in r_graphs:
+            samples = samples_with_props['samples']
+            props = samples_with_props['props']
+            std_conf_props = props.copy()
+            std_conf_props.pop('label')
+            expectation = [apply_unless_all_nans(nanmean, nums) for nums in zip(*samples)]
+            std = [apply_unless_all_nans(nanstd, nums) for nums in zip(*samples)]
+            confidence = [
+                apply_unless_all_nans(nanstd, nums) / sqrt(apply_unless_all_nans(len, nums))
+                for nums in zip(*samples)
+            ]
 
-        exp_data.append({
-            'data': expectation,
-            'props': props
-        })
-        std_data.append({
-            'data': std,
-            'props': std_conf_props
-        })
-        confidence_data.append({
-            'data': confidence,
-            'props': std_conf_props
-        })
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), dates, exp_data, std_data, background_stripes_data)
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), dates, exp_data,
-                             confidence_data, background_stripes_data)
+            exp_data.append({
+                'data': expectation,
+                'props': props
+            })
+            std_data.append({
+                'data': std,
+                'props': std_conf_props
+            })
+            confidence_data.append({
+                'data': confidence,
+                'props': std_conf_props
+            })
+        #Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), dates, exp_data, std_data,
+        #                         background_stripes_data, first_graph)
+        first_graph = False
+        Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), dates, exp_data,
+                                 confidence_data, background_stripes_data, False)
 
 
 def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir):
