@@ -44,19 +44,18 @@ INTERVENTION_TYPE_TO_COLOR = {
     HouseholdIsolationIntervention: 'blue',
     WorkplaceClosureIntervention: 'teal',
     LockdownIntervention: 'pink'
-
 }
 
 INTERVENTION_TYPE_TO_LABEL = {
-    SocialDistancingIntervention: 'social distancing',
+    CityCurfewIntervention: 'city curfew intervention',
     ElderlyQuarantineIntervention: 'Elderly Quarantine',
+    HouseholdIsolationIntervention: 'household isolation',
+    LockdownIntervention: 'lockdown isolation',
+    SocialDistancingIntervention: 'social distancing',
     SchoolClosureIntervention: 'school closure',
     SchoolIsolationIntervention: 'school isolation',
     SymptomaticIsolationIntervention: 'symptomatic isolation',
-    CityCurfewIntervention: 'city curfew intervention',
-    HouseholdIsolationIntervention: 'household isolation',
-    WorkplaceClosureIntervention: 'workplace closure',
-    LockdownIntervention: 'lockdown isolation'
+    WorkplaceClosureIntervention: 'workplace closure'
 }
 
 class DataToPlot(object):
@@ -758,7 +757,7 @@ class Statistics(object):
         if is_dates:
             fig = plt.gcf()
             fig.autofmt_xdate()
-            # fig.set_size_inches(11,8)
+            fig.set_size_inches(11,8)
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
         plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3, fancybox=True, shadow=True)
         plt.yscale(yscale)

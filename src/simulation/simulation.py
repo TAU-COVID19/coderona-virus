@@ -1,21 +1,67 @@
+from copy import deepcopy
+from collections import Counter
+from enum import Enum
+from functools import cmp_to_key
 import logging
 import os
 import random as random
-from collections import Counter
 from datetime import timedelta
-from copy import deepcopy
 from src.seir import seir_times
 from src.seir.disease_state import DiseaseState
-
 from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
-from src.world.environments import InitialGroup
+from src.world.environments import InitialGroup,Household
+
 
 
 log = logging.getLogger(__name__)
 
+class ORDER(Enum):
+    NONE =0,
+    ASCENDING=1,
+    DESCENDING=2,
 
+
+def person_comperator_ASCENDING(a:Person,b:Person):
+    """
+    Compare persons by their age for ASCENDING sort
+    """
+    return a.get_age() - b.get_age()
+
+def person_comperator_DESCENDING(a:Person,b:Person):
+    """
+    Compare persons by their age for DESCENDING sort
+    """
+    return b.get_age() - a.get_age()
+
+def house_comperator_ASCENDING(a:Household,b:Household):
+        """
+        Compare households by their youngest person
+        """
+        #Get the persons we whish to sort 
+        a_people = a.get_people()
+        b_people = b.get_people()
+        #Sort the persons by their age in ascending way 
+        a_people = sorted(a_people,key = cmp_to_key(person_comperator_ASCENDING))
+        b_people = sorted(b_people,key = cmp_to_key(person_comperator_ASCENDING))
+        #compare the youngest persons of each house
+        return a_people[0].get_age() - b_people[0].get_age()
+    
+def house_comperator_DESCENDING(a:Household,b:Household):
+    """
+    Compare households by their youngest person
+    """
+    #Get the persons we whish to sort 
+    a_people = a.get_people()
+    b_people = b.get_people()
+    #Sort the persons by their age in ascending way 
+    a_people = sorted(a_people,key = cmp_to_key(person_comperator_DESCENDING))
+    b_people = sorted(b_people,key = cmp_to_key(person_comperator_DESCENDING))
+    #compare the youngest persons of each house
+    return b_people[0].get_age() - a_people[0].get_age()
+    
+    
 class Simulation(object):
     """
     An object which runs a single simulation, holding a world,
@@ -156,18 +202,24 @@ class Simulation(object):
                 'Unexpected event type: {}'.format(type(event))
             self.register_event_on_day(event, event._date)
 
-    def infect_random_set(self, num_infected, infection_doc, per_to_immune=None, city_name=None,min_age=0,people_per_day =1):
+
+    def infect_random_set(self,num_infected :int, infection_doc :str, per_to_immune=0.0,Immune_compliance :float =1,order:ORDER = ORDER.NONE, city_name=None,min_age=0,people_per_day =1):
         """
         Infect a uniformly random initial set,
         so that the disease can spread during the simulation.
         :param num_infected: int number of infected to make
+        :param per_to_immune: percent from the total population that should get immuned
         :param infection_doc: str to doc the infection data
         (written to the inputs.txt file)
+        param oredr: specify if we order asending to descending the ages oof the persons that will get immuned 
         :param city_name: the name of the city to infect
         (if left None, infects people from all around the World)
-        :param min_age: specify the min age from which we start to infect population
-        if the value is 0 we infect all the population 
+        :param min_age: int specify the min age from which we start to infect population
+        if the value is 0 we infect all the population \
+        :param: Immune_compliance float. Simulate the state in which we aske some percentage of the population
+        to get immune but only some of them agreed
         """
+        assert Immune_compliance >= 0, "Immune_compliance can not be negative"
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
         self.initial_infection_doc = infection_doc
@@ -179,28 +231,17 @@ class Simulation(object):
         else:
             population = [p for p in self._world.all_people()]
 
-        num_immuned = int(round(len(population)*per_to_immune))
+        #Doing best effort to infect and immune the people in our world
+        #after talking to Noam we first infect the ones we can and immune the rest
+        num_infected = min(num_infected ,len(population))
+        tmp_num_immuned = int(round(len(population) * per_to_immune * Immune_compliance))
+        num_immuned = min(len(population) - num_infected,tmp_num_immuned)
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
         adults = [p for p in population if p.get_age() > min_age]
-        num_immuned = min(len(adults),num_immuned )
+        used_adults =0 
         used_persons = {}
-        #First set the immune persons that are above min_age
-        while num_immuned > 0: #we start to count from zero therefor we need one more person
-            Selected_persons = random.sample(adults, num_immuned)
-            delta_days =0 
-            immuned_today =0 
-            for p in Selected_persons:
-                if (p.get_id() not in used_persons) : 
-                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
-                    num_immuned = num_immuned-1
-                    used_persons[p.get_id()] = p
-                    immuned_today +=1
-                    if immuned_today == people_per_day:
-                        delta_days += 1 
-                        immuned_today = 0
-
-        #Second set the people that aren't immune to be infected
+        #First set the people that aren't immune to be infected
         while num_infected > 0:
             Selected_persons = random.sample(population, num_infected)
             for p in Selected_persons:
@@ -208,8 +249,36 @@ class Simulation(object):
                     self.register_events(p.infect_and_get_events(self._date, InitialGroup.initial_group()))
                     num_infected = num_infected-1
                     used_persons[p.get_id()]=p
+                    if p.get_age() > 0:
+                        used_adults += 1
 
-    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0, city_name=None,min_age = 0,people_per_day =0 ):
+        num_immuned = min(len(adults)-used_adults,num_immuned )
+        if order == ORDER.ASCENDING:
+            adults = sorted(adults,key = cmp_to_key(person_comperator_ASCENDING))
+        elif order == ORDER.DESCENDING:
+            adults = sorted(adults,key = cmp_to_key(person_comperator_DESCENDING))
+        else:
+            adults = random.sample(adults,len(adults))
+        #Second set- immune persons that are above min_age and we are able to immune
+        Immuned_until_now =0 
+        while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
+            Selected_persons = adults[Immuned_until_now:]
+            delta_days =0 
+            immuned_today =0 
+            for p in Selected_persons:
+                if (p.get_id() not in used_persons) : 
+                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
+                    # print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
+                    num_immuned = num_immuned-1
+                    used_persons[p.get_id()] = p
+                    immuned_today += 1
+                    Immuned_until_now += 1
+                    if immuned_today == people_per_day:
+                        delta_days += 1 
+                        immuned_today = 0
+
+    
+    def immune_households_infect_others(self,num_infected : int, infection_doc : str, per_to_immune=0.0,Immune_compliance:float =1,Sort_order:ORDER = ORDER.NONE, city_name=None,min_age = 0,people_per_day =0 ):
         """
         Immune some percentage of the households in the population and infectimg a given percentage of the population
         so that the disease can spread during the simulation.
@@ -222,6 +291,8 @@ class Simulation(object):
         if the value is 0 we infect all the population 
         :per_to_immune: percentage of the population that we are going to immune by housholds
         :people_per_day: how much houses per day we should immune
+        :param: Immune_compliance float. Simulate the state in which we aske some percentage of the population
+        to get immune but only some of them agreed
         """
         assert isinstance(num_infected, int)
         assert self.initial_infection_doc is None
@@ -234,46 +305,75 @@ class Simulation(object):
             tmp_households = [h for h in self._world.get_all_city_households()]
         
         households= []
-        acc = 0 
+        adults_cnt = 0 
         for h in tmp_households:
             cnt = len([p for p in h.get_people() if p.get_age() > min_age])
             if cnt > 0:
                 households.append(h)
-                acc += cnt
-        random.shuffle(households)
+                adults_cnt += cnt
+        if Sort_order == ORDER.NONE:
+                households = random.sample(households,len(households))
+        elif Sort_order ==  ORDER.ASCENDING:
+                households = sorted(households,key=cmp_to_key(house_comperator_ASCENDING))
+        elif Sort_order == ORDER.DESCENDING:
+                households = sorted(households,key=cmp_to_key(house_comperator_DESCENDING))
 
-        cnt_people_to_immun = min(acc,int(per_to_immune * self._world.num_people()))
-        
-
+        num_infected = min(self._world.num_people(),num_infected)
+        #Immune only some percentage of adults, that agreed to be immuned
+        cnt_people_to_immun = int(self._world.num_people() * per_to_immune *  Immune_compliance )
         used_persons = {}
         household_index =0 
         days_delta =0 
-        while cnt_people_to_immun > 0:
-            cnt_people_to_immun_today  = people_per_day
-            while cnt_people_to_immun_today > 0:
-                persons_to_immune = [ p for p in households[household_index].get_people() \
-                    if (p.get_age() >= min_age) and (p.get_id() not in used_persons)]
-                cnt_immune_in_house =0
-                for i in range(min(len(persons_to_immune),cnt_people_to_immun_today)):
-                    self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
-                    used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
-                    # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                    cnt_people_to_immun_today -= 1
-                    cnt_people_to_immun -= 1
-                    cnt_immune_in_house += 1 
-                if cnt_immune_in_house == len(persons_to_immune):
-                    household_index += 1
-                # if i == cnt_people_to_immun_today move to tomorrow
-            days_delta += 1
-
+        
         if num_infected > 0:
-            UnsafePersons = [p for p in self._world.all_people() if p.get_id() not in used_persons]
+            UnsafePersons = [p for p in self._world.all_people()]
             people_to_infect = random.sample(UnsafePersons, min(len(UnsafePersons),num_infected))
             for person in people_to_infect:
                 # print("calling infect_and_get_events from immune_households_infect_others for id:{}".format(person.get_id()))
                 self.register_events(person.infect_and_get_events(self._date, InitialGroup.initial_group()))
                 used_persons[person.get_id()] = person
                 # print("Infecting person id:{} on date:{}".format(person.get_id(),self._date))
+        
+        while (cnt_people_to_immun > 0) and (people_per_day > 0)and (household_index < len(households)):
+            cnt_people_to_immun_today  = people_per_day
+            while (cnt_people_to_immun_today > 0) and (household_index < len(households)):
+                persons_to_immune = [ p for p in households[household_index].get_people() \
+                    if (p.get_age() >= min_age) and (p.get_id() not in used_persons)]
+                if Sort_order == ORDER.NONE:
+                    cnt_immune_in_house =0
+                    for i in range(min(len(persons_to_immune),cnt_people_to_immun_today)):
+                        self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                        used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
+                        # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
+                        cnt_people_to_immun_today -= 1
+                        cnt_people_to_immun -= 1
+                        cnt_immune_in_house += 1 
+                    if cnt_immune_in_house == len(persons_to_immune):
+                        household_index += 1
+                elif Sort_order in [ORDER.ASCENDING,ORDER.DESCENDING]:
+                    i=0
+                    cnt_immune_in_house =0
+                    while i < min(len(persons_to_immune),cnt_people_to_immun_today):
+                        self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                        used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
+                        # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
+                        cnt_people_to_immun_today -= 1
+                        cnt_people_to_immun -= 1
+                        cnt_immune_in_house += 1 
+                        for j in range(i+1,min(len(persons_to_immune),cnt_people_to_immun_today)):
+                            if (persons_to_immune[j] not in used_persons) and ((persons_to_immune[i].get_age() // 10) == (persons_to_immune[j].get_age() // 10)):
+                                self.register_events(persons_to_immune[j].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                                used_persons[persons_to_immune[j].get_id()] = persons_to_immune[j]
+                                # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
+                                cnt_people_to_immun_today -= 1
+                                cnt_people_to_immun -= 1
+                                cnt_immune_in_house += 1 
+                                i += 1
+                        if cnt_immune_in_house == len(persons_to_immune):
+                            household_index += 1
+            days_delta += 1
+
+        
 
     def first_people_are_done(self):
         """

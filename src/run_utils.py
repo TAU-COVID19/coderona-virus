@@ -269,7 +269,6 @@ class RepeatJob(RunningJob):
                 "statistics.pkl"
             ))
         for name, data_to_plot in self.datas_to_plot.items():
-            # print(f"RepeatJob.finalize() {self.scenario_name}_{name} outdir={outdir}")
             get_mean_and_confidence_from_statistics(stats_files, data_to_plot, self.scenario_name + "_" + name, outdir)
         get_multiple_stats_summary_file(stats_files, self.scenario_name, outdir, shortened=False)
         get_multiple_stats_summary_file(stats_files, self.scenario_name, outdir, shortened=True)
@@ -535,8 +534,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
 
 def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_range,
-                                      interventions=None, num_repetitions=7,
-                                      initial_num_infected=20, num_rs=0):
+                                      interventions=None, num_repetitions=7, num_rs=0):
     """
     Wraps the inialization of a job that creates a graph of R as a function of base infectiousness value.
 
@@ -546,7 +544,6 @@ def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_ran
     :param param_range: list of all the base infectiousness values
     :param interventions: list of interventions to apply during the simulation
     :param num_repetitions: int repetition for each base infectiousness value
-    :param initial_num_infected: initial number of infected people
     :param num_rs: number of Rs to compute
     :return: ParamChangeRJob
     """

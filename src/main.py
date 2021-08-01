@@ -12,16 +12,17 @@ from src.seir import DiseaseState
 from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams,InitialImmuneType
 from src.logs import make_age_and_state_datas_to_plot
 from src.simulation.params import Params
-from src.run_utils import RepeatJob, SimpleJob, run, make_base_infectiousness_to_r_job
+from src.simulation.simulation import ORDER
+from src.run_utils import RepeatJob, SimpleJob, run
 import src.util.seed as seed
 
 seed.set_random_seed()
 log = logging.getLogger(__name__)
 
 
-def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_source,min_age, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
-    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}\n" + \
-    f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}\n" + \
+def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_complience_at_start,immune_source,min_age, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
+    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_percenage_{initial_per_immuned}_immune_complience_at_start_{immune_complience_at_start}" + \
+    f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}_computerName_{gethostname()}" + \
     f"_immune_source_{immune_source}_min_age_{min_age}"
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
@@ -43,10 +44,13 @@ def get_datas_to_plot():
         "susceptible": [
             DiseaseState.SUSCEPTIBLE
         ],
+        "Immuned": [
+            DiseaseState.IMMUNE
+        ],
         "deceased": [
             DiseaseState.DECEASED
         ],
-        "immune": [
+        "immuned": [
             DiseaseState.IMMUNE
         ]
     }
@@ -79,7 +83,7 @@ def main():
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions
         # "reality1" : scenario_reality1
-        "householdisolation_sd_interventions" : householdisolation_sd_interventions
+        "householdisolation_sd_interventions" : householdisolation_sd_interventions,
         # "check" : scenario_check
         # "reality2" : scenario_reality2
         # "reality3": scenario_reality3
@@ -101,6 +105,7 @@ def main():
         # "paper_2_comp_9": paper_2_comp_9
         #"vaccinations_scenario_general": vaccinations_scenario_general,
         #"vaccinations_scenario_households": vaccinations_scenario_households,
+        #"Empty_scenario": Empty_scenario
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -123,38 +128,45 @@ def main():
     # if caching option is on
 
     jobs = []
-    for initial_percentage_immune in [0.0]:  # [0.0,0.5]:
-        for people_per_day in [0]:
-            for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS,18)]:  # [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.GENERAL_POPULATION]:  #the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [25, 100]:  # [25, 100, 250, 500]:
-                    for city_name, scale in [("Holon",1), ("Bene Beraq",1)]:  # [("Holon",1), ("Bene Beraq",1)]:
+
+    for initial_percentage_immune, Immune_compliance_at_start in [(0.4, 0.8)]: # [(0.0,1),(0.5,1)]:
+        for people_per_day in [100]:
+            for immune_source,min_age in [(InitialImmuneType.GENERAL_POPULATION, 18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
+                for initial_num_infected in [500]: # [25, 100, 250, 500]:
+                    for city_name, scale in [("Holon",1),("Bene Beraq",1)]:
                         for compliance in [0.8]:
-                            for ci_delay in [4]:
-                                for hi_delay in [4]:
+                            for order in [ORDER.DESCENDING]:
+                                for ci_delay in [4]:
+                                    for hi_delay in [4]:                                
                                         for symptomatic_probs_scale in [1]:
                                             for scenario_name, intervention_scheme in scenarios.items():
                                                 params_to_change= {
-                                                    ('disease_parameters', 'symptomatic_given_infected_per_age'): get_rescaled_symptomatic_probs(symptomatic_probs_scale)
-                                                }
+                                                        ('disease_parameters', 'symptomatic_given_infected_per_age'): get_rescaled_symptomatic_probs(symptomatic_probs_scale)
+                                                    }
                                                 full_scenario_name = generate_scenario_name(city_name,
-                                                                                            scenario_name,
-                                                                                            initial_num_infected,
-                                                                                            initial_percentage_immune,
-                                                                                            immune_source,
-                                                                                            min_age,
-                                                                                            compliance,
-                                                                                            ci_delay,
-                                                                                            hi_delay,
-                                                                                            symptomatic_probs_scale)
+                                                                                                scenario_name,
+                                                                                                initial_num_infected,
+                                                                                                initial_percentage_immune,
+                                                                                                Immune_compliance_at_start,
+                                                                                                immune_source,
+                                                                                                min_age,
+                                                                                                compliance,
+                                                                                                ci_delay,
+                                                                                                hi_delay,
+                                                                                                symptomatic_probs_scale)
+                #                                    full_scenario_name = "res"
                                                 jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                days=360,
-                                                                                city_name=city_name,
-                                                                                scale=scale,
-                                                                                infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,immune_source = immune_source,min_age = min_age,people_per_day =people_per_day),
-                                                                                params_to_change=params_to_change,
-                                                                                interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                                                                datas_to_plot=datas_to_plot),
-                                                                    num_repetitions=80))
+                                                                                    days=180,
+                                                                                    city_name=city_name,
+                                                                                    scale=scale,
+                                                                                    infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,\
+                                                                                        Immune_compliance = Immune_compliance_at_start,order= order,immune_source = immune_source, \
+                                                                                        min_age = min_age,people_per_day =people_per_day),
+                                                                                    #infection_params=SmartInitialInfectionParams(initial_num_infected, round(initial_num_infected/10)),
+                                                                                    params_to_change=params_to_change,
+                                                                                    interventions=intervention_scheme(compliance, ci_delay, hi_delay),
+                                                                                    datas_to_plot=datas_to_plot),
+                                                                        num_repetitions=50))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
