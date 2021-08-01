@@ -33,8 +33,8 @@ class ImmuneByAgeExtension(Simulation):
         self.min_age_to_immune = 18
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = 800
-        self.immune_by_households = True # set to False, will Not immune all family members first
-        self.immune_strategy: ImmuneStrategy = ImmuneStrategy(ImmuneStrategy.ANY_AGE)
+        self.immune_by_households = False # set to False, will Not immune all family members first
+        self.immune_strategy: ImmuneStrategy = ImmuneStrategy(ImmuneStrategy.OLDER_TO_YOUNGER)
 
         # internal state. do not change!
         self.parent = parent
