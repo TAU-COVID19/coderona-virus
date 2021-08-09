@@ -20,10 +20,24 @@ seed.set_random_seed()
 log = logging.getLogger(__name__)
 
 
-def generate_scenario_name(city_name, scenario, initial_num_infected,initial_per_immuned,immune_complience_at_start,immune_source,min_age, compliance, ci_delay, hi_delay, symptomatic_probs_scale):
-    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_perc_{initial_per_immuned}_imm_comp_at_start_{immune_complience_at_start}\n" + \
+def generate_scenario_name(
+        city_name,
+        scenario,
+        initial_num_infected,
+        initial_per_immuned,
+        immune_complience_at_start,
+        immune_source,
+        min_age,
+        compliance,
+        ci_delay,
+        hi_delay,
+        symptomatic_probs_scale,
+        minimum_infectiousness_age):
+    return f"{city_name}_{scenario}_init_{initial_num_infected}_immune_perc_{initial_per_immuned}\n" + \
+    f"_imm_comp_at_start_{immune_complience_at_start}\n" + \
     f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}\n" + \
-    f"_imm_src_{immune_source}_min_age_{min_age}"
+    f"_imm_src_{immune_source}_min_age_{min_age}\n" + \
+    f"_minimum_infectiousness_age={minimum_infectiousness_age}"
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
     current_probs = Params.loader()['disease_parameters']['symptomatic_given_infected_per_age']
@@ -156,7 +170,8 @@ def main():
                                                                                                     compliance,
                                                                                                     ci_delay,
                                                                                                     hi_delay,
-                                                                                                    symptomatic_probs_scale)
+                                                                                                    symptomatic_probs_scale,
+                                                                                                    minimum_infectiousness_age)
                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
                                                                                         days=10,

@@ -34,9 +34,10 @@ def load_population_to_file() -> List[Person]:
         return population
 
 
-def calculate_r0_data(population: List[Person], max_date=None):
+def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_age=100):
     """
     Calculates daily avg r data.
+    people can infect others only if their age is between min_age to max_age. but they can infect anyone
     Returns a dictionary that contains an array of dates, an array of avg r values,
     and an array of smoothed avg values.
     If no valid infections were made, returns None
@@ -66,6 +67,13 @@ def calculate_r0_data(population: List[Person], max_date=None):
     p.for_each(sum_sick_per_day)
     seq(r0_by_infection_date_pre_division.items())
     '''
+
+    # number_of_people_before = len(population)
+    # population = seq(population).filter(lambda p:
+    #                         (p.get_infection_data() is None or p.get_infection_data().transmitter is None) or
+    #                         (min_age <= p.get_infection_data().transmitter.get_age() <= max_age)
+    #                        ).to_list()
+    # print(f"calculate_r0_data() filtered the list from {number_of_people_before} to {len(population)} (-{number_of_people_before-len(population)}) people for {min_age}<ages<{max_age} ")
 
 	# rs is dictionary for each person how many he has infected every day
     # a dictionary where the key is a Person and the

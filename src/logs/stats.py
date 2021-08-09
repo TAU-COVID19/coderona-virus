@@ -306,7 +306,7 @@ class Statistics(object):
                 count += 1
         self._susceptibles[today_date] = count
 
-    def calc_r0_data(self, population: List[Person], max_date=None):
+    def calc_r0_data(self, population: List[Person], max_date=None, min_age=0, max_age=100):
         """
         Calculate the R data of the given list of people
         (i -> the average number of people a person on day i infected)
@@ -317,7 +317,7 @@ class Statistics(object):
         """
         if max_date is None:
             max_date = self.max_date
-        self._r0_data = calculate_r0_data(population, max_date)
+        self._r0_data = calculate_r0_data(population, max_date, min_age, max_age)
 
     def plot_r0_data(self, image_path, avg_props=None, smoothed_props=None):
         """
@@ -1169,7 +1169,7 @@ def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_prop
         #                         background_stripes_data, first_graph)
         first_graph = False
         Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), dates, exp_data,
-                                 confidence_data, background_stripes_data, False)
+                                 confidence_data, background_stripes_data, True)
 
 
 def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir):

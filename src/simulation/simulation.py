@@ -449,6 +449,11 @@ class Simulation(object):
                 
 
         self.stats.mark_ending(self._world.all_people())
+
+        # self.stats.calc_r0_data(self._world.all_people(), self.num_r_days, min_age=19, max_age=100)
+        # if self.stats._r0_data:
+        #     self.stats.plot_r0_data('r0_data_age_19_100_' + name)
+
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():
