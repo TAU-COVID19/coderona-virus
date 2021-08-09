@@ -138,6 +138,7 @@ def main():
                             for order in [ORDER.DESCENDING]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
+                                        # people aging less than minimum_infectioness_age will not infect others
                                         for minimum_infectiousness_age in [18]: # [0, 18]
                                             for symptomatic_probs_scale in [1]:
                                                 for scenario_name, intervention_scheme in scenarios.items():
