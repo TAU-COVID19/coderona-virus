@@ -54,7 +54,7 @@ class ImmuneByAgeExtension(Simulation):
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
             order=ImmuneStrategy.ANY_AGE,
             immune_by_households=False,
-            immune_everybody_in_the_house=True)
+            immune_everybody_in_the_house=False)
 
         # internal state. do not change!
         self.parent = parent
