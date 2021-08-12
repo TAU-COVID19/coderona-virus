@@ -193,7 +193,7 @@ class SimpleJob(RunningJob):
             verbosity=verbosity
         )
 
-        world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = False)
+        world = population_loader.get_world(city_name=self.city_name, scale=self.scale,is_smart = True)
 
         ExtensionType = None
         
