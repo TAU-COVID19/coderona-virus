@@ -1217,5 +1217,5 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
         })
 
     #TODO NOAM: why std_data and confidence_data are all 0?
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), params, exp_data, std_data, is_dates=False)
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), params, exp_data, confidence_data, is_dates=False)
+    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), params, exp_data, std_data, is_dates=True)
+    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), params, exp_data, confidence_data, is_dates=True)
