@@ -894,7 +894,8 @@ def make_age_and_state_datas_to_plot(
         ("susceptible", (DiseaseState.SUSCEPTIBLE,)),
         ("Immune", (DiseaseState.IMMUNE,))
     ),
-    additional_props=None
+    additional_props=None,
+    is_integral=True
 ):
     """
     Make a list of 'DataToPlot' objects that define desired graphs
@@ -926,7 +927,7 @@ def make_age_and_state_datas_to_plot(
             ret.append(
                 AgeGroupDiseaseStatePlot(
                     age_group, disease_states,
-                    props, is_integral=True
+                    props, is_integral=is_integral
                 )
             )
     return ret

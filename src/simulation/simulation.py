@@ -234,6 +234,7 @@ class Simulation(object):
         #Doing best effort to infect and immune the people in our world
         #after talking to Noam we first infect the ones we can and immune the rest
         num_infected = min(num_infected ,len(population))
+        # TODO the percentage should be out of the people who CAN BE IMMUNED and not out of the complete population
         tmp_num_immuned = int(round(len(population) * per_to_immune * Immune_compliance))
         num_immuned = min(len(population) - num_infected,tmp_num_immuned)
         assert len(population) >= num_infected + num_immuned \
@@ -266,7 +267,9 @@ class Simulation(object):
             delta_days =0 
             immuned_today =0 
             for p in Selected_persons:
-                if (p.get_id() not in used_persons) : 
+                if (p.get_id() not in used_persons) :
+                    # TODO can it be that by the time that this person will need to get immune, he will not be in a
+                    # TODO disease state that allows him to get immune?
                     self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
                     # print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
                     num_immuned = num_immuned-1
@@ -314,6 +317,7 @@ class Simulation(object):
         if Sort_order == ORDER.NONE:
                 households = random.sample(households,len(households))
         elif Sort_order ==  ORDER.ASCENDING:
+                # TODO the sorting logic is very strange...
                 households = sorted(households,key=cmp_to_key(house_comperator_ASCENDING))
         elif Sort_order == ORDER.DESCENDING:
                 households = sorted(households,key=cmp_to_key(house_comperator_DESCENDING))

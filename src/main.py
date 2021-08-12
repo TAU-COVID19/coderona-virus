@@ -34,10 +34,10 @@ def generate_scenario_name(
         symptomatic_probs_scale,
         minimum_infectiousness_age):
     return f"{city_name}_{scenario}_init_inf_{initial_num_infected}_immune_perc_{initial_per_immuned}\n" + \
-    f"_imm_comp_at_start_{immune_complience_at_start}\n" + \
-    f"_comp_{compliance}_cidelay_{ci_delay}_hidelay_{hi_delay}_symsc_{symptomatic_probs_scale}\n" + \
+    f"_imm_comp_{immune_complience_at_start}\n" + \
+    f"_comp_{compliance}\n" + \
     f"_imm_src_{immune_source}_min_age_{min_age}\n" + \
-    f"_min_inf_age={minimum_infectiousness_age}"
+    f"_min_inf_age_{minimum_infectiousness_age}"
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
     current_probs = Params.loader()['disease_parameters']['symptomatic_given_infected_per_age']
@@ -68,8 +68,12 @@ def get_datas_to_plot():
             DiseaseState.IMMUNE
         ]
     }
-    return {'amit_graph': make_age_and_state_datas_to_plot(age_groups=((0, 19), (20, 59), (60, 99)),
-                                                           disease_state_groups=list(graphs.items()))}
+    return {
+        'amit_graph': make_age_and_state_datas_to_plot(age_groups=((0, 19), (20, 59), (60, 99)),
+                                                           disease_state_groups=list(graphs.items())),
+        'amit_graph_daily': make_age_and_state_datas_to_plot(age_groups=[(0,99)],
+                                                           disease_state_groups=list(graphs.items()), is_integral=False)
+    }
 
 def main():
     """
@@ -97,7 +101,7 @@ def main():
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions
         # "reality1" : scenario_reality1
-        "householdisolation_sd_interventions" : householdisolation_sd_interventions,
+        "householdisolation_sd" : householdisolation_sd_interventions,
         # "check" : scenario_check
         # "reality2" : scenario_reality2
         # "reality3": scenario_reality3
@@ -144,9 +148,9 @@ def main():
     jobs = []
 
     for initial_percentage_immune, Immune_compliance_at_start in [(0, 0)]: # [(0.0,1),(0.5,1)]:
-        for people_per_day in [100]:
+        for people_per_day in [0]:
             for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18)]:#the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [25,100]: # [25, 100, 250, 500]:
+                for initial_num_infected in [100]: # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq",1), ("Holon",1)]:
                         for compliance in [0.8]:
                             for order in [ORDER.DESCENDING]:
@@ -174,7 +178,7 @@ def main():
                                                                                                     minimum_infectiousness_age)
                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                        days=365,
+                                                                                        days=30,
                                                                                         city_name=city_name,
                                                                                         scale=scale,
                                                                                         infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,\
@@ -184,7 +188,7 @@ def main():
                                                                                         params_to_change=params_to_change,
                                                                                         interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                                         datas_to_plot=datas_to_plot),
-                                                                            num_repetitions=90))
+                                                                            num_repetitions=3))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
