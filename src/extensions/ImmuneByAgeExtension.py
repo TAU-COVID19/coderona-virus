@@ -52,7 +52,7 @@ class ImmuneByAgeExtension(Simulation):
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = 800
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
-            order=ImmuneStrategy.YOUNGER_TO_OLDER,
+            order=ImmuneStrategy.ANY_AGE,
             immune_by_households=False,
             immune_everybody_in_the_house=True)
 
