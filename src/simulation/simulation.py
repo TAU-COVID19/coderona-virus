@@ -1,18 +1,18 @@
 from copy import deepcopy
 from collections import Counter
+from datetime import timedelta
 from enum import Enum
 from functools import cmp_to_key
 import logging
 import os
 import random as random
-from datetime import timedelta
+
 from src.seir import seir_times
 from src.seir.disease_state import DiseaseState
 from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup,Household
-
 
 
 log = logging.getLogger(__name__)
@@ -22,46 +22,6 @@ class ORDER(Enum):
     ASCENDING=1,
     DESCENDING=2,
 
-
-def person_comperator_ASCENDING(a:Person,b:Person):
-    """
-    Compare persons by their age for ASCENDING sort
-    """
-    return a.get_age() - b.get_age()
-
-def person_comperator_DESCENDING(a:Person,b:Person):
-    """
-    Compare persons by their age for DESCENDING sort
-    """
-    return b.get_age() - a.get_age()
-
-def house_comperator_ASCENDING(a:Household,b:Household):
-        """
-        Compare households by their youngest person
-        """
-        #Get the persons we whish to sort 
-        a_people = a.get_people()
-        b_people = b.get_people()
-        #Sort the persons by their age in ascending way 
-        a_people = sorted(a_people,key = cmp_to_key(person_comperator_ASCENDING))
-        b_people = sorted(b_people,key = cmp_to_key(person_comperator_ASCENDING))
-        #compare the youngest persons of each house
-        return a_people[0].get_age() - b_people[0].get_age()
-    
-def house_comperator_DESCENDING(a:Household,b:Household):
-    """
-    Compare households by their youngest person
-    """
-    #Get the persons we whish to sort 
-    a_people = a.get_people()
-    b_people = b.get_people()
-    #Sort the persons by their age in ascending way 
-    a_people = sorted(a_people,key = cmp_to_key(person_comperator_DESCENDING))
-    b_people = sorted(b_people,key = cmp_to_key(person_comperator_DESCENDING))
-    #compare the youngest persons of each house
-    return b_people[0].get_age() - a_people[0].get_age()
-    
-    
 class Simulation(object):
     """
     An object which runs a single simulation, holding a world,
@@ -234,11 +194,11 @@ class Simulation(object):
         #Doing best effort to infect and immune the people in our world
         #after talking to Noam we first infect the ones we can and immune the rest
         num_infected = min(num_infected ,len(population))
-        tmp_num_immuned = int(round(len(population) * per_to_immune * Immune_compliance))
+        adults = [p for p in population if p.get_age() > min_age]
+        tmp_num_immuned = int(round(len(adults) * per_to_immune * Immune_compliance))
         num_immuned = min(len(population) - num_infected,tmp_num_immuned)
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
-        adults = [p for p in population if p.get_age() > min_age]
         used_adults =0 
         used_persons = {}
         #First set the people that aren't immune to be infected
@@ -254,12 +214,12 @@ class Simulation(object):
 
         num_immuned = min(len(adults)-used_adults,num_immuned )
         if order == ORDER.ASCENDING:
-            adults = sorted(adults,key = cmp_to_key(person_comperator_ASCENDING))
+            adults = sorted(adults,key = cmp_to_key(Person.person_comperator_ASCENDING))
         elif order == ORDER.DESCENDING:
-            adults = sorted(adults,key = cmp_to_key(person_comperator_DESCENDING))
+            adults = sorted(adults,key = cmp_to_key(Person.person_comperator_DESCENDING))
         else:
             adults = random.sample(adults,len(adults))
-        #Second set- immune persons that are above min_age and we are able to immune
+        # Second set- immune persons that are above min_age and we are able to immune
         Immuned_until_now =0 
         while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
             Selected_persons = adults[Immuned_until_now:]
@@ -314,9 +274,9 @@ class Simulation(object):
         if Sort_order == ORDER.NONE:
                 households = random.sample(households,len(households))
         elif Sort_order ==  ORDER.ASCENDING:
-                households = sorted(households,key=cmp_to_key(house_comperator_ASCENDING))
+                households = sorted(households,key=cmp_to_key(Household.house_comperator_ASCENDING))
         elif Sort_order == ORDER.DESCENDING:
-                households = sorted(households,key=cmp_to_key(house_comperator_DESCENDING))
+                households = sorted(households,key=cmp_to_key(Household.house_comperator_DESCENDING))
 
         num_infected = min(self._world.num_people(),num_infected)
         #Immune only some percentage of adults, that agreed to be immuned

@@ -1,6 +1,8 @@
 from datetime import timedelta
 import os
 import json
+import random
+from functools import cmp_to_key
 
 from src.run_utils import INITIAL_DATE
 from src.seir import DiseaseState
@@ -207,3 +209,29 @@ def test_immune_and_get_events6():
     events[0].apply(simulation = my_simulation)
     assert p.get_disease_state() == DiseaseState.IMMUNE
     assert len(p._seir_times)==2
+
+def test_sortPersonsAsending():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    persons_arr = [Person(random.randint(0,99)) for _ in range(20)]
+    persons_arr = sorted(persons_arr,key = cmp_to_key(Person.person_comperator_ASCENDING))
+    for i in range (1,20):
+        assert persons_arr[i-1].get_age() <= persons_arr[i].get_age()
+
+def test_sortPersonsDescending():
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    Expected  = -1
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+
+    persons_arr = [Person(random.randint(0,99)) for _ in range(20)]
+    persons_arr = sorted(persons_arr,key = cmp_to_key(Person.person_comperator_DESCENDING))
+    for i in range (1,20):
+        assert persons_arr[i-1].get_age() >= persons_arr[i].get_age()

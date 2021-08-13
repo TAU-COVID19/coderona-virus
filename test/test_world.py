@@ -5,7 +5,7 @@ from functools import cmp_to_key
 from src.run_utils import INITIAL_DATE 
 from src.seir import DiseaseState
 from src.simulation.params import Params
-from src.simulation.simulation import Simulation,ORDER, person_comperator_ASCENDING, person_comperator_DESCENDING,house_comperator_ASCENDING,house_comperator_DESCENDING
+from src.simulation.simulation import Simulation,ORDER
 from src.world import Person
 from src.world.environments.household import Household
 from src.world.population_generation import population_loader
@@ -108,31 +108,6 @@ def test_createInfectedPersons3():
         if person.get_disease_state() == DiseaseState.IMMUNE:
             cnt_immune = cnt_immune + 1
     assert cnt_immune == 0
-def test_sortPersonsAsending():
-    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
-    Expected  = -1
-    with open(config_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        paramsDataPath = ConfigData['ParamsFilePath']
-    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
-
-    persons_arr = [Person(random.randint(0,99)) for _ in range(20)]
-    persons_arr = sorted(persons_arr,key = cmp_to_key(person_comperator_ASCENDING))
-    for i in range (1,20):
-        assert persons_arr[i-1].get_age() <= persons_arr[i].get_age()
-
-def test_sortPersonsDescending():
-    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
-    Expected  = -1
-    with open(config_path) as json_data_file:
-        ConfigData = json.load(json_data_file)
-        paramsDataPath = ConfigData['ParamsFilePath']
-    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
-
-    persons_arr = [Person(random.randint(0,99)) for _ in range(20)]
-    persons_arr = sorted(persons_arr,key = cmp_to_key(person_comperator_DESCENDING))
-    for i in range (1,20):
-        assert persons_arr[i-1].get_age() >= persons_arr[i].get_age()
 
 def test_createInfectedPersonsOredredDESCENDING():
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
@@ -630,9 +605,9 @@ def test_sortHouseholdsAscendingandAndDescending():
     houses.append(house1)
     houses.append(house2)
     
-    houses = sorted(houses,key = cmp_to_key(house_comperator_ASCENDING))
+    houses = sorted(houses,key = cmp_to_key(Household.house_comperator_ASCENDING))
     assert 5 in [p.get_age() for p in houses[0].get_people()]
 
-    houses = sorted(houses,key = cmp_to_key(house_comperator_DESCENDING))
+    houses = sorted(houses,key = cmp_to_key(Household.house_comperator_DESCENDING))
     assert 98 in [p.get_age() for p in houses[0].get_people()]
 

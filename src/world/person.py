@@ -489,3 +489,17 @@ class Person(object):
 
     def __hash__(self):
         return hash(self._id)
+
+    @classmethod
+    def person_comperator_ASCENDING(cls, a,b):
+        """
+        Compare persons by their age for ASCENDING sort
+        """
+        return a.get_age() - b.get_age()
+        
+    @classmethod
+    def person_comperator_DESCENDING(cls, a,b):
+        """
+        Compare persons by their age for DESCENDING sort
+        """
+        return b.get_age() - a.get_age()

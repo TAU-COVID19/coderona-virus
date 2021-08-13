@@ -14,6 +14,7 @@ def test_createInfectedPersons():
     #create population with 5 people ages [9,19,29,39,49]
     #test that each day one of them is getting immuned
     """
+    
     #Editig confige file saving is nessery 
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     ConfigData = None
