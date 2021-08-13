@@ -1,7 +1,7 @@
 import os
 import json
+from shutil import rmtree
 from src.extensions.ImmuneByAgeExtension import ImmuneByAgeExtension
-
 from src.run_utils import INITIAL_DATE
 from src.seir import DiseaseState
 from src.simulation.simulation import Simulation
@@ -14,7 +14,12 @@ def test_createInfectedPersons():
     #create population with 5 people ages [9,19,29,39,49]
     #test that each day one of them is getting immuned
     """
-    
+    path1 = os.path.join(os.path.dirname(__file__),'..','outputs')
+    path2 = os.path.join(os.path.dirname(__file__),'..','src','outputs')
+    if os.path.isdir(path1):
+        rmtree(path1)
+    if os.path.isdir(path2):
+        rmtree(path2)
     #Editig confige file saving is nessery 
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     ConfigData = None
@@ -37,5 +42,5 @@ def test_createInfectedPersons():
     my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
     my_simulation.run_simulation(7,"test_simulation",datas_to_plot = None,extensionsList = ["ImmuneByAgeExtension","EmptyExtension"] )
     cnt = sum([1 for p in persons_arr if p.get_disease_state() == DiseaseState.IMMUNE])
-    assert cnt == 3
+    assert cnt == 4
     
