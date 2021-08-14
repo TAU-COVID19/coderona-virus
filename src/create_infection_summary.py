@@ -104,4 +104,4 @@ if __name__ == "__main__":
     axs[1].set_title("Total Critical")
 
 
-    pyplot.show()
+    fig.savefig(f"../outputs/{sys.argv[1]}/results.svg")
