@@ -348,7 +348,8 @@ class Person(object):
         :param delta_time: time_delta from start_Date of the simulation in which the person will be immuned
         :param seir_times: The state changes of this person (what they are and how long they last).
         If this is None, it is sampled with the distribution defined in params.json.
-        :return: infection events
+        :return: tuple  first element true if person can be vaccinate
+                        second elemnt is infection events 
         """
         lastState = self._disease_state
         assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
@@ -368,12 +369,14 @@ class Person(object):
         new_states_and_times = []
         cut_in_middle = False
         zero_days = (delta_time.days ==0) and (states_and_times[0][0] in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT])
-
+        #specify if the person can be vaccinated or we should find a substitute
+        ok = True
         append_rest_of_table = False
         if zero_days :
             new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
             new_states_and_times.append((DiseaseState.IMMUNE,None))
             lastState = DiseaseState.IMMUNE
+            ok = True
         else:
             while i < len(states_and_times):
                 if delta_time.days >= states_and_times[i][1].days : 
@@ -383,25 +386,31 @@ class Person(object):
                     lastState = states_and_times[i][0]
                 i += 1
             if delta_time.days > 0:
-                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT,DiseaseState.IMMUNE]:
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
                     new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                    ok = True
                 else: 
                     append_rest_of_table = True
+                    ok = False
                 delta_time -= timedelta(delta_time.days)
             elif delta_time.days == 0:
                 if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
                     new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                    ok = True
                 elif len(new_states_and_times) < len(states_and_times):
                     i -= 1
                     append_rest_of_table = True
+                    ok = False
             elif delta_time.days < 0:
                 cut_in_middle = True
                 if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
                     new_states_and_times[i-1][0] == DiseaseState.IMMUNE
                     lastState = DiseaseState.IMMUNE
+                    ok = True
                 else:
                     #add the rest of the table don't change a thing
                     append_rest_of_table = True
+                    ok = False
 
             assert delta_time.days >= 0,'miscalculating days'
             # if delta_time.days < 0 :
@@ -420,12 +429,14 @@ class Person(object):
         if (not(zero_days)):
             if (lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]):
                 new_states_and_times.append((DiseaseState.IMMUNE,None))
+                ok = True
             else:
                 new_states_and_times.append(alt_state)
+                ok = False
         # print(new_states_and_times)
         #Update person seir_times
         self._seir_times = new_states_and_times
-        return self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
+        return ok, self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
 
 
     def add_routine_change(self, key, value):

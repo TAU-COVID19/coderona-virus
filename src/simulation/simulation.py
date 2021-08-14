@@ -226,13 +226,15 @@ class Simulation(object):
             delta_days =0 
             immuned_today =0 
             for p in Selected_persons:
-                if (p.get_id() not in used_persons) : 
-                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
+                if (p.get_id() not in used_persons):
+                    ok,events =  p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days))
+                    self.register_events(events)
                     # print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
-                    num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
-                    immuned_today += 1
-                    Immuned_until_now += 1
+                    if ok:
+                        immuned_today += 1
+                        num_immuned = num_immuned-1
+                        Immuned_until_now += 1
                     if immuned_today == people_per_day:
                         delta_days += 1 
                         immuned_today = 0
@@ -302,11 +304,14 @@ class Simulation(object):
                 if Sort_order == ORDER.NONE:
                     cnt_immune_in_house =0
                     for i in range(min(len(persons_to_immune),cnt_people_to_immun_today)):
-                        self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                        ok, events  = persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta))
+                        self.register_events(events)
+                        #Dror
                         used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
                         # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                        cnt_people_to_immun_today -= 1
-                        cnt_people_to_immun -= 1
+                        if ok : 
+                            cnt_people_to_immun_today -= 1
+                            cnt_people_to_immun -= 1
                         cnt_immune_in_house += 1 
                     if cnt_immune_in_house == len(persons_to_immune):
                         household_index += 1
@@ -314,19 +319,23 @@ class Simulation(object):
                     i=0
                     cnt_immune_in_house =0
                     while i < min(len(persons_to_immune),cnt_people_to_immun_today):
-                        self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                        ok,events = persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta))
+                        self.register_events(events)
                         used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
                         # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                        cnt_people_to_immun_today -= 1
-                        cnt_people_to_immun -= 1
+                        if ok:
+                            cnt_people_to_immun_today -= 1
+                            cnt_people_to_immun -= 1
                         cnt_immune_in_house += 1 
                         for j in range(i+1,min(len(persons_to_immune),cnt_people_to_immun_today)):
                             if (persons_to_immune[j] not in used_persons) and ((persons_to_immune[i].get_age() // 10) == (persons_to_immune[j].get_age() // 10)):
-                                self.register_events(persons_to_immune[j].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                                ok,events = persons_to_immune[j].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta))
+                                self.register_events(events)
                                 used_persons[persons_to_immune[j].get_id()] = persons_to_immune[j]
                                 # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                                cnt_people_to_immun_today -= 1
-                                cnt_people_to_immun -= 1
+                                if ok:
+                                    cnt_people_to_immun_today -= 1
+                                    cnt_people_to_immun -= 1
                                 cnt_immune_in_house += 1 
                                 i += 1
                         if cnt_immune_in_house == len(persons_to_immune):

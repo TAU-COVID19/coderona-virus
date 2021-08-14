@@ -21,11 +21,11 @@ def test_immune_and_get_events1():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     p = Person(30)
-    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  15), \
+    ok , events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  15), \
         ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.IMMUNE,timedelta(21))))
 
     assert len(events) == 2
-    
+    assert ok
     persons_arr = [p]
     env_arr = []
     small_world = world.World(
@@ -50,11 +50,11 @@ def test_immune_and_get_events2():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     p = Person(30)
-    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  20), \
+    ok,events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  20), \
         ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.LATENT,timedelta(5)), \
         (DiseaseState.SUSCEPTIBLE,None)))
     assert len(events) == 3
-
+    assert ok
     persons_arr = [p]
     env_arr = []
     small_world = world.World(
@@ -83,11 +83,11 @@ def test_immune_and_get_events3():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     p = Person(30)
-    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  20), \
+    ok, events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  20), \
         ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.LATENT,timedelta(5)),\
         (DiseaseState.ASYMPTOMATICINFECTIOUS,timedelta(5)),(DiseaseState.SUSCEPTIBLE,None)))
     assert len(events) == 3
-
+    assert ok == False
     persons_arr = [p]
     env_arr = []
     small_world = world.World(
@@ -121,10 +121,11 @@ def test_immune_and_get_events4():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     p = Person(30)
-    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  3), \
+    ok, events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  3), \
         ((DiseaseState.LATENT , timedelta(days=10)),(DiseaseState.INCUBATINGPOSTLATENT, timedelta(days=3))))
     assert len(events) == 1
-    
+    assert  ok
+
     persons_arr = [p]
     env_arr = []
     small_world = world.World(
@@ -155,11 +156,11 @@ def test_immune_and_get_events5():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     p = Person(30)
-    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  20), \
+    ok, events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  20), \
         ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.LATENT,timedelta(5)),\
         (DiseaseState.ASYMPTOMATICINFECTIOUS,timedelta(5)),(DiseaseState.DECEASED,timedelta(5)),(DiseaseState.DECEASED,None)))
     assert len(events) == 4
-
+    assert ok == False
     persons_arr = [p]
     env_arr = []
     small_world = world.World(
@@ -192,10 +193,10 @@ def test_immune_and_get_events6():
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
 
     p = Person(30)
-    events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  0), \
+    ok, events =  p.immune_and_get_events(INITIAL_DATE , timedelta(days =  0), \
         ((DiseaseState.SUSCEPTIBLE,timedelta(10)),(DiseaseState.IMMUNE,timedelta(21)),(DiseaseState.IMMUNE,None)))
-
     assert len(events) == 1
+    assert ok
     
     persons_arr = [p]
     env_arr = []

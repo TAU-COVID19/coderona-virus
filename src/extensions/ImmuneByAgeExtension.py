@@ -27,7 +27,8 @@ class ImmuneByAgeExtension(Simulation):
         if self.ImmunePortion > potionUntilNow:
             peopleToImmune = [p for p in self.parent._world.all_people() if  (self.MinAgeToImmune < p.get_age_category()) and (p.get_age_category() < self.MaxAgeToImmune)]
         for person in peopleToImmune:
-            self.parent.register_events(person.immune_and_get_events(start_date = self.parent._date ,delta_time =  timedelta(1)))
+            ok, events = person.immune_and_get_events(start_date = self.parent._date ,delta_time =  timedelta(1))
+            self.parent.register_events(events)
         self.MinAgeToImmune = self.MinAgeToImmune + 10
         self.MaxAgeToImmune = self.MaxAgeToImmune + 10
         print("")
