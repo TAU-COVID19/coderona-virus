@@ -50,10 +50,10 @@ class ImmuneByAgeExtension(Simulation):
         self.target_immune_percentage = 0.8
         self.min_age_to_immune = 18
         self.max_age_to_immune = 100
-        self.max_people_to_immune_a_day = 800
+        self.max_people_to_immune_a_day = 400
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
-            order=ImmuneStrategy.YOUNGER_TO_OLDER,
-            immune_by_households=True,
+            order=ImmuneStrategy.OLDER_TO_YOUNGER,
+            immune_by_households=False,
             immune_everybody_in_the_house=True)
 
         # internal state. do not change!
