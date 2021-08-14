@@ -26,7 +26,8 @@ def generate_scenario_name(
         city_name,
         scenario,
         initial_num_infected,
-        initial_per_immuned,
+        percentage_immuned,
+        immune_per_day,
         immune_order,
         immune_complience_at_start,
         immune_source,
@@ -36,8 +37,8 @@ def generate_scenario_name(
         hi_delay,
         symptomatic_probs_scale,
         minimum_infectiousness_age):
-    return f"{city_name}_{scenario}_inf_{initial_num_infected}_immune_{initial_per_immuned}\n" + \
-           f"_imm_order_{immune_order}\n" + \
+    return f"{city_name}_{scenario}_inf_{initial_num_infected}_immune_{percentage_immuned}\n" + \
+           f"imm_per_day_{immune_per_day}_imm_order_{immune_order}\n" + \
            f"_imm_comp_{immune_complience_at_start}\n" + \
            f"_comp_{compliance}\n" + \
            f"_imm_src_{immune_source}_min_age_{min_age}\n" + \
@@ -158,8 +159,8 @@ def main():
 
     jobs = []
 
-    for initial_percentage_immune, Immune_compliance_at_start in [(0.5, 0.8)]:  # [(0.0,1),(0.5,1)]:
-        for people_per_day in [300]:
+    for initial_percentage_immune, Immune_compliance_at_start in [(0.5, 1.0)]:  # [(0.0,1),(0.5,1)]:
+        for people_per_day in [300, 1000]:
             for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [1000]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1)]:
@@ -182,6 +183,7 @@ def main():
                                                                                                 scenario_name,
                                                                                                 initial_num_infected,
                                                                                                 initial_percentage_immune,
+                                                                                                people_per_day,
                                                                                                 order,
                                                                                                 Immune_compliance_at_start,
                                                                                                 immune_source,

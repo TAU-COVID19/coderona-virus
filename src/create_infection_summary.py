@@ -8,7 +8,7 @@ from matplotlib import pyplot
 
 
 def get_run_folders(root_dir):
-    all_runs = [x for x in os.listdir(root_dir) if x[0] != "." and "csv" not in x]
+    all_runs = [x for x in os.listdir(root_dir) if x[0] != "." and "csv" not in x and "svg" not in x]
     return all_runs
 
 
@@ -64,7 +64,12 @@ def short_name(one_run):
         household = "HOUSEHOLD"
     else:
         household = "GENERAL"
-    return f"{household}\n{order}"
+    parameters = one_run.split('_')
+    immune_per_day = 0
+    for i in range(len(parameters)):
+        if parameters[i] == 'day':
+            immune_per_day = parameters[i+1]
+    return f"{household}\n{order}\nIMMUNE={immune_per_day}"
 
 
 if __name__ == "__main__":

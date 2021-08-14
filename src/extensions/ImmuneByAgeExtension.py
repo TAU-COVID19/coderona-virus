@@ -47,7 +47,7 @@ class ImmuneByAgeExtension(Simulation):
     def __init__(self, parent: Simulation):
         # super().__init__(world, initial_date)
         extension_parameters = parent._extension_params["ImmuneByAgeExtension"]
-        # print(f"ImmuneByAgeExtension() extension_parameters {str(extension_parameters)}")
+        print(f"ImmuneByAgeExtension() extension_parameters {str(extension_parameters)}")
         # change the following parameters to affect the vaccination flow
         self.target_immune_percentage = extension_parameters.per_to_Immune
         self.min_age_to_immune = extension_parameters.min_age
