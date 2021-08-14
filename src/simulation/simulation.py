@@ -12,6 +12,7 @@ from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup,Household
+from typing import Dict
 
 
 
@@ -81,11 +82,13 @@ class Simulation(object):
         'num_r_days',
         'first_infectious_people',
         'initial_infection_doc',
-        'num_days_to_run'
+        'num_days_to_run',
+        '_extension_params'
     )
 
     def __init__(self, world, initial_date, interventions=None, stop_early=None, verbosity=False,
-                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')):
+                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs'),
+                 extension_params=None):
         """
         :param world: The World object that this simulation will run on
         :param initial_date: The starting date for the simulation
@@ -99,6 +102,8 @@ class Simulation(object):
         :param outdir: The path of the directory output files
         should be written into
         """
+        if extension_params is None:
+            extension_params = {}
         if interventions is None:
             interventions = []
         self._verbosity = verbosity
@@ -108,6 +113,7 @@ class Simulation(object):
         self.interventions = interventions
         self._events = {}
         self.stats = Statistics(outdir, world)
+        self._extension_params = extension_params
         # It's important that we sign people up before we init interventions!
         self._world.sign_all_people_up_to_environments()
         for intervention in interventions:
@@ -129,6 +135,8 @@ class Simulation(object):
         # save all the events that create the interventions behavior on the simulation
         for inter in self.interventions:
             self.register_events(inter.generate_events(self._world))
+
+        # print(f"Simulation() ImmuneByAgeExtension params {str(extension_params['ImmuneByAgeExtension'])}")
 
     def simulate_day(self):
         """
@@ -263,6 +271,7 @@ class Simulation(object):
         #Second set- immune persons that are above min_age and we are able to immune
         Immuned_until_now =0 
         while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
+            assert False, "Immune code should NOT run! we use the one from the extension"
             Selected_persons = adults[Immuned_until_now:]
             delta_days =0 
             immuned_today =0 
@@ -339,6 +348,7 @@ class Simulation(object):
                 # print("Infecting person id:{} on date:{}".format(person.get_id(),self._date))
         
         while (cnt_people_to_immun > 0) and (people_per_day > 0)and (household_index < len(households)):
+            assert False, "Immune code should NOT run! we use the one from the extension"
             cnt_people_to_immun_today  = people_per_day
             while (cnt_people_to_immun_today > 0) and (household_index < len(households)):
                 persons_to_immune = [ p for p in households[household_index].get_people() \

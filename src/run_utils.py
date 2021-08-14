@@ -198,7 +198,8 @@ class SimpleJob(RunningJob):
         ExtensionType = None
         
         sim = Simulation(world, self.initial_date, self.interventions,
-                         verbosity=verbosity, outdir=outdir, stop_early=stop_early)
+                         verbosity=verbosity, outdir=outdir, stop_early=stop_early,
+                         extension_params={"ImmuneByAgeExtension": self.infection_params})
         self.infection_params.infect_simulation(sim, outdir)
         if len(Extensionslst) > 0:
             sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extensionsList = Extensionslst)

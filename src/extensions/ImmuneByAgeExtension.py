@@ -1,15 +1,14 @@
 from datetime import timedelta
-from src.seir import DiseaseState
-from src.simulation.simulation import Simulation
-from src.world import world
-from src.world.environments import InitialGroup
 from functional import seq
+from src.seir import DiseaseState
+from src.simulation.initial_infection_params import InitialImmuneType
+from src.simulation.simulation import Simulation
 
 
 class ImmuneStrategy:
-    YOUNGER_TO_OLDER = 1
-    OLDER_TO_YOUNGER = 2
-    ANY_AGE = 3
+    NONE: int = 0,
+    ASCENDING: int = 1,
+    DESCENDING: int = 2,
 
     def __init__(self, order: int, immune_by_households: bool, immune_everybody_in_the_house: bool):
         """
@@ -36,9 +35,9 @@ class ImmuneStrategy:
                 by_household = "By Household, All or nothing"
             else:
                 by_household = "By Household"
-        if self.order == self.YOUNGER_TO_OLDER:
+        if self.order == self.ASCENDING:
             return "YOUNGER_TO_OLDER" + ", " + by_household
-        elif self.order == self.OLDER_TO_YOUNGER:
+        elif self.order == self.DESCENDING:
             return "OLDER_TO_YOUNGER" + ", " + by_household
         else:
             return "ANY_AGE" + ", " + by_household
@@ -46,27 +45,37 @@ class ImmuneStrategy:
 
 class ImmuneByAgeExtension(Simulation):
     def __init__(self, parent: Simulation):
+        # super().__init__(world, initial_date)
+        extension_parameters = parent._extension_params["ImmuneByAgeExtension"]
+        # print(f"ImmuneByAgeExtension() extension_parameters {str(extension_parameters)}")
         # change the following parameters to affect the vaccination flow
-        self.target_immune_percentage = 0.8
-        self.min_age_to_immune = 18
+        self.target_immune_percentage = extension_parameters.per_to_Immune
+        self.min_age_to_immune = extension_parameters.min_age
         self.max_age_to_immune = 100
-        self.max_people_to_immune_a_day = 800
+        self.max_people_to_immune_a_day = extension_parameters.people_per_day
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
-            order=ImmuneStrategy.YOUNGER_TO_OLDER,
-            immune_by_households=True,
-            immune_everybody_in_the_house=True)
+            order=extension_parameters.order.value,
+            immune_by_households=extension_parameters.immune_source in
+                                 [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE],
+            immune_everybody_in_the_house=extension_parameters.immune_source == InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE)
 
         # internal state. do not change!
         self.parent = parent
-        if self.immune_strategy.get_order() == ImmuneStrategy.OLDER_TO_YOUNGER:
+        if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
             self.state_max_age_to_immune = self.max_age_to_immune
             self.state_min_age_to_immune = self.max_age_to_immune - 10
-        elif self.immune_strategy.get_order() == ImmuneStrategy.YOUNGER_TO_OLDER:
+        elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.min_age_to_immune + 10
         else:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.max_age_to_immune
+
+    def __str__(self):
+        return f"ImmuneByAgeExtension() immune_percentage={self.target_immune_percentage}\n" + \
+               f"min_age={self.min_age_to_immune}, max_age={self.max_age_to_immune}\n" + \
+               f"self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n" + \
+               f"strategy={str(self.immune_strategy)}"
 
     def can_immune(self, state: DiseaseState) -> bool:
         if state in (DiseaseState.INCUBATINGPOSTLATENT, DiseaseState.ASYMPTOMATICINFECTIOUS, DiseaseState.LATENT,
@@ -124,11 +133,11 @@ class ImmuneByAgeExtension(Simulation):
 
             # advance to the next age group only if you covered the current age group
             if len(people_to_immune) <= self.max_people_to_immune_a_day:
-                if self.immune_strategy.get_order() == ImmuneStrategy.OLDER_TO_YOUNGER:
+                if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
                     self.state_min_age_to_immune = max(self.state_min_age_to_immune - 10, self.min_age_to_immune)
-                elif self.immune_strategy.get_order() == ImmuneStrategy.YOUNGER_TO_OLDER:
+                elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
                     self.state_max_age_to_immune = min(self.state_max_age_to_immune + 10, self.max_age_to_immune)
-                elif self.immune_strategy.get_order() == ImmuneStrategy.ANY_AGE:
+                elif self.immune_strategy.get_order() == ImmuneStrategy.NONE:
                     pass  # do nothing
                 else:
                     assert False, "immune_strategy is Out Of Range!"

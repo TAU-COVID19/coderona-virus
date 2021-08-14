@@ -8,11 +8,13 @@ class InitialInfectionParams(object):
     Base abstract class that defines the behavior of infecting an initial set of people at the start of the simulation.
     Each subclass has to implement a way to infect an initial set in a simulation object.
     """
+
     def __init__(self):
         pass
 
     def infect_simulation(self, sim, outdir):
         raise NotImplementedError()
+
 
 class InitialImmuneType(Enum):
     """
@@ -22,14 +24,17 @@ class InitialImmuneType(Enum):
     """
     GENERAL_POPULATION = 1
     HOUSEHOLDS = 2
-    
+    HOUSEHOLDS_ALL_AT_ONCE = 3
+
 
 class NaiveInitialInfectionParams(InitialInfectionParams):
     """
     Infect num_to_infect random people in city_name_to_infect
     or in the entire country if city_name_to_infect is not given
     """
-    def __init__(self, num_to_infect,per_to_Immune = 0.0,Immune_compliance = 1,order = ORDER.NONE, city_name_to_infect=None,immune_source = InitialImmuneType.GENERAL_POPULATION,min_age = 0,people_per_day =0):
+
+    def __init__(self, num_to_infect, per_to_Immune, Immune_compliance, order, city_name_to_infect, immune_source,
+                 min_age=0, people_per_day=0):
         super(NaiveInitialInfectionParams, self).__init__()
         self.num_to_infect = num_to_infect
         self.city_name_to_infect = city_name_to_infect
@@ -41,18 +46,23 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
         self.order = order
 
     def infect_simulation(self, sim, outdir):
+        # TODO to skip the immune code here and only use the one in the extension
+        per_to_Immune = 0
         if self.immune_source == InitialImmuneType.GENERAL_POPULATION:
-            sim.infect_random_set(self.num_to_infect, str(self),self.per_to_Immune,self.Immune_compliance,self.order, \
-            self.city_name_to_infect,self.min_age,people_per_day = self.people_per_day)
+            sim.infect_random_set(self.num_to_infect, str(self), per_to_Immune, self.Immune_compliance, self.order, \
+                                  self.city_name_to_infect, self.min_age, people_per_day=self.people_per_day)
         if self.immune_source == InitialImmuneType.HOUSEHOLDS:
-            sim.immune_households_infect_others(self.num_to_infect, str(self),self.per_to_Immune,self.Immune_compliance,self.order,\
-             self.city_name_to_infect,self.min_age,people_per_day =self.people_per_day)
-        
+            sim.immune_households_infect_others(self.num_to_infect, str(self), per_to_Immune,
+                                                self.Immune_compliance, self.order, \
+                                                self.city_name_to_infect, self.min_age,
+                                                people_per_day=self.people_per_day)
+
     def __str__(self):
         if self.city_name_to_infect is None:
             return "{}(num_to_infect={})".format(self.__class__.__name__, self.num_to_infect)
-        return "{}(num_to_infect={}, city_name_to_infect={}, per_to_Immune={},immune_source={})".format(
-            self.__class__.__name__, self.num_to_infect, self.city_name_to_infect,self.per_to_Immune,self.immune_source
+        return "{}(num_to_infect={}, per_to_Immune={}, city_name_to_infect={}, per_to_Immune={},immune_source={})".format(
+            self.__class__.__name__, self.num_to_infect, self.per_to_Immune, self.city_name_to_infect, self.per_to_Immune,
+            self.immune_source
         )
 
 
@@ -65,6 +75,7 @@ class SmartInitialInfectionParams(InitialInfectionParams):
     It will 'copy' the disease states in each city corresponding to that city's
     point in time (when the 'symptomatic or post-symptomatic' number was right).
     """
+
     def __init__(self, initial_symptomatic_num_in_each_city, initial_random_set_for_mock):
         super(SmartInitialInfectionParams, self).__init__()
         self.initial_symptomatic_num_in_each_city = initial_symptomatic_num_in_each_city
