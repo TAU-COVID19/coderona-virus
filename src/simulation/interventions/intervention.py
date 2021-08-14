@@ -460,7 +460,7 @@ class HouseholdIsolationIntervention(Intervention):
         duration: timedelta,
         delay_on_enter=1,  # arbitrary
         delay_on_exit=14,  # arbitrary
-        is_exit_after_recovery=False
+        is_exit_after_recovery=True
     ):
         super(HouseholdIsolationIntervention, self).__init__(compliance, start_date, duration)
         self.delay_on_enter = timedelta(delay_on_enter)

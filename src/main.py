@@ -178,7 +178,7 @@ def main():
                                                                                                     minimum_infectiousness_age)
                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                        days=30,
+                                                                                        days=365,
                                                                                         city_name=city_name,
                                                                                         scale=scale,
                                                                                         infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,\
@@ -188,7 +188,7 @@ def main():
                                                                                         params_to_change=params_to_change,
                                                                                         interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                                         datas_to_plot=datas_to_plot),
-                                                                            num_repetitions=3))
+                                                                            num_repetitions=80))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
