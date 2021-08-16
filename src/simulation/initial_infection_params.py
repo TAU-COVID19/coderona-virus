@@ -47,7 +47,7 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
 
     def infect_simulation(self, sim, outdir):
         # TODO to skip the immune code here and only use the one in the extension
-        per_to_Immune = 0
+        per_to_Immune = 0 # self.per_to_Immune
         if self.immune_source == InitialImmuneType.GENERAL_POPULATION:
             sim.infect_random_set(self.num_to_infect, str(self), per_to_Immune, self.Immune_compliance, self.order, \
                                   self.city_name_to_infect, self.min_age, people_per_day=self.people_per_day)

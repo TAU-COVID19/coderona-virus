@@ -70,6 +70,8 @@ def get_daily_info(root_path):
 
 
 def short_name(one_run):
+    parameters = one_run.split('_')
+    city = parameters[0]
     if "ASCENDING" in one_run:
         order = "ASCENDING"
     elif "DESCENDING" in one_run:
@@ -82,12 +84,11 @@ def short_name(one_run):
         household = "HOUSEHOLD"
     else:
         household = "GENERAL"
-    parameters = one_run.split('_')
     immune_per_day = 0
     for i in range(len(parameters)):
         if parameters[i] == 'day':
             immune_per_day = parameters[i+1]
-    return f"{household}\n{order}\nIMMUNE={immune_per_day}"
+    return f"{city}\n{household}\n{order}\nIMMUNE={immune_per_day}"
 
 
 if __name__ == "__main__":
@@ -126,6 +127,8 @@ if __name__ == "__main__":
     axs[1].bar(df["immune_order"], df["total_critical"], color="thistle")
     axs[1].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
     axs[1].set_title("Total Critical")
+
+    fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
     fig.tight_layout(pad=3.0)
     fig.savefig(f"../outputs/{sys.argv[1]}/results.svg")

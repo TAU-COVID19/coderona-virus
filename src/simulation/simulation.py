@@ -235,11 +235,11 @@ class Simulation(object):
             per_to_immune = 0.0
         if city_name is not None:
             population = [p for p in self._world.all_people() \
-                if (p.get_city_name() == city_name)]
+                if (p.get_city_name().lower() == city_name.lower())]
         else:
             population = [p for p in self._world.all_people()]
 
-        #Doing best effort to infect and immune the people in our world
+    #Doing best effort to infect and immune the people in our world
         #after talking to Noam we first infect the ones we can and immune the rest
         num_infected = min(num_infected ,len(population))
         # TODO the percentage should be out of the people who CAN BE IMMUNED and not out of the complete population
@@ -269,9 +269,11 @@ class Simulation(object):
         else:
             adults = random.sample(adults,len(adults))
         #Second set- immune persons that are above min_age and we are able to immune
-        Immuned_until_now =0 
+        Immuned_until_now =0
+
+        print(f"infect_random_set() going to immune {num_immuned} people out of {len(population)} in an {str(order)}")
         while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
-            assert False, "Immune code should NOT run! we use the one from the extension"
+            # assert False, "Immune code should NOT run! we use the one from the extension"
             Selected_persons = adults[Immuned_until_now:]
             delta_days =0 
             immuned_today =0 
@@ -312,7 +314,7 @@ class Simulation(object):
         if per_to_immune is None:
             per_to_immune = 0.0
         if city_name is not None:
-            tmp_households = [h for h in self._world.get_all_city_households() if h._city == city_name]
+            tmp_households = [h for h in self._world.get_all_city_households() if h._city.lower() == city_name.lower()]
         else:
             tmp_households = [h for h in self._world.get_all_city_households()]
         

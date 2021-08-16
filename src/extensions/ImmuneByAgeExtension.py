@@ -79,7 +79,7 @@ class ImmuneByAgeExtension(Simulation):
                f"strategy={str(self.immune_strategy)}"
 
     def can_immune(self, state: DiseaseState) -> bool:
-        if state in (DiseaseState.INCUBATINGPOSTLATENT, DiseaseState.ASYMPTOMATICINFECTIOUS, DiseaseState.LATENT,
+        if state in (DiseaseState.INCUBATINGPOSTLATENT, DiseaseState.ASYMPTOMATICINFECTIOUS,
                      DiseaseState.SUSCEPTIBLE):
             return True
         else:
@@ -131,11 +131,11 @@ class ImmuneByAgeExtension(Simulation):
                                     (p.get_age_category() > self.state_min_age_to_immune) and
                                     (p.get_age_category() < self.state_max_age_to_immune)]
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
-                  f"between {self.state_min_age_to_immune} to {self.state_max_age_to_immune}, {self.max_people_to_immune_a_day} a day " +
+                  f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
                   f"immune % = {immuned}/{can_be_immuned} = {immuned_percentage*100.0:.1f}")
             seq(people_to_immune).take(self.max_people_to_immune_a_day).for_each(
                 lambda person: self.parent.register_events(
-                    person.immune_and_get_events(start_date=self.parent._date, delta_time=timedelta(1))))
+                    person.immune_and_get_events(start_date=self.parent._date, delta_time=timedelta(days=0))))
 
             # advance to the next age group only if you covered the current age group
             if len(people_to_immune) <= self.max_people_to_immune_a_day:
