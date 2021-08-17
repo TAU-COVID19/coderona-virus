@@ -235,7 +235,7 @@ class Simulation(object):
             per_to_immune = 0.0
         if city_name is not None:
             population = [p for p in self._world.all_people() \
-                if (p.get_city_name().lower() == city_name.lower())]
+                if (p.get_city_name() == city_name.lower())]
         else:
             population = [p for p in self._world.all_people()]
 
@@ -314,7 +314,7 @@ class Simulation(object):
         if per_to_immune is None:
             per_to_immune = 0.0
         if city_name is not None:
-            tmp_households = [h for h in self._world.get_all_city_households() if h._city.lower() == city_name.lower()]
+            tmp_households = [h for h in self._world.get_all_city_households() if h._city.get_name() == city_name.lower()]
         else:
             tmp_households = [h for h in self._world.get_all_city_households()]
         

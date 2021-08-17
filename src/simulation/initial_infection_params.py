@@ -37,7 +37,7 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
                  min_age=0, people_per_day=0):
         super(NaiveInitialInfectionParams, self).__init__()
         self.num_to_infect = num_to_infect
-        self.city_name_to_infect = city_name_to_infect
+        self.city_name_to_infect = city_name_to_infect.lower()
         self.per_to_Immune = per_to_Immune
         self.immune_source = immune_source
         self.min_age = min_age
