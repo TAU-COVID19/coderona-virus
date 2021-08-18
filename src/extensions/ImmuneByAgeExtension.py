@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta
 from functional import seq
 from src.seir import DiseaseState
@@ -107,7 +108,6 @@ class ImmuneByAgeExtension(Simulation):
             if self.immune_strategy.is_by_households():
                 households = [h for h in self.parent._world.get_all_city_households()]
                 for h in households:
-                    people_to_immune = []
                     if self.immune_strategy.is_immune_everybody_in_the_house():
                         # if one person can be vaccinated in this household, vaccinate ALL the eligible people
                         if seq(h.get_people()).count(
@@ -130,6 +130,7 @@ class ImmuneByAgeExtension(Simulation):
                                     if (self.can_immune(p.get_disease_state())) and
                                     (p.get_age_category() > self.state_min_age_to_immune) and
                                     (p.get_age_category() < self.state_max_age_to_immune)]
+            random.shuffle(people_to_immune)
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
                   f"immune % = {immuned}/{can_be_immuned} = {immuned_percentage*100.0:.1f}")

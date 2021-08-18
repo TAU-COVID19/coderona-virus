@@ -764,6 +764,7 @@ class Statistics(object):
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
         if len(dates) > 1:
             plt.savefig(svg_filename, bbox_inches="tight")
+        plt.close('all')
         with open(csv_filename, 'w') as f:
             if is_dates:
                 date_strings = [d.strftime("%d/%m/%y") for d in dates]
