@@ -1,6 +1,6 @@
 import os
 import json
-from shutil import rmtree
+from test.conftest import helpers
 from src.extensions.ImmuneByAgeExtension import ImmuneByAgeExtension
 from src.run_utils import INITIAL_DATE
 from src.seir import DiseaseState
@@ -9,17 +9,12 @@ from src.simulation.params import Params
 from src.world import Person,World
 
 #Test the amount of the  created Immune
-def test_createInfectedPersons():
+def test_createInfectedPersons(helpers):
     """
     #create population with 5 people ages [9,19,29,39,49]
     #test that each day one of them is getting immuned
     """
-    path1 = os.path.join(os.path.dirname(__file__),'..','outputs')
-    path2 = os.path.join(os.path.dirname(__file__),'..','src','outputs')
-    if os.path.isdir(path1):
-        rmtree(path1)
-    if os.path.isdir(path2):
-        rmtree(path2)
+    helpers.clean_outputs()
     #Editig confige file saving is nessery 
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     ConfigData = None

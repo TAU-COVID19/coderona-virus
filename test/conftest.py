@@ -1,10 +1,26 @@
 import os
 import json
 import pytest
+from shutil import rmtree
+
 from src.world.city_data import get_city_list_from_dem_xls
 from src.simulation.params import Params
 
+class Helpers:
+    @staticmethod
+    def clean_outputs():
+        path1 = os.path.join(os.path.dirname(__file__),'..','outputs')
+        path2 = os.path.join(os.path.dirname(__file__),'..','src','outputs')
+        if os.path.isdir(path1):
+            rmtree(path1)
+        if os.path.isdir(path2):
+            rmtree(path2)
+        return True
 
+@pytest.fixture
+def helpers():
+    return Helpers
+    
 @pytest.fixture
 def cities():
     file_path = os.path.dirname(__file__) + "/../src/config.json"

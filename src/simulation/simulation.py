@@ -422,6 +422,7 @@ class Simulation(object):
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():
             self.stats.plot_daily_sum(name, data_to_plot)
+        self.stats.write_daily_delta()
         self.stats.write_summary_file('summary')
         self.stats.write_summary_file('summary_long', shortened=False)
         if self.stats._r0_data:
