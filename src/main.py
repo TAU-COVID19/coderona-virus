@@ -135,7 +135,7 @@ def main():
         # "paper_2_comp_9": paper_2_comp_9
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        # "Empty_scenario": Empty_scenario
+        "Empty_scenario": Empty_scenario
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -162,7 +162,7 @@ def main():
     for initial_percentage_immune, Immune_compliance_at_start in [(0.75, 1.0)]:  # [(0.0,1),(0.5,1)]:
         for people_per_day in [400, 800]:
             for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE, 18), (InitialImmuneType.HOUSEHOLDS, 18), (InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [25, 100]:  # [25, 100, 250, 500]:
+                for initial_num_infected in [100, 3000]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Holon", 1), ("Bene Beraq", 1)]:  # ("Bene Beraq", 1)
                         for compliance in [0.8]:
                             for order in [ORDER.DESCENDING, ORDER.ASCENDING]:

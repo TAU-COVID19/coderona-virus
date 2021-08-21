@@ -99,7 +99,11 @@ def short_name(one_run):
     for i in range(len(parameters)):
         if parameters[i] == 'day':
             immune_per_day = parameters[i+1]
-    return f"{city}\n{household}\nIMMUNE={immune_per_day}\n{order}"
+    initial_infected = 0
+    for i in range(len(parameters)):
+        if parameters[i] == 'inf' and parameters[i+2] == "immune":
+            initial_infected = parameters[i+1]
+    return f"{city}\nINF={initial_infected}\nIMMUNE={immune_per_day}\n{household}\n{order}"
 
 
 if __name__ == "__main__":
@@ -111,8 +115,8 @@ if __name__ == "__main__":
     df = pandas.DataFrame(columns=["scenario", "immune_order", "total_infected", "std_infected", "total_critical", "std_critical",
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
     for one_run in all_runs:
-        daily_csv_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_daily")
-        daily_integral_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_integral")
+        # daily_csv_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_daily")
+        # daily_integral_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_integral")
 
         daily = get_daily_info(f"../outputs/{sys.argv[1]}/{one_run}")
         df = df.append({"scenario": one_run, "immune_order": short_name(one_run),
@@ -132,11 +136,11 @@ if __name__ == "__main__":
 
 
     fig, axs = pyplot.subplots(4, 1)
-    fig.set_figwidth(15)
-    fig.set_figheight(18)
+    fig.set_figwidth(20)
+    fig.set_figheight(20)
 
-    [ax.tick_params(axis='x', labelsize=8) for ax in axs]
-    [ax.tick_params(axis='y', labelsize=8) for ax in axs]
+    [ax.tick_params(axis='x', labelsize=6) for ax in axs]
+    [ax.tick_params(axis='y', labelsize=6) for ax in axs]
 
 
     axs[0].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
