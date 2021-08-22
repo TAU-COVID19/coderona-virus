@@ -6,8 +6,41 @@ import pandas
 from matplotlib import pyplot
 
 
+class Categories:
+    def __init__(self, one_run):
+        parameters = one_run.split('_')
+        self.city = parameters[0]
+        if "ASCENDING" in one_run:
+            self.order = "ASCENDING"
+        elif "DESCENDING" in one_run:
+            self.order = "DESCENDING"
+        else:
+            self.order = "NONE"
+        if "HOUSEHOLDS_ALL_AT_ONCE" in one_run:
+            self.household = "HH_ALL_AT_ONCE"
+        elif "HOUSEHOLD" in one_run:
+            self.household = "HOUSEHOLD"
+        else:
+            self.household = "GENERAL"
+        self.immune_per_day = 0
+        for i in range(len(parameters)):
+            if parameters[i] == 'day':
+                self.immune_per_day = parameters[i + 1]
+        self.initial_infected = 0
+        for i in range(len(parameters)):
+            if parameters[i] == 'inf' and parameters[i + 2] == "immune":
+                self.initial_infected = parameters[i + 1]
+
+    def __str__(self):
+        return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n{self.household}\n{self.order}"
+
+
 def sort_runs(a, b):
     return short_name(a) > short_name(b)
+
+
+def short_name(a):
+    return str(Categories(a))
 
 
 def get_run_folders(root_dir):
@@ -80,46 +113,24 @@ def get_daily_info(root_path):
            statistics.mean(critical_max), statistics.stdev(critical_max)
 
 
-def short_name(one_run):
-    parameters = one_run.split('_')
-    city = parameters[0]
-    if "ASCENDING" in one_run:
-        order = "ASCENDING"
-    elif "DESCENDING" in one_run:
-        order = "DESCENDING"
-    else:
-        order = "NONE"
-    if "HOUSEHOLDS_ALL_AT_ONCE" in one_run:
-        household = "HH_ALL_AT_ONCE"
-    elif "HOUSEHOLD" in one_run:
-        household = "HOUSEHOLD"
-    else:
-        household = "GENERAL"
-    immune_per_day = 0
-    for i in range(len(parameters)):
-        if parameters[i] == 'day':
-            immune_per_day = parameters[i+1]
-    initial_infected = 0
-    for i in range(len(parameters)):
-        if parameters[i] == 'inf' and parameters[i+2] == "immune":
-            initial_infected = parameters[i+1]
-    return f"{city}\nINF={initial_infected}\nIMMUNE={immune_per_day}\n{household}\n{order}"
-
-
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("ERROR! please provide one argument which is the date/time of the run")
         exit(-1)
 
     all_runs = get_run_folders(f"../outputs/{sys.argv[1]}")
-    df = pandas.DataFrame(columns=["scenario", "immune_order", "total_infected", "std_infected", "total_critical", "std_critical",
+    df = pandas.DataFrame(columns=["scenario", "city", "initial_infected", "immune_per_day",
+                                   "immune_order", "total_infected", "std_infected", "total_critical", "std_critical",
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
     for one_run in all_runs:
         # daily_csv_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_daily")
         # daily_integral_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_integral")
 
         daily = get_daily_info(f"../outputs/{sys.argv[1]}/{one_run}")
-        df = df.append({"scenario": one_run, "immune_order": short_name(one_run),
+        c = Categories(one_run)
+        df = df.append({"scenario": one_run,
+                        "city": c.city, "initial_infected": c.initial_infected, "immune_per_day": c.immune_per_day,
+                        "immune_order": str(c),
                         "total_infected": daily[0], "std_infected": daily[1], "total_critical": daily[2], "std_critical": daily[3],
                        "max_infected": daily[4], "std_max_infected": daily[5], "max_critical": daily[6], "std_max_critical": daily[7]},
                        ignore_index=True)
@@ -134,32 +145,41 @@ if __name__ == "__main__":
 
     df.to_csv(f"../outputs/{sys.argv[1]}/results.csv")
 
+    categories = df.groupby(by=["city", "initial_infected", "immune_per_day"])
 
-    fig, axs = pyplot.subplots(4, 1)
-    fig.set_figwidth(20)
-    fig.set_figheight(20)
+
+    fig, axs = pyplot.subplots(len(categories) * 4, 1)
+    fig.set_figwidth(16)
+    fig.set_figheight(80)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
 
+    category_i = 0
+    for category in categories:
+        title = f'{category[0][0]}: initial={category[0][1]}, per-day={category[0][2]}'
+        df = category[1]
+        axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
+        axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
+        axs[category_i].set_title(f"Total Infected ({title})")
+        category_i += 1
 
-    axs[0].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
-    axs[0].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
-    axs[0].set_title("Total Infected")
+        axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
+        axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
+        axs[category_i].set_title(f"Total Critical ({title})")
+        category_i += 1
 
-    axs[1].bar(df["immune_order"], df["total_critical"], color="thistle")
-    axs[1].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
-    axs[1].set_title("Total Critical")
+        axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
+        axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
+        axs[category_i].set_title(f"Max Infected ({title})")
+        category_i += 1
 
-    axs[2].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
-    axs[2].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
-    axs[2].set_title("Max Infected")
-
-    axs[3].bar(df["immune_order"], df["max_critical"], color="thistle")
-    axs[3].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
-    axs[3].set_title("Max Critical")
+        axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
+        axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
+        axs[category_i].set_title(f"Max Critical ({title})")
+        category_i += 1
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
-    fig.tight_layout(pad=3.0)
+    fig.tight_layout(pad=7.0)
     fig.savefig(f"../outputs/{sys.argv[1]}/results.svg")
