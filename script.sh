@@ -15,6 +15,8 @@ echo "cd coderona-virus" >> power9.sh
 echo "module load miniconda/miniconda3-4.7.12-environmentally" >> power9.sh
 echo "conda activate YairDaon" >> power9.sh ## Don't change this to your name. It won't work
 echo "python src/main.py" >> power9.sh
+echo "rm -f csv.zip" >> power9.sh
+echo 'find outputs -name "amit*.csv" -name params.json -name inputs.txt -exec zip csv.zip {} \;' >> power9.sh
 echo "conda deactivate" >> power9.sh
 
 echo "Sync files to server."
