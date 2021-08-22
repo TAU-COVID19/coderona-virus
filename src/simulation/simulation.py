@@ -222,7 +222,7 @@ class Simulation(object):
         # Second set- immune persons that are above min_age and we are able to immune
         Immuned_until_now =0 
         while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
-            Selected_persons = adults[Immuned_until_now:]
+            Selected_persons = adults[Immuned_until_now:num_immuned]
             delta_days =0 
             immuned_today =0 
             for p in Selected_persons:

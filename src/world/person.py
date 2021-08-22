@@ -1,3 +1,4 @@
+from src.seir.seir_times import machine_type
 import numpy as _np
 import json
 import random
@@ -47,6 +48,7 @@ class Person(object):
         '_num_infections',
         'last_state',
         '_seir_times',
+        'state_machine_type',
     )
     num_people_so_far = 0
 
@@ -81,7 +83,9 @@ class Person(object):
         self.is_dead = False
         self.is_infectious = False
         self.is_infected = False
-        
+        str_type = params['state_macine_type']
+        assert str_type in ['SIRS','SIR']
+        self.state_machine_type = machine_type[str_type]
         self._id = Person.num_people_so_far
         # hold all the events that are triggered by some disease state(s) change(s), like isolation when symptomatic
         self.state_to_events = {}
@@ -321,7 +325,7 @@ class Person(object):
         elif self._seir_times:
             states_and_times =  self._seir_times
         else:
-            states_and_times = sample_seir_times(self)
+            states_and_times = sample_seir_times(self.state_machine_type,self)
         #update self._infection_data
         for state,date_change in states_and_times:
             if state != DiseaseState.SUSCEPTIBLE:
@@ -359,7 +363,7 @@ class Person(object):
         elif self._seir_times:
             states_and_times =  self._seir_times
         else:
-            states_and_times = sample_seir_times(self)
+            states_and_times = sample_seir_times(self.state_machine_type,self)
         #alt_state (alternative state) in case the person won't be immuned
         alt_state = states_and_times[-1]
         states_and_times = states_and_times[:-1]

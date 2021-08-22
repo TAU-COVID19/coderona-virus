@@ -2,7 +2,8 @@
     "person": {
         "base_infectiousness": 0.1,
         "individual_infectiousness_gamma_shape": 0.25,
-        "individual_infectiousness_gamma_scale": 4
+        "individual_infectiousness_gamma_scale": 4,
+        "state_macine_type": "SIR"
     },
     "population": {
         "R0_percent": 0.0,
@@ -23,6 +24,7 @@
         "hospitalization_given_symptomatic_per_age":    [0.0, 0.008,  0.008, 0.01, 0.019, 0.054, 0.151, 0.333, 0.618],
         "critical_given_hospitalized_per_age":          [ 0.05,  0.05,  0.05,  0.05, 0.063, 0.122, 0.274, 0.432, 0.709],
         "deceased_given_critical_per_age":              [  0.4,   0.4,   0.4,   0.4,   0.4,   0.4,   0.4,   0.5,   0.5],
+        "susceptible_given_immuned_per_age":            [  0.4,   0.4,   0.4,   0.4,   0.4,   0.4,   0.4,   0.5,   0.5],
         "latent_period_gamma_params": {
             "a": 4,
             "scale": 1.333333333,
@@ -54,6 +56,11 @@
             "max_val": 45
         },
         "critical_before_immune_gamma_params": {
+            "a":  8,
+            "scale": 1,
+            "max_val": 45
+        },
+        "Immuned_before_susceptible_gamma_params": {
             "a":  8,
             "scale": 1,
             "max_val": 45

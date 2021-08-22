@@ -41,10 +41,8 @@ def test_createInfectedPersons():
     for person in my_world.all_people():
         if person.get_disease_state() == DiseaseState.IMMUNE:
             cnt_immune = cnt_immune + 1
-    per_immune  = cnt_immune / len(PersonList)
-    #Assert that the amount of people that created in recovered state are 
-    # within 5 percent of expected
-    assert abs(per_immune - 0.5)< 0.0005
+    assert cnt_immune ==2
+    
 
 def test_createInfectedPersons2():
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
