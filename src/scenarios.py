@@ -443,6 +443,12 @@ def scenario_26_interventions(compliance, ci_delay, hi_delay):
                      ]
     return interventions
 def householdisolation_sd_interventions(compliance, ci_delay, hi_delay):
+    ci_intervention = SymptomaticIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(360),
+        compliance=compliance,
+        delay=ci_delay
+    )
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
@@ -457,6 +463,7 @@ def householdisolation_sd_interventions(compliance, ci_delay, hi_delay):
         delay_on_enter=hi_delay
     )
     interventions = [sd_intervention,
+                     ci_intervention,
                       household_intervention
                       ]
     return interventions

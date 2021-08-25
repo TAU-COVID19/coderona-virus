@@ -135,7 +135,7 @@ def main():
         # "paper_2_comp_9": paper_2_comp_9
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        "Empty_scenario": Empty_scenario
+        #"Empty_scenario": Empty_scenario
     }
 
     datas_to_plot = get_datas_to_plot()
