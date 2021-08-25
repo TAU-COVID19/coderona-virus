@@ -99,6 +99,7 @@ class DayStatistics(object):
 
     def __init__(self, date, changed_population):
         self.date = date
+        #how many people change to each state
         self.person_count = Counter(
             person.get_state()
             for person in changed_population
@@ -107,15 +108,18 @@ class DayStatistics(object):
             person.get_last_state()
             for person in changed_population
         )
+        #for each person that change state today get dictionary of date
         infected_today_stats = list(
             person.get_infection_data().get_stats()
             for person in changed_population
             if (person.get_infection_data() is not None) and (person.get_infection_data().date == date)
         )
+        #how many got infected divided into inector_state,env_name,etc'
         self.infection_data_projection = {
             key: Counter(stat[key] for stat in infected_today_stats)
             for key in InfectionData.get_keys()
         }
+        #Creating 2 dimentiona table of the data listed above
         self.infection_data_projection.update({
             pair: Counter((stat[pair[0]], stat[pair[1]]) for stat in infected_today_stats)
             for pair in combinations(InfectionData.get_keys(), 2)
@@ -410,7 +414,7 @@ class Statistics(object):
             lambda person: person_in_age_group(person) and
                            person.disease_state == DiseaseState.CRITICAL, True
         ))
-
+        
         ret = defaultdict(int)
         ret["Total people"] = total_people
         ret["Total deceased"] = total_deceased
@@ -440,6 +444,42 @@ class Statistics(object):
             key_str = "Total infected in {}".format(name)
             ret[key_str] += count
         return ret
+    def get_state_stratified_summary_table(self,table_format:TableFormat,is_relative = True):
+        """
+        Computes and returns summary data which is stratified
+        by the given disease states
+        :param states: The disease states by which to stratify the data
+        :param is_relative: Should the results be relative (i.e. the percentage
+        of people satisfying each property) or absolute numbers
+        :param shortened: Should this generate a short summary or
+        a more detailed one
+        :return: A concise readable text containing a table of
+        age-stratified results (delta deceased, delta infected, ...)
+        """
+        #Collecting the data
+        lst = []
+        for i in range(len(self._days_data)):
+            if self._days_data[i].person_count == 0:
+                tmp = (self._days_data[i].date,None)
+            else:
+                d = self._days_data[i].date
+                states_col = []
+                for reducted_person, count in self._days_data[i].person_count.items():
+                    for i in range(count):
+                        states_col.append(reducted_person.disease_state)
+                cnt = Counter(states_col)
+                tmp = (d,cnt)
+            lst.append(tmp)
+        
+        #Create corresponding string 
+        table = [[] for i in range(len(lst)+1)]
+        table [0] = ["Dates"] + [state.name for state in DiseaseState]
+        for i in range(1,len(lst)+1):
+            date,data = lst[i-1]
+            tmp = [str(data[s]) if s in data else '0' for s in DiseaseState ]
+            table[i] = [str(date)] + tmp
+        ans = table_format.format(table)
+        return lst,ans
 
     def get_age_stratified_summary_table(
         self,
@@ -524,6 +564,18 @@ class Statistics(object):
                 f.write(make_summary_by_age_table(datas, table_format))
             with open(absolute_table_path + extension, 'w') as f:
                 f.write(make_summary_by_age_table(datas, table_format, False))
+    #Dror
+    def write_daily_delta(self, filename):
+        outpath = os.path.join(self._output_path, filename)
+        absolute_table_path = os.path.join(self._output_path, 'daily_delta_table')
+        for table_format in TableFormat:
+            extension = '.' + table_format.get_file_extension()
+            for path in (outpath, absolute_table_path):
+                assert not os.path.exists(path + extension), "Failed to create file '%s': file exists!" % (path + extension)
+            with open(outpath + extension, 'w') as f:
+                _,str = self.get_state_stratified_summary_table(table_format=table_format)
+                f.write(str)
+
 
     def write_summary_file(self, filename, shortened=True):
         """
