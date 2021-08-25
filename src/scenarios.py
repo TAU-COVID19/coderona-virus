@@ -527,7 +527,7 @@ def old_specific_noHH_interventions(compliance, ci_delay, hi_delay):
                      elderly_intervention
                       ]
     return interventions
-def adult_specific_interventions(compliance, ci_delay, hi_delay):
+def adult_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
@@ -557,7 +557,35 @@ def adult_specific_interventions(compliance, ci_delay, hi_delay):
                      workplace_closure_intervention
                       ]
     return interventions
-def children_specific_interventions(compliance, ci_delay, hi_delay):
+def adult_specific_noHH_interventions(compliance, ci_delay, hi_delay):
+    ci_intervention = SymptomaticIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=compliance,
+        delay=ci_delay
+    )
+    sd_intervention = SocialDistancingIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=compliance,
+        age_range=(0, 99)
+    )
+    household_intervention = HouseholdIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=compliance,
+        delay_on_enter=hi_delay
+    )
+    workplace_closure_intervention = WorkplaceClosureIntervention(
+        start_date=INITIAL_DATE,
+        duration=daysdelta(120),
+        compliance=1
+    )
+    interventions = [sd_intervention,
+                     workplace_closure_intervention
+                      ]
+    return interventions
+def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
@@ -587,6 +615,37 @@ def children_specific_interventions(compliance, ci_delay, hi_delay):
     interventions = [sd_intervention,
                      ci_intervention,
                       household_intervention,
+                     school_closer_intervention
+                      ]
+    return interventions
+def children_specific_noHH_interventions(compliance, ci_delay, hi_delay):
+    ci_intervention = SymptomaticIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=compliance,
+        delay=ci_delay
+    )
+    sd_intervention = SocialDistancingIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=compliance,
+        age_range=(0, 99)
+    )
+    household_intervention = HouseholdIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=compliance,
+        delay_on_enter=hi_delay
+    )
+    school_closer_intervention = SchoolClosureIntervention(
+        start_date=INITIAL_DATE,
+        duration=daysdelta(120),
+        compliance=1.0,
+        proportion_of_envs=1,
+        city_name='all',
+        age_segment=(6, 18)
+    )
+    interventions = [sd_intervention,
                      school_closer_intervention
                       ]
     return interventions
