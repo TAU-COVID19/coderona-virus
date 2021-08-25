@@ -2,7 +2,9 @@ import os
 import json
 import random
 from functools import cmp_to_key
+from src.logs.summary import TableFormat
 from src.simulation.event import Event
+from collections import Counter
 from test.conftest import helpers
 from src.seir.seir_times import daysdelta
 from src.run_utils import INITIAL_DATE 
@@ -47,7 +49,20 @@ def test_CreateDeltaFile(helpers):
     my_simulation.register_events(events_acc)
     my_simulation.run_simulation(num_days=10,name="test")
     #assert events dictionary is not empty
-    print(my_simulation.stats._days_data)
-    for p in PersonList:
-        assert p.get_disease_state() == DiseaseState.IMMUNE
-    assert True
+    tbl,txt = my_simulation.stats.get_state_stratified_summary_table(table_format=TableFormat.CSV)
+    assert len(tbl)==7
+    assert tbl[0][0] == INITIAL_DATE
+    assert tbl[0][1][DiseaseState.SUSCEPTIBLE] == 10
+    assert tbl[1][0] == INITIAL_DATE + daysdelta(days=1)
+    assert tbl[1][1] == Counter() 
+    assert tbl[2][0] == INITIAL_DATE + daysdelta(days=2)
+    assert tbl[2][1] == Counter() 
+    assert tbl[3][0] == INITIAL_DATE + daysdelta(days=3)
+    assert tbl[3][1][DiseaseState.ASYMPTOMATICINFECTIOUS] == 10
+    assert tbl[4][0] == INITIAL_DATE + daysdelta(days=4)
+    assert tbl[4][1] == Counter() 
+    assert tbl[5][0] == INITIAL_DATE + daysdelta(days=5)
+    assert tbl[5][1] == Counter() 
+    assert tbl[6][0] == INITIAL_DATE + daysdelta(days=6)
+    assert tbl[6][1][DiseaseState.IMMUNE] == 10
+    
