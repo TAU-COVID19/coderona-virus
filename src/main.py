@@ -135,7 +135,7 @@ def main():
         # "paper_2_comp_9": paper_2_comp_9,
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        "Empty_scenario": Empty_scenario,
+        #"Empty_scenario": Empty_scenario,
         #"HH_children_specific_interventions": children_specific_HH_interventions,
         #"noHH_children_specific_interventions": children_specific_noHH_interventions(),
         #"HH_adult_specific_interventions": adult_specific_HH_interventions(),
@@ -201,7 +201,7 @@ def main():
                                                                                                 minimum_infectiousness_age)
                                                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                    days=20,
+                                                                                    days=120,
                                                                                     city_name=city_name,
                                                                                     scale=scale,
                                                                                     infection_params=NaiveInitialInfectionParams(
@@ -218,7 +218,7 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=2))
+                                                                          num_repetitions=80))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
