@@ -37,12 +37,12 @@ def generate_scenario_name(
         hi_delay,
         symptomatic_probs_scale,
         minimum_infectiousness_age):
-    return f"{city_name}_{scenario}_inf_{initial_num_infected}_immune_{percentage_immuned}\n" + \
-           f"imm_per_day_{immune_per_day}_imm_order_{immune_order}\n" + \
-           f"_imm_comp_{immune_complience_at_start}\n" + \
-           f"_comp_{compliance}\n" + \
-           f"_imm_src_{immune_source}_min_age_{min_age}\n" + \
-           f"_min_inf_age_{minimum_infectiousness_age}"
+    return f"{city_name},{scenario},inf={initial_num_infected},immune={percentage_immuned}\n" + \
+           f",imm_per_day={immune_per_day},imm_order={immune_order}\n" + \
+           f",imm_comp={immune_complience_at_start}\n" + \
+           f",comp={compliance}\n" + \
+           f",imm_src={immune_source},min_age={min_age}\n" + \
+           f",min_inf_age={minimum_infectiousness_age}"
 
 
 def get_rescaled_symptomatic_probs(symptomatic_probs_scale):
@@ -201,7 +201,7 @@ def main():
                                                                                                 minimum_infectiousness_age)
                                                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                    days=120,
+                                                                                    days=20,
                                                                                     city_name=city_name,
                                                                                     scale=scale,
                                                                                     infection_params=NaiveInitialInfectionParams(
@@ -218,7 +218,7 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=80))
+                                                                          num_repetitions=2))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(

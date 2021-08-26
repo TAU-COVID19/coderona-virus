@@ -8,8 +8,9 @@ from matplotlib import pyplot
 
 class Categories:
     def __init__(self, one_run):
-        parameters = one_run.split('_')
+        parameters = one_run.split(',')
         self.city = parameters[0]
+        self.intervention = parameters[1]
         if "ASCENDING" in one_run:
             self.order = "ASCENDING"
         elif "DESCENDING" in one_run:
@@ -24,15 +25,15 @@ class Categories:
             self.household = "GENERAL"
         self.immune_per_day = 0
         for i in range(len(parameters)):
-            if parameters[i] == 'day':
-                self.immune_per_day = parameters[i + 1]
+            if 'imm_per_day' in parameters[i]:
+                self.immune_per_day = parameters[i].split('=')[1]
         self.initial_infected = 0
         for i in range(len(parameters)):
-            if parameters[i] == 'inf' and parameters[i + 2] == "immune":
-                self.initial_infected = parameters[i + 1]
+            if 'inf=' in parameters[i]:
+                self.initial_infected = parameters[i].split('=')[1]
 
     def __str__(self):
-        return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n{self.household}\n{self.order}"
+        return f"{self.city}\nINT={self.intervention}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n{self.household}\n{self.order}"
 
 
 def sort_runs(a, b):
@@ -129,7 +130,10 @@ if __name__ == "__main__":
         daily = get_daily_info(f"../outputs/{sys.argv[1]}/{one_run}")
         c = Categories(one_run)
         df = df.append({"scenario": one_run,
-                        "city": c.city, "initial_infected": c.initial_infected, "immune_per_day": c.immune_per_day,
+                        "city": c.city,
+                        "intervention": c.intervention,
+                        "initial_infected": c.initial_infected,
+                        "immune_per_day": c.immune_per_day,
                         "immune_order": str(c),
                         "total_infected": daily[0], "std_infected": daily[1], "total_critical": daily[2], "std_critical": daily[3],
                        "max_infected": daily[4], "std_max_infected": daily[5], "max_critical": daily[6], "std_max_critical": daily[7]},
@@ -145,7 +149,7 @@ if __name__ == "__main__":
 
     df.to_csv(f"../outputs/{sys.argv[1]}/results.csv")
 
-    categories = df.groupby(by=["city", "initial_infected", "immune_per_day"])
+    categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day"])
 
 
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
@@ -157,27 +161,35 @@ if __name__ == "__main__":
 
     category_i = 0
     for category in categories:
-        title = f'{category[0][0]}: initial={category[0][1]}, per-day={category[0][2]}'
+        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}'
         df = category[1]
         axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Total Infected ({title})")
+
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Total Critical ({title})")
+
+        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Max Infected ({title})")
+
+        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Max Critical ({title})")
+
+        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
+
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
