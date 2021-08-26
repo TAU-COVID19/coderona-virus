@@ -479,7 +479,7 @@ class Statistics(object):
             tmp = [str(data[s]) if s in data else '0' for s in DiseaseState ]
             table[i] = [str(date)] + tmp
         ans = table_format.format(table)
-        return lst,ans
+        return ans
 
     def get_age_stratified_summary_table(
         self,
@@ -564,7 +564,7 @@ class Statistics(object):
                 f.write(make_summary_by_age_table(datas, table_format))
             with open(absolute_table_path + extension, 'w') as f:
                 f.write(make_summary_by_age_table(datas, table_format, False))
-    #Dror
+    
     def write_daily_delta(self, filename):
         outpath = os.path.join(self._output_path, filename)
         absolute_table_path = os.path.join(self._output_path, 'daily_delta_table')
@@ -573,8 +573,7 @@ class Statistics(object):
             for path in (outpath, absolute_table_path):
                 assert not os.path.exists(path + extension), "Failed to create file '%s': file exists!" % (path + extension)
             with open(outpath + extension, 'w') as f:
-                _,str = self.get_state_stratified_summary_table(table_format=table_format)
-                f.write(str)
+                f.write(self.get_state_stratified_summary_table(table_format=table_format))
 
 
     def write_summary_file(self, filename, shortened=True):

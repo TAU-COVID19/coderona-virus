@@ -1,27 +1,24 @@
-import os
+from io import StringIO
 import json
+import os
+from numpy.core.numeric import Infinity
+import pandas  as pd 
 import random
-from functools import cmp_to_key
+
 from src.logs.summary import TableFormat
-from src.simulation.event import Event
 from collections import Counter
-from test.conftest import helpers
 from src.seir.seir_times import daysdelta
 from src.run_utils import INITIAL_DATE 
 from src.seir import DiseaseState
+from src.simulation.simulation import Simulation
 from src.simulation.params import Params
-from src.simulation.simulation import Simulation,ORDER
 from src.world import Person
-from src.world.environments.household import Household
-from src.world.population_generation import population_loader
-from src.world.population_generation import generate_city
 from src.world.world import World
 
 #Test the amount of the  created Immune
 def test_CreateDeltaFile(helpers):
     helpers.clean_outputs()
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
-    Expected  = -1
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
@@ -49,20 +46,14 @@ def test_CreateDeltaFile(helpers):
     my_simulation.register_events(events_acc)
     my_simulation.run_simulation(num_days=10,name="test")
     #assert events dictionary is not empty
-    tbl,txt = my_simulation.stats.get_state_stratified_summary_table(table_format=TableFormat.CSV)
+    txt = my_simulation.stats.get_state_stratified_summary_table(table_format=TableFormat.CSV)
+    test_data = StringIO(txt)
+    tbl = pd.read_csv(test_data)
     assert len(tbl)==7
-    assert tbl[0][0] == INITIAL_DATE
-    assert tbl[0][1][DiseaseState.SUSCEPTIBLE] == 10
-    assert tbl[1][0] == INITIAL_DATE + daysdelta(days=1)
-    assert tbl[1][1] == Counter() 
-    assert tbl[2][0] == INITIAL_DATE + daysdelta(days=2)
-    assert tbl[2][1] == Counter() 
-    assert tbl[3][0] == INITIAL_DATE + daysdelta(days=3)
-    assert tbl[3][1][DiseaseState.ASYMPTOMATICINFECTIOUS] == 10
-    assert tbl[4][0] == INITIAL_DATE + daysdelta(days=4)
-    assert tbl[4][1] == Counter() 
-    assert tbl[5][0] == INITIAL_DATE + daysdelta(days=5)
-    assert tbl[5][1] == Counter() 
-    assert tbl[6][0] == INITIAL_DATE + daysdelta(days=6)
-    assert tbl[6][1][DiseaseState.IMMUNE] == 10
+    
+    print(tbl)
+    
+    assert tbl.iloc[0,DiseaseState.SUSCEPTIBLE.value] == 10
+    assert tbl.iloc[3,DiseaseState.ASYMPTOMATICINFECTIOUS.value] == 10
+    assert tbl.iloc[6,DiseaseState.IMMUNE.value] == 10
     
