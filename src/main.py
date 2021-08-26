@@ -111,31 +111,37 @@ def main():
         # "scenario_36": scenario_36_interventions,
         # "scenario_39": scenario_39_interventions,
         # "scenario_365": scenario_365_interventions,
-        # "scenario_395": scenario_395_interventions
-        # "reality1" : scenario_reality1
-        "hh_isolation": householdisolation_sd_interventions,
-        # "check" : scenario_check
-        # "reality2" : scenario_reality2
-        # "reality3": scenario_reality3
-        # "reality4": scenario_reality4
-        # "no_interventions": no_interventions
-        # "not_relaxing_interventions": not_relaxing_interventions
+        # "scenario_395": scenario_395_interventions,
+        # "reality1" : scenario_reality1,
+        #"hh_isolation": householdisolation_sd_interventions,
+        # "check" : scenario_check,
+        # "reality2" : scenario_reality2,
+        # "reality3": scenario_reality3,
+        # "reality4": scenario_reality4,
+        # "no_interventions": no_interventions,
+        # "not_relaxing_interventions": not_relaxing_interventions,
         # "grant_time1" : grant_time1,
-        # "grant_time2" : grant_time2
-        # "paper_1" : paper_1
-        # "paper_2" : paper_2
+        # "grant_time2" : grant_time2,
+        # "paper_1" : paper_1,
+        # "paper_2" : paper_2,
         # "noam_lockdown_scenario": noam_lockdown_scenario,
         # "no_interventions": no_interventions,
-        # "paper_3" : paper_3
-        # "paper_4" : paper_4
-        # "paper_5": paper_5
-        # "paper_6": paper_6
-        # "paper_7": paper_7
-        # "paper_8": paper_8
-        # "paper_2_comp_9": paper_2_comp_9
+        # "paper_3" : paper_3,
+        # "paper_4" : paper_4,
+        # "paper_5": paper_5,
+        # "paper_6": paper_6,
+        # "paper_7": paper_7,
+        # "paper_8": paper_8,
+        # "paper_2_comp_9": paper_2_comp_9,
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        "Empty_scenario": Empty_scenario
+        #"Empty_scenario": Empty_scenario,
+        #"HH_children_specific_interventions": children_specific_HH_interventions,
+        #"noHH_children_specific_interventions": children_specific_noHH_interventions(),
+        #"HH_adult_specific_interventions": adult_specific_HH_interventions(),
+        #"noHH_adult_specific_interventions": adult_specific_noHH_interventions(),
+        "HH_old_specific_interventions": old_specific_HH_interventions,
+        "noHH_old_specific_interventions": old_specific_noHH_interventions,
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -160,11 +166,11 @@ def main():
     jobs = []
 
     for initial_percentage_immune, Immune_compliance_at_start in [(0.75, 1.0)]:  # [(0.0,1),(0.5,1)]:
-        for people_per_day in [400, 800]:
+        for people_per_day in [800]:
             for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE, 18), (InitialImmuneType.HOUSEHOLDS, 18), (InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [100, 3000]:  # [25, 100, 250, 500]:
+                for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Holon", 1), ("Bene Beraq", 1)]:  # ("Bene Beraq", 1)
-                        for compliance in [0.8]:
+                        for compliance in [1]:
                             for order in [ORDER.DESCENDING, ORDER.ASCENDING]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
