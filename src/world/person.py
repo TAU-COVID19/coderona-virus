@@ -1,11 +1,9 @@
-from src.seir.seir_times import machine_type
-import numpy as _np
-import json
-import random
-import os
-from copy import copy
+
 from collections import namedtuple
+from copy import copy
 from datetime import date, timedelta
+from enum import Enum
+import numpy as _np
 
 from src.simulation.event import (
     Event,
@@ -13,9 +11,9 @@ from src.simulation.event import (
     EmptyTrigger,
     DiseaseStateChangeEffect
 )
-from src.seir import DiseaseState
-from src.seir import sample_seir_times
+from src.seir import DiseaseState,sample_seir_times
 from src.simulation.params import Params
+from src.util.Enumerations import machine_type
 from src.world.infection_data import InfectionData
 
 
@@ -323,7 +321,7 @@ class Person(object):
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
-            states_and_times =  self._seir_times
+            states_and_times = self._seir_times
         else:
             states_and_times = sample_seir_times(self.state_machine_type,self)
         #update self._infection_data

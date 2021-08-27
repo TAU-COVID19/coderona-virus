@@ -82,3 +82,10 @@ class Params(object):
         assert not os.path.exists(path), "File {} already exists!".format(path)
         with open(path, 'w') as f:
             json.dump(self._data, f)
+    
+    @classmethod
+    def clean(cls):
+        """
+        Clean the value of the singleton in case we want to update it's values
+        """
+        cls.singleton = None

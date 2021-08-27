@@ -1,12 +1,13 @@
+from datetime import timedelta
+from enum import Enum
 import random as _random
 from scipy.stats import gamma
-from datetime import timedelta
 import warnings
-from enum import Enum
 
 from src.seir.disease_state import DiseaseState
-from src.util import Distribution
 from src.simulation.params import Params
+from src.util import Distribution
+from src.util.Enumerations import machine_type
 
 
 
@@ -18,9 +19,6 @@ def daysdelta(days):
     """
     return timedelta(days=days)
 
-class machine_type(Enum):
-    SIR = 1 
-    SIRS = 2
 
 class StatisticalSeirTimesGeneration(object):
     """
@@ -255,7 +253,8 @@ class RealDataSeirTimesGeneration(StatisticalSeirTimesGeneration):
         return _random.random() < prob
 
     def sample_latent_stage(self, person):
-        if self.sample_bool(self.prob_symptomatic(person)):
+        tmpprob = self.prob_symptomatic(person)
+        if self.sample_bool(tmpprob):
             return daysdelta(self._latent_period_distribution.sample()), DiseaseState.INCUBATINGPOSTLATENT
         else:
             return daysdelta(self._latent_period_distribution.sample()), DiseaseState.ASYMPTOMATICINFECTIOUS
@@ -295,6 +294,13 @@ class RealDataSeirTimesGeneration(StatisticalSeirTimesGeneration):
         if cls.singleton is None:
             cls.singleton = cls()
         return cls.singleton
+    
+    @classmethod
+    def clean(cls):
+        """
+        Clean the value of the singleton in case we want to update it's values
+        """
+        cls.singleton = None
 
 class SIRS(RealDataSeirTimesGeneration):
     """
@@ -309,7 +315,6 @@ class SIRS(RealDataSeirTimesGeneration):
     def __init__(self):
         super().__init__()
         params = Params.loader()['disease_parameters']
-        self.susceptible_given_immuned_per_age = params["susceptible_given_immuned_per_age"]
         self._immuned_before_susceptible_distribution = self.generate_gamma_distribution(
             params["Immuned_before_susceptible_gamma_params"]
         )
@@ -318,10 +323,8 @@ class SIRS(RealDataSeirTimesGeneration):
         return self.access_table_per_age(self.susceptible_given_immuned_per_age,person)
 
     def sample_immune_stage(self, person):
-        if self.sample_bool(self.prob_susptible_given_Immuned(person)):
-            return daysdelta(self._immuned_before_susceptible_distribution.sample()), DiseaseState.SUSCEPTIBLE
-        else:
-            return daysdelta(self._immuned_before_susceptible_distribution.sample()), DiseaseState.IMMUNE
+        #on 25/8/21 Ori asked that on SIRS that Immuned people will became susptible after some time
+        return daysdelta(self._immuned_before_susceptible_distribution.sample()), DiseaseState.SUSCEPTIBLE
     def sample_stage(self, person, stage):
         """
         Gets a person and a stage (disease state) he is in,
@@ -343,10 +346,7 @@ class SIRS(RealDataSeirTimesGeneration):
         if stage == DiseaseState.CRITICAL:
             return self.sample_critical_stage(person)
         if stage == DiseaseState.IMMUNE:
-            #No while loop needed because sometime thid person will be immuned while 
-            #at the other time he will be susceptible
-            duration,next_state = self.sample_immune_stage(person)
-            return duration,next_state
+            return self.sample_immune_stage(person)
 
     def sample_seir_times(self, person):
         """
@@ -357,23 +357,13 @@ class SIRS(RealDataSeirTimesGeneration):
         """
         rv = []
         curr_stage = DiseaseState.LATENT
-        immune_cnt = 0
-        break_loop = False
-        while not(break_loop):
+        while curr_stage not in (DiseaseState.DECEASED, DiseaseState.SUSCEPTIBLE):
             interval, next_stage = self.sample_stage(person, curr_stage)
             rv.append((curr_stage, interval))
             curr_stage = next_stage
-            if curr_stage == DiseaseState.IMMUNE:
-                immune_cnt += 1
-            if curr_stage in [DiseaseState.DECEASED,DiseaseState.SUSCEPTIBLE]:
-                break_loop = True
-            elif curr_stage == DiseaseState.IMMUNE and immune_cnt == 2:
-                break_loop =True    
-            else:
-                break_loop =False
-
         rv.append((curr_stage, None))
         return rv
+
     
     @classmethod
     def make(cls):
