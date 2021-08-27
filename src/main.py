@@ -138,8 +138,8 @@ def main():
         #"Empty_scenario": Empty_scenario,
         "HH_children_specific_interventions": children_specific_HH_interventions,
         "noHH_children_specific_interventions": children_specific_noHH_interventions(),
-        "HH_adult_specific_interventions": adult_specific_HH_interventions(),
-        "noHH_adult_specific_interventions": adult_specific_noHH_interventions(),
+        #"HH_adult_specific_interventions": adult_specific_HH_interventions(),
+        #"noHH_adult_specific_interventions": adult_specific_noHH_interventions(),
         #"HH_old_specific_interventions": old_specific_HH_interventions,
         #"noHH_old_specific_interventions": old_specific_noHH_interventions,
     }
