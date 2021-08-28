@@ -423,6 +423,37 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
+    def print_hh_statistics(self):
+        all_households = [h for h in self._world.get_all_city_households()]
+
+        elderly_with_children = 0
+        more_than_2_parents = 0
+        more_than_2_elderly = 0
+        only_children = 0
+        city_name = ""
+        for h in all_households:
+            children = [p for p in h.get_people() if p.get_age() <= 16]
+            elderly = [p for p in h.get_people() if p.get_age() >= 60]
+            parents = [p for p in h.get_people() if 60 > p.get_age() > 18]
+            city_name = h._city.get_name()
+            if len(elderly) > 0 and len(children) > 0:
+                elderly_with_children += 1
+            if len(parents) > 3:
+                more_than_2_parents += 1
+            if len(elderly) > 2:
+                more_than_2_elderly += 1
+            if len(elderly) == 0 and len(parents) == 0 and len(children) > 0:
+                only_children += 1
+
+        print(f"print_hh_statistics() \n\t"
+              f"city={city_name}\n\t"
+              f"all_households={len(all_households)}\n\t"
+              f"elderly_with_children={elderly_with_children} ({elderly_with_children*100/len(all_households):.1f}%)\n\t"
+              f"more_than_2_parents={more_than_2_parents} ({more_than_2_parents*100/len(all_households):.1f}%)\n\t"
+              f"more_than_2_elderly={more_than_2_elderly} ({more_than_2_elderly*100/len(all_households):.1f}%)\n\t"
+              f"only_children={only_children} ({only_children*100/len(all_households):.1f}%)\n"
+              )
+
     def run_simulation(self, num_days, name, datas_to_plot=None,run_simulation = None,extensionsList = None):
         """
         This main loop of the simulation.
@@ -447,7 +478,8 @@ class Simulation(object):
                 mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
                 ExtensionType = getattr(mod,ExtName)
                 extensions = extensions + [ExtensionType(self)]
-            
+
+        self.print_hh_statistics()
 
         for day in range(num_days):
             for ext in extensions:
