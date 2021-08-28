@@ -137,10 +137,10 @@ def main():
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         #"Empty_scenario": Empty_scenario,
         "HH_children_specific_interventions": children_specific_HH_interventions,
-        "noHH_children_specific_interventions": children_specific_noHH_interventions,
-        #"HH_adult_specific_interventions": adult_specific_HH_interventions,
+        #"noHH_children_specific_interventions": children_specific_noHH_interventions,
+        "HH_adult_specific_interventions": adult_specific_HH_interventions,
         #"noHH_adult_specific_interventions": adult_specific_noHH_interventions,
-        #"HH_old_specific_interventions": old_specific_HH_interventions,
+        "HH_old_specific_interventions": old_specific_HH_interventions,
         #"noHH_old_specific_interventions": old_specific_noHH_interventions,
     }
 
@@ -168,9 +168,9 @@ def main():
     for initial_percentage_immune, Immune_compliance_at_start in [(0.75, 1.0)]:  # [(0.0,1),(0.5,1)]:
         for people_per_day in [800]:
             for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE, 18), (InitialImmuneType.HOUSEHOLDS, 18), (InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [100]:  # [25, 100, 250, 500]:
+                for initial_num_infected in [100, 1000]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Holon", 1), ("Bene Beraq", 1)]:  # ("Bene Beraq", 1)
-                        for compliance in [1]:
+                        for compliance in [0.7]:
                             for order in [ORDER.DESCENDING, ORDER.ASCENDING]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
