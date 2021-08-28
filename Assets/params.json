@@ -116,7 +116,8 @@
             "other": 1.25
         },
         "quarantine": {
-            "all": 0
+            "household": 1.25,
+            "other": 0
         },
         "lockdown": {
             "household": 1.75,

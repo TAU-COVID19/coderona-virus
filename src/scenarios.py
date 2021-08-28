@@ -471,7 +471,7 @@ def old_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=compliance,
+        compliance=1,
         delay=ci_delay
     )
     sd_intervention = SocialDistancingIntervention(
@@ -489,7 +489,7 @@ def old_specific_HH_interventions(compliance, ci_delay, hi_delay):
     elderly_intervention = ElderlyQuarantineIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=compliance,
+        compliance=1,
         min_age=60
     )
     interventions = [sd_intervention,
@@ -531,7 +531,7 @@ def adult_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=compliance,
+        compliance=1,
         delay=ci_delay
     )
     sd_intervention = SocialDistancingIntervention(
@@ -549,7 +549,7 @@ def adult_specific_HH_interventions(compliance, ci_delay, hi_delay):
     workplace_closure_intervention = WorkplaceClosureIntervention(
         start_date=INITIAL_DATE,
         duration=daysdelta(120),
-        compliance=1
+        compliance=0.75
     )
     interventions = [sd_intervention,
                      ci_intervention,
@@ -589,7 +589,7 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=compliance,
+        compliance=1,
         delay=ci_delay
     )
     sd_intervention = SocialDistancingIntervention(

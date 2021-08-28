@@ -151,10 +151,9 @@ if __name__ == "__main__":
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day"])
 
-
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
-    fig.set_figheight(80)
+    fig.set_figheight(18*len(categories))
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
@@ -169,29 +168,31 @@ if __name__ == "__main__":
 
         category_i += 1
 
+    for category in categories:
         axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Total Critical ({title})")
 
-        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
+        # axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
+    for category in categories:
         axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Max Infected ({title})")
 
-        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
+        # axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
+    for category in categories:
         axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Max Critical ({title})")
 
-        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
+        # axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
-
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
-    fig.tight_layout(pad=7.0)
+    fig.tight_layout(pad=5.0)
     fig.savefig(f"../outputs/{sys.argv[1]}/results.svg")
