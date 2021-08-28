@@ -185,3 +185,26 @@ def test_latent_incubating_critical_deceased():
             assert tbl[2][0] == DiseaseState.SYMPTOMATICINFECTIOUS,"{}".format(cur_type.name)
             assert tbl[3][0] == DiseaseState.CRITICAL,"{}".format(cur_type.name)
             assert tbl[4][0] == DiseaseState.DECEASED,"{}".format(cur_type.name)
+
+def test_SIRS_second_infection():
+    """
+    Test that in SIRS model in case that a person get sick twice,
+     (and get recovered between them). 
+     He will experience two different time schedule of the illness
+    """
+    #Pretest
+    Params.clean()
+    SIRS.clean()
+
+    config_path = os.path.join(os.path.dirname(__file__),"tests_config_files","test_latent_incubating_critical_immune_config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"tests_params_files", paramsDataPath), override=True)
+
+    p=Person(30)
+    event_lst = p.infect_and_get_events(INITIAL_DATE,InitialGroup.initial_group())
+    p.set_disease_state(DiseaseState.SUSCEPTIBLE)
+    event_lst2 = p.infect_and_get_events(INITIAL_DATE,InitialGroup.initial_group())
+    assert not (event_lst == event_lst2)
+    
