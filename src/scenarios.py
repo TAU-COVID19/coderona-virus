@@ -520,7 +520,7 @@ def old_specific_noHH_interventions(compliance, ci_delay, hi_delay):
     elderly_intervention = ElderlyQuarantineIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=compliance,
+        compliance=0.9,
         min_age=60
     )
     interventions = [sd_intervention,
