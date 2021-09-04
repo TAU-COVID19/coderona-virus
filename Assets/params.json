@@ -118,6 +118,7 @@
         "quarantine": {
             "all": 0
         },
+
         "lockdown": {
             "household": 1.75,
             "workplace": 0.30,
