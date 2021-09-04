@@ -146,7 +146,6 @@ if __name__ == "__main__":
         # std_infected = daily_integral[3][1:][index_of_max_infected]
 
 
-
     df.to_csv(f"../outputs/{sys.argv[1]}/results.csv")
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day"])
@@ -163,31 +162,29 @@ if __name__ == "__main__":
     for category in categories:
         title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}'
         df = category[1]
+
+        # plot a separator line between each category
+        axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes, clip_on=False)
+
         axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Total Infected ({title})")
-
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Total Critical ({title})")
-
-        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Max Infected ({title})")
-
-        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Max Critical ({title})")
 
-        axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
 

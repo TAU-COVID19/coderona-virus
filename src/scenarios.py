@@ -4,6 +4,7 @@ from src.run_utils import INITIAL_DATE
 from src.seir import daysdelta
 from src.simulation.interventions.intervention import LockdownIntervention
 from src.world.environments.environment import EnvironmentalAttribute
+from src.seir.disease_state import DiseaseState
 
 #first scenarios
 def scenario_1_interventions(compliance, ci_delay, hi_delay):
@@ -467,6 +468,7 @@ def householdisolation_sd_interventions(compliance, ci_delay, hi_delay):
                       ]
     return interventions
 
+
 def old_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
@@ -498,6 +500,8 @@ def old_specific_HH_interventions(compliance, ci_delay, hi_delay):
                      elderly_intervention
                       ]
     return interventions
+
+
 def old_specific_noHH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
@@ -527,6 +531,8 @@ def old_specific_noHH_interventions(compliance, ci_delay, hi_delay):
                      elderly_intervention
                       ]
     return interventions
+
+
 def adult_specific_HH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
@@ -557,6 +563,8 @@ def adult_specific_HH_interventions(compliance, ci_delay, hi_delay):
                      workplace_closure_intervention
                       ]
     return interventions
+
+
 def adult_specific_noHH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
@@ -592,6 +600,18 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
         compliance=compliance,
         delay=ci_delay
     )
+    # to simulate detection of asymptomatic children at school
+    asi_intervention = SymptomaticIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=0.8,
+        delay=ci_delay,
+        max_age=18,
+        entry_states=(
+            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.ASYMPTOMATICINFECTIOUS
+        )
+    )
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
@@ -615,7 +635,8 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     interventions = [sd_intervention,
                      ci_intervention,
                       household_intervention,
-                     school_closer_intervention
+                     # school_closer_intervention,
+                     asi_intervention
                       ]
     return interventions
 def children_specific_noHH_interventions(compliance, ci_delay, hi_delay):

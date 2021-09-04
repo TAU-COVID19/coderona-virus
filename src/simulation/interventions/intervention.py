@@ -357,17 +357,26 @@ class SymptomaticIsolationIntervention(Intervention):
     As some person starts to be symptomatic, the intervention is activated and a new routine is implied.
     The API also allows to have a delay between th symptoms and the isolation.
     """
-    __slots__ = ('start_date', 'end_date', 'duration', 'delay')
+    __slots__ = ('start_date', 'end_date', 'duration', 'delay', 'min_age', 'max_age', 'entry_states')
 
     def __init__(
             self,
             compliance: float,
             start_date: date,
             duration: timedelta,
-            delay=1  # arbitrary
+            delay=1,  # arbitrary
+            min_age=0,
+            max_age=120,
+            entry_states=(
+                    DiseaseState.INCUBATINGPOSTLATENT,
+                    DiseaseState.SYMPTOMATICINFECTIOUS
+            )
     ):
         super(SymptomaticIsolationIntervention, self).__init__(compliance, start_date, duration)
         self.delay = delay
+        self.min_age = min_age
+        self.max_age = max_age
+        self.entry_states = entry_states
 
     def generate_events(self, world: World):
         """
@@ -378,16 +387,15 @@ class SymptomaticIsolationIntervention(Intervention):
         """
         ret = []
         for person in world.all_people():
-            if random.random() < self.compliance:
+            if (self.min_age <= person.get_age() <= self.max_age) and \
+                    random.random() < self.compliance:
                 add_effect = AddRoutineChangeEffect(
                     person=person,
                     routine_change_key='quarantine',
                     routine_change_val=quarantine_routine(person)
                 )
-                states = (
-                    DiseaseState.INCUBATINGPOSTLATENT,
-                    DiseaseState.SYMPTOMATICINFECTIOUS
-                )
+                states = self.entry_states
+
                 person._init_event(*states)
                 entry_moment = Event()
                 add_trigger = AndTrigger(

@@ -1,3 +1,4 @@
+import math
 import random
 from datetime import timedelta
 from functional import seq
@@ -47,11 +48,24 @@ class ImmuneStrategy:
 class ImmuneByAgeExtension(Simulation):
     def __init__(self, parent: Simulation):
         # super().__init__(world, initial_date)
+        self.finished = False
         extension_parameters = parent._extension_params["ImmuneByAgeExtension"]
         print(f"ImmuneByAgeExtension() extension_parameters {str(extension_parameters)}")
         # change the following parameters to affect the vaccination flow
         self.days_since_start = 0
-        self.target_immune_percentage = extension_parameters.per_to_Immune
+        # self.target_immune_percentage = extension_parameters.per_to_Immune
+        self.target_immune_percentage = [
+            0,  # AGE 0-9
+            0.7,  # AGE 10-19
+            0.73,  # AGE 20-29
+            0.79,  # AGE 30-39
+            0.82,  # AGE 40-49
+            0.86,  # AGE 50-59
+            0.88,  # AGE 60-69
+            0.94,  # AGE 70-79
+            0.92,  # AGE 80-89
+            0.91  # AGE 90-99
+        ]
         self.min_age_to_immune = extension_parameters.min_age
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = extension_parameters.people_per_day
@@ -64,11 +78,11 @@ class ImmuneByAgeExtension(Simulation):
         # internal state. do not change!
         self.parent = parent
         if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
-            self.state_max_age_to_immune = self.max_age_to_immune
-            self.state_min_age_to_immune = self.max_age_to_immune - 10
+            self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
+            self.state_min_age_to_immune = self.state_max_age_to_immune - 10
         elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
             self.state_min_age_to_immune = self.min_age_to_immune
-            self.state_max_age_to_immune = self.min_age_to_immune + 10
+            self.state_max_age_to_immune = math.floor((self.min_age_to_immune + 15) / 10) * 10
         else:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.max_age_to_immune
@@ -88,7 +102,7 @@ class ImmuneByAgeExtension(Simulation):
 
     def start_of_day_processing(self):
 
-            pass
+        pass
 
     def end_of_day_processing(self):
         """
@@ -96,15 +110,26 @@ class ImmuneByAgeExtension(Simulation):
         else immune by the selected ImmuneStrategy
         """
         self.days_since_start += 1
-        immuned = seq(self.parent._world.all_people()).count(lambda p: p.get_disease_state() == DiseaseState.IMMUNE)
+        immuned = seq(self.parent._world.all_people()).count(
+            lambda p: p.get_disease_state() == DiseaseState.IMMUNE and
+                      (self.state_min_age_to_immune < p.get_age_category() <= self.state_max_age_to_immune)
+        )
         can_be_immuned = seq(self.parent._world.all_people()).count(
-            lambda p: self.can_immune(p.get_disease_state()) and
-                      (p.get_age_category() >= self.min_age_to_immune) and
-                      (p.get_age_category() <= self.max_age_to_immune))
+            lambda p: (self.can_immune(p.get_disease_state()) or (p.get_disease_state() == DiseaseState.IMMUNE)) and
+                      (self.state_min_age_to_immune < p.get_age_category() <= self.state_max_age_to_immune)
+        )
         immuned_percentage = (immuned / can_be_immuned) if can_be_immuned > 0 else 1.0
 
         people_to_immune = []
-        if self.target_immune_percentage > immuned_percentage:
+
+        target_percentage_index = max(0, int(self.state_min_age_to_immune / 10))
+        target_percentage_index = min(len(self.target_immune_percentage)-1, target_percentage_index)
+        target_percentage = self.target_immune_percentage[target_percentage_index]
+
+        # print(f"Immune: self.state_min_age_to_immune={self.state_min_age_to_immune}, "
+        #       f"target={target_percentage}, "
+        #       f"immuned_percentage={immuned_percentage}")
+        if not self.finished:
             if self.immune_strategy.is_by_households():
                 households = [h for h in self.parent._world.get_all_city_households()]
                 for h in households:
@@ -113,37 +138,45 @@ class ImmuneByAgeExtension(Simulation):
                         if seq(h.get_people()).count(
                                 lambda p: self.can_immune(p.get_disease_state()) and
                                           (p.get_age_category() > self.state_min_age_to_immune) and
-                                          (p.get_age_category() < self.state_max_age_to_immune)) > 0:
+                                          (p.get_age_category() <= self.state_max_age_to_immune)) > 0:
                             people_to_immune += [p for p in h.get_people()
                                                  if (self.can_immune(p.get_disease_state())) and
                                                  (p.get_age_category() >= 18) and
-                                                 (p.get_age_category() < self.state_max_age_to_immune)]
+                                                 (p.get_age_category() <= self.state_max_age_to_immune)]
                     else:
                         people_to_immune += [p for p in h.get_people()
                                              if (self.can_immune(p.get_disease_state())) and
                                              (p.get_age_category() > self.state_min_age_to_immune) and
-                                             (p.get_age_category() < self.state_max_age_to_immune)]
+                                             (p.get_age_category() <= self.state_max_age_to_immune)]
                     if len(people_to_immune) > self.max_people_to_immune_a_day:
                         break
             else:
                 people_to_immune = [p for p in self.parent._world.all_people()
                                     if (self.can_immune(p.get_disease_state())) and
                                     (p.get_age_category() > self.state_min_age_to_immune) and
-                                    (p.get_age_category() < self.state_max_age_to_immune)]
+                                    (p.get_age_category() <= self.state_max_age_to_immune)]
             random.shuffle(people_to_immune)
+            count_to_percentage = math.floor(max(0, target_percentage * can_be_immuned - immuned))
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
-                  f"immune % = {immuned}/{can_be_immuned} = {immuned_percentage*100.0:.1f}")
-            seq(people_to_immune).take(self.max_people_to_immune_a_day).for_each(
+                  f"immune % = {immuned}/{can_be_immuned} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}")
+            seq(people_to_immune).take(min(count_to_percentage, self.max_people_to_immune_a_day)).for_each(
                 lambda person: self.parent.register_events(
                     person.immune_and_get_events(start_date=self.parent._date, delta_time=timedelta(days=0))))
 
             # advance to the next age group only if you covered the current age group
-            if len(people_to_immune) <= self.max_people_to_immune_a_day:
+            if len(people_to_immune) <= self.max_people_to_immune_a_day or \
+                    immuned_percentage >= target_percentage:
                 if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
+                    if self.state_min_age_to_immune <= self.min_age_to_immune:
+                        self.finished = True
                     self.state_min_age_to_immune = max(self.state_min_age_to_immune - 10, self.min_age_to_immune)
+                    self.state_max_age_to_immune -= 10
                 elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
+                    if self.state_max_age_to_immune >= self.max_age_to_immune:
+                        self.finished = True
                     self.state_max_age_to_immune = min(self.state_max_age_to_immune + 10, self.max_age_to_immune)
+                    self.state_min_age_to_immune = self.state_max_age_to_immune - 10
                 elif self.immune_strategy.get_order() == ImmuneStrategy.NONE:
                     pass  # do nothing
                 else:

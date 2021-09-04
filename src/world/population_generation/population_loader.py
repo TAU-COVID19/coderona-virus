@@ -43,7 +43,8 @@ class PopulationLoader(object):
         :param scale: The scale by which to multiply the city size
         :return: The path that this serialized file should be saved to
         """
-        filename = "%s_%s_%s_%s%s.pkl" % (OUTPUT_NAME, city_name, is_smart, scale, self.added_description)
+        description = self.added_description.replace(' ', '').replace(',','_').replace('[','').replace(']', '')
+        filename = "%s_%s_%s_%s%s.pkl" % (OUTPUT_NAME, city_name, is_smart, scale, description)
         return os.path.join(self.output_dir, filename)
 
     def _save_to_file(self, world, is_smart):

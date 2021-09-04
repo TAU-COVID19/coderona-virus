@@ -136,12 +136,12 @@ def main():
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         #"Empty_scenario": Empty_scenario,
-        #"HH_children_specific_interventions": children_specific_HH_interventions,
-        #"noHH_children_specific_interventions": children_specific_noHH_interventions(),
-        #"HH_adult_specific_interventions": adult_specific_HH_interventions(),
-        #"noHH_adult_specific_interventions": adult_specific_noHH_interventions(),
-        "HH_old_specific_interventions": old_specific_HH_interventions,
-        "noHH_old_specific_interventions": old_specific_noHH_interventions,
+        "HH_children_specific_interventions": children_specific_HH_interventions,
+        #"noHH_children_specific_interventions": children_specific_noHH_interventions,
+        #"HH_adult_specific_interventions": adult_specific_HH_interventions,
+        #"noHH_adult_specific_interventions": adult_specific_noHH_interventions,
+        #"HH_old_specific_interventions": old_specific_HH_interventions,
+        #"noHH_old_specific_interventions": old_specific_noHH_interventions,
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -165,13 +165,13 @@ def main():
 
     jobs = []
 
-    for initial_percentage_immune, Immune_compliance_at_start in [(0.75, 1.0)]:  # [(0.0,1),(0.5,1)]:
+    for target_immune_percentage, immune_compliance in [(0.75, 1.0)]:  # [(0.0,1),(0.5,1)]:
         for people_per_day in [800]:
-            for immune_source, min_age in [(InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE, 18), (InitialImmuneType.HOUSEHOLDS, 18), (InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
+            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
-                    for city_name, scale in [("Holon", 1), ("Bene Beraq", 1)]:  # ("Bene Beraq", 1)
+                    for city_name, scale in [("Bene Beraq", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [1]:
-                            for order in [ORDER.DESCENDING, ORDER.ASCENDING]:
+                            for order in [ORDER.ASCENDING]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
                                         # people aging less than minimum_infectioness_age will not infect others
@@ -188,10 +188,10 @@ def main():
                                                     full_scenario_name = generate_scenario_name(city_name,
                                                                                                 scenario_name,
                                                                                                 initial_num_infected,
-                                                                                                initial_percentage_immune,
+                                                                                                target_immune_percentage,
                                                                                                 people_per_day,
                                                                                                 order,
-                                                                                                Immune_compliance_at_start,
+                                                                                                immune_compliance,
                                                                                                 immune_source,
                                                                                                 min_age,
                                                                                                 compliance,
@@ -206,8 +206,8 @@ def main():
                                                                                     scale=scale,
                                                                                     infection_params=NaiveInitialInfectionParams(
                                                                                         num_to_infect=initial_num_infected,
-                                                                                        per_to_Immune=initial_percentage_immune, \
-                                                                                        Immune_compliance=Immune_compliance_at_start,
+                                                                                        per_to_Immune=target_immune_percentage, \
+                                                                                        Immune_compliance=immune_compliance,
                                                                                         city_name_to_infect=city_name,
                                                                                         order=order,
                                                                                         immune_source=immune_source, \
@@ -218,7 +218,7 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=80))
+                                                                          num_repetitions=1))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
@@ -227,7 +227,7 @@ def main():
                                         #             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                         #             num_repetitions=3, initial_num_infected=initial_num_infected)]
     # this start the run of the jobs
-    run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
+    run(jobs, multi_processed=False, with_population_caching=False, verbosity=False)
 
 
 if __name__ == "__main__":

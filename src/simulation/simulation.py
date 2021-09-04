@@ -461,7 +461,8 @@ class Simulation(object):
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
-                break
+                print(f'run_simulation() simulation statistics stopped changing after {day} days')
+                # break
                 
 
         self.stats.mark_ending(self._world.all_people())
