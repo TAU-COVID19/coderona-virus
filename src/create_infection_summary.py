@@ -4,6 +4,7 @@ from functional import seq
 import statistics
 import pandas
 from matplotlib import pyplot
+from math import sqrt
 
 
 class Categories:
@@ -71,26 +72,16 @@ def get_sample_line(root_path, sample, amit_graph_type, line, as_is=False):
             return [max(0, float(x)) for x in data[line][1:]]
     return None
 
-def get_daily_column(root_path, sample, column):
-    filename = f"{root_path}/sample_{sample}/daily_delta.csv"
-    if os.path.isfile(filename):
-        data = seq.csv(filename)
-        print(f'get_daily_column() of sample {sample}, line start with {data[0][column]}')
-        return [max(0, float(x[column])) for x in data[1:]]
-    return None
 
 def get_daily_info(root_path):
     infected_sum = []
     infected_max = []
 
-    number_of_dates = 0
     for i in range(1000):
         data = get_sample_line(root_path, i, "integral", 1)
-        daily_delta = get_daily_column(root_path, sample=i, column=9)
         if data is not None:
-            infected_sum.append(sum(daily_delta))
+            infected_sum.append(sum(data))
             infected_max.append(max(data))
-            number_of_dates = len(daily_delta)
         else:
             break
 
@@ -111,18 +102,17 @@ def get_daily_info(root_path):
     critical_max = []
 
     for i in range(1000):
-        data = get_sample_line(root_path, sample=i, amit_graph_type="integral", line=2)
+        data = get_sample_line(root_path, i, "integral", 2)
         if data is not None:
             critical_sum.append(sum(data))
             critical_max.append(max(data))
         else:
             break
 
-
-    return statistics.mean(infected_sum), statistics.stdev(infected_sum), \
-           statistics.mean(critical_sum), statistics.stdev(critical_sum), \
-           statistics.mean(infected_max), statistics.stdev(infected_max), \
-           statistics.mean(critical_max), statistics.stdev(critical_max)
+    return statistics.mean(infected_sum), statistics.stdev(infected_sum)/sqrt(i), \
+           statistics.mean(critical_sum), statistics.stdev(critical_sum)/sqrt(i), \
+           statistics.mean(infected_max), statistics.stdev(infected_max)/sqrt(i), \
+           statistics.mean(critical_max), statistics.stdev(critical_max)/sqrt(i)
 
 
 if __name__ == "__main__":
@@ -157,14 +147,14 @@ if __name__ == "__main__":
         # std_infected = daily_integral[3][1:][index_of_max_infected]
 
 
+
     df.to_csv(f"../outputs/{sys.argv[1]}/results.csv")
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day"])
 
-
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
-    fig.set_figheight(80)
+    fig.set_figheight(18*len(categories))
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
@@ -173,33 +163,37 @@ if __name__ == "__main__":
     for category in categories:
         title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}'
         df = category[1]
-
-        # plot a separator line between each category
-        axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes, clip_on=False)
-
         axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Total Infected ({title})")
+
         category_i += 1
 
+    #for category in categories:
         axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Total Critical ({title})")
+
+        # axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
+    #for category in categories:
         axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
         axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Max Infected ({title})")
+
+        # axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
 
+    #for category in categories:
         axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
         axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Max Critical ({title})")
 
+        # axs[category_i].plot([-1, 1.5], [1.2, 1.2], color='black', lw=1, transform=axs[category_i].transAxes, clip_on=False)
         category_i += 1
-
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
-    fig.tight_layout(pad=7.0)
+    fig.tight_layout(pad=5.0)
     fig.savefig(f"../outputs/{sys.argv[1]}/results.svg")
