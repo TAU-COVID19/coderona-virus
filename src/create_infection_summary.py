@@ -71,16 +71,26 @@ def get_sample_line(root_path, sample, amit_graph_type, line, as_is=False):
             return [max(0, float(x)) for x in data[line][1:]]
     return None
 
+def get_daily_column(root_path, sample, column):
+    filename = f"{root_path}/sample_{sample}/daily_delta.csv"
+    if os.path.isfile(filename):
+        data = seq.csv(filename)
+        print(f'get_daily_column() of sample {sample}, line start with {data[0][column]}')
+        return [max(0, float(x[column])) for x in data[1:]]
+    return None
 
 def get_daily_info(root_path):
     infected_sum = []
     infected_max = []
 
+    number_of_dates = 0
     for i in range(1000):
         data = get_sample_line(root_path, i, "integral", 1)
+        daily_delta = get_daily_column(root_path, sample=i, column=9)
         if data is not None:
-            infected_sum.append(sum(data))
+            infected_sum.append(sum(daily_delta))
             infected_max.append(max(data))
+            number_of_dates = len(daily_delta)
         else:
             break
 
@@ -101,12 +111,13 @@ def get_daily_info(root_path):
     critical_max = []
 
     for i in range(1000):
-        data = get_sample_line(root_path, i, "integral", 2)
+        data = get_sample_line(root_path, sample=i, amit_graph_type="integral", line=2)
         if data is not None:
             critical_sum.append(sum(data))
             critical_max.append(max(data))
         else:
             break
+
 
     return statistics.mean(infected_sum), statistics.stdev(infected_sum), \
            statistics.mean(critical_sum), statistics.stdev(critical_sum), \
