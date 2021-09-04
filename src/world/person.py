@@ -1,3 +1,4 @@
+from src.seir.seir_times import machine_type
 import numpy as _np
 import json
 import random
@@ -17,9 +18,9 @@ from src.seir import sample_seir_times
 from src.simulation.params import Params
 from src.world.infection_data import InfectionData
 
+
 RedactedPerson = namedtuple("RedactedPerson", ("age", "disease_state"))
 RedactedPersonAndEnv = namedtuple("RedactedPersonAndEnv", ("age", "disease_state", "infection_env_source"))
-
 
 class Person(object):
     """
@@ -47,7 +48,8 @@ class Person(object):
         '_num_infections',
         'last_state',
         '_seir_times',
-        '_minimum_infectiousness_age',
+        'state_machine_type',
+        '_minimum_infectiousness_age'
     )
     num_people_so_far = 0
 
@@ -55,7 +57,7 @@ class Person(object):
         params = Params.loader()['population']
         R0 = params["R0_percent"]
         StartAsRecovered = False
-        # if random.random() < R0:
+        #if random.random() < R0:
         #   StartAsRecovered = True
 
         self._changed = True
@@ -86,7 +88,9 @@ class Person(object):
         self.is_dead = False
         self.is_infectious = False
         self.is_infected = False
-
+        str_type = params['state_macine_type']
+        assert str_type in ['SIRS','SIR']
+        self.state_machine_type = machine_type[str_type]
         self._id = Person.num_people_so_far
         # hold all the events that are triggered by some disease state(s) change(s), like isolation when symptomatic
         self.state_to_events = {}
@@ -98,11 +102,11 @@ class Person(object):
         self.routine_changes = {}
         self._infection_data = None
         # Table that currespond to seir times and events so it will be easier to mange
-        self._seir_times = None
+        self._seir_times= None
         self._num_infections = 0
-        # if StartAsRecovered:
+        #if StartAsRecovered:
         #    self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
-        # else:
+        #else:
         self.last_state = None
         Person.num_people_so_far += 1
 
@@ -305,11 +309,11 @@ class Person(object):
         return events
 
     def infect_and_get_events(
-            self,
-            date,
-            environment,
-            infection_transmitter=None,
-            seir_times=None
+        self,
+        date,
+        environment,
+        infection_transmitter=None,
+        seir_times=None
     ):
         """
         Infect this person, save his infection data, create and register the events of his state changes.
@@ -327,11 +331,11 @@ class Person(object):
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
-            states_and_times = self._seir_times
+            states_and_times =  self._seir_times
         else:
-            states_and_times = sample_seir_times(self)
-        # update self._infection_data
-        for state, date_change in states_and_times:
+            states_and_times = sample_seir_times(self.state_machine_type,self)
+        #update self._infection_data
+        for state,date_change in states_and_times:
             if state != DiseaseState.SUSCEPTIBLE:
                 break
         assert self._infection_data is None, \
@@ -340,15 +344,15 @@ class Person(object):
         self._infection_data = InfectionData(self, date + date_change, environment, infection_transmitter)
         # print("in infect_and_get_events id:{} disease_state:{} states_and_times:{}"\
         #     .format(self.get_id(),self.get_disease_state(),states_and_times))
-        # update seir times table
-        self._seir_times = states_and_times
+        #update seir times table
+        self._seir_times = states_and_times  
         return self.gen_and_register_events_from_seir_times(date, states_and_times)
-
+    
     def immune_and_get_events(
-            self,
-            start_date,
-            delta_time,
-            seir_times=None
+        self,
+        start_date,
+        delta_time,
+        seir_times=None
     ):
         """
         Immune this person, create and register the events of his state changes.
@@ -356,7 +360,8 @@ class Person(object):
         :param delta_time: time_delta from start_Date of the simulation in which the person will be immuned
         :param seir_times: The state changes of this person (what they are and how long they last).
         If this is None, it is sampled with the distribution defined in params.json.
-        :return: infection events
+        :return: tuple  first element true if person can be vaccinate
+                        second elemnt is infection events 
         """
         lastState = self._disease_state
         assert (self._disease_state in (DiseaseState.SUSCEPTIBLE,
@@ -368,55 +373,62 @@ class Person(object):
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
-            states_and_times = self._seir_times
+            states_and_times =  self._seir_times
         else:
-            states_and_times = sample_seir_times(self)
-        # alt_state (alternative state) in case the person won't be immuned
+            states_and_times = sample_seir_times(self.state_machine_type,self)
+        #alt_state (alternative state) in case the person won't be immuned
         alt_state = states_and_times[-1]
         states_and_times = states_and_times[:-1]
-        # Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
+        #Orgenize the states_and_times dictionaery so that is simulation.current_date == date this person will be immmune
         # only if he should get immuned
-        i = 0
+        i=0
         new_states_and_times = []
         cut_in_middle = False
-        zero_days = (delta_time.days == 0) and (
-                    states_and_times[0][0] in [DiseaseState.SUSCEPTIBLE, DiseaseState.LATENT])
-
+        zero_days = (delta_time.days ==0) and (states_and_times[0][0] in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT])
+        #specify if the person can be vaccinated or we should find a substitute
+        ok = True
         append_rest_of_table = False
-        if zero_days:
-            new_states_and_times.append((DiseaseState.IMMUNE, timedelta(days=0)))
-            new_states_and_times.append((DiseaseState.IMMUNE, None))
+        if zero_days :
+            new_states_and_times.append((DiseaseState.IMMUNE,timedelta(days =0)))
+            new_states_and_times.append((DiseaseState.IMMUNE,None))
             lastState = DiseaseState.IMMUNE
+            ok = True
         else:
             while i < len(states_and_times):
-                if delta_time.days >= states_and_times[i][1].days:
-                    new_states_and_times.append( \
-                        (states_and_times[i][0], timedelta(days=states_and_times[i][1].days)))
-                    delta_time -= timedelta(days=states_and_times[i][1].days)
+                if delta_time.days >= states_and_times[i][1].days : 
+                    new_states_and_times.append(\
+                        (states_and_times[i][0],timedelta(days = states_and_times[i][1].days)))
+                    delta_time -= timedelta(days = states_and_times[i][1].days)
                     lastState = states_and_times[i][0]
                 i += 1
             if delta_time.days > 0:
-                if lastState in [DiseaseState.SUSCEPTIBLE, DiseaseState.LATENT, DiseaseState.IMMUNE]:
-                    new_states_and_times.append((DiseaseState.IMMUNE, timedelta(delta_time.days)))
-                else:
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
+                    new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                    ok = True
+                else: 
                     append_rest_of_table = True
+                    ok = False
                 delta_time -= timedelta(delta_time.days)
             elif delta_time.days == 0:
-                if lastState in [DiseaseState.SUSCEPTIBLE, DiseaseState.LATENT]:
-                    new_states_and_times.append((DiseaseState.IMMUNE, timedelta(delta_time.days)))
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
+                    new_states_and_times.append((DiseaseState.IMMUNE,timedelta(delta_time.days)))
+                    ok = True
                 elif len(new_states_and_times) < len(states_and_times):
                     i -= 1
                     append_rest_of_table = True
+                    ok = False
             elif delta_time.days < 0:
                 cut_in_middle = True
-                if lastState in [DiseaseState.SUSCEPTIBLE, DiseaseState.LATENT]:
-                    new_states_and_times[i - 1][0] == DiseaseState.IMMUNE
+                if lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]:
+                    new_states_and_times[i-1][0] == DiseaseState.IMMUNE
                     lastState = DiseaseState.IMMUNE
+                    ok = True
                 else:
-                    # add the rest of the table don't change a thing
+                    #add the rest of the table don't change a thing
                     append_rest_of_table = True
+                    ok = False
 
-            assert delta_time.days >= 0, 'miscalculating days'
+            assert delta_time.days >= 0,'miscalculating days'
             # if delta_time.days < 0 :
             #     print("i:{} len(states_and_times):{} delta_time.days:{}".format(i,len(states_and_times),delta_time.days))
             #     print("start_date:{} ,old_delta_time:{} ,delta_time:{}".format(start_date,old_delta_time , delta_time))
@@ -424,21 +436,24 @@ class Person(object):
             #     print("-----------------------")
             if append_rest_of_table:
                 while i < len(states_and_times):
-                    new_states_and_times.append((states_and_times[i][0], timedelta(days=states_and_times[i][1].days)))
+                    new_states_and_times.append((states_and_times[i][0],timedelta(days = states_and_times[i][1].days)))
                     i += 1
-
-        # print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
-        # At the End of the table we put immune only if the person was susptible or latent
+                
+        #print("immune_and_get_events id:{} new_states_and_times:{}".format(self.get_id(),new_states_and_times))
+        #At the End of the table we put immune only if the person was susptible or latent 
         # otherwise he continues his life regularly
-        if (not (zero_days)):
-            if (lastState in [DiseaseState.SUSCEPTIBLE, DiseaseState.LATENT]):
-                new_states_and_times.append((DiseaseState.IMMUNE, None))
+        if (not(zero_days)):
+            if (lastState in [DiseaseState.SUSCEPTIBLE,DiseaseState.LATENT]):
+                new_states_and_times.append((DiseaseState.IMMUNE,None))
+                ok = True
             else:
                 new_states_and_times.append(alt_state)
+                ok = False
         # print(new_states_and_times)
-        # Update person seir_times
+        #Update person seir_times
         self._seir_times = new_states_and_times
-        return self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
+        return ok, self.gen_and_register_events_from_seir_times(start_date, new_states_and_times)
+
 
     def add_routine_change(self, key, value):
         if key in self.routine_changes:
@@ -459,8 +474,7 @@ class Person(object):
         assert key in self.routine_changes, "key " + str(key) + " not in routine changes " + str(
             self.routine_changes) + str(self)
         assert key in self.routine_change_multiplicities, "key " + str(key) + \
-                                                          " not in routine change multiplicities " + str(
-            self.routine_changes) + str(self)
+            " not in routine change multiplicities " + str(self.routine_changes) + str(self)
         self.routine_change_multiplicities[key] -= 1
         if self.routine_change_multiplicities[key] == 0:
             self.routine_changes.pop(key, None)
@@ -487,18 +501,32 @@ class Person(object):
 
     def __repr__(self):
         return (
-                'Person id: {}, age: {}, inf_prob: {}, state: {}, routine: {},' +
-                'changes: {}, events: {} env: {}'
+            'Person id: {}, age: {}, inf_prob: {}, state: {}, routine: {},' +
+            'changes: {}, events: {} env: {}'
         ).format(
-            self._id,
-            self._age,
-            self._infectiousness_prob,
-            self._disease_state,
-            self._current_routine,
-            self.routine_changes,
-            self.state_to_events,
-            self._environments
+                self._id,
+                self._age,
+                self._infectiousness_prob,
+                self._disease_state,
+                self._current_routine,
+                self.routine_changes,
+                self.state_to_events,
+                self._environments
         )
 
     def __hash__(self):
         return hash(self._id)
+
+    @classmethod
+    def person_comperator_ASCENDING(cls, a,b):
+        """
+        Compare persons by their age for ASCENDING sort
+        """
+        return a.get_age() - b.get_age()
+        
+    @classmethod
+    def person_comperator_DESCENDING(cls, a,b):
+        """
+        Compare persons by their age for DESCENDING sort
+        """
+        return b.get_age() - a.get_age()

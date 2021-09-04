@@ -468,7 +468,7 @@ class HouseholdIsolationIntervention(Intervention):
         duration: timedelta,
         delay_on_enter=1,  # arbitrary
         delay_on_exit=14,  # arbitrary
-        is_exit_after_recovery=True
+        is_exit_after_recovery=False
     ):
         super(HouseholdIsolationIntervention, self).__init__(compliance, start_date, duration)
         self.delay_on_enter = timedelta(delay_on_enter)
@@ -580,7 +580,7 @@ class ImmuneGeneralPopulationIntervention(Intervention):
             for i in range(min(self.people_per_day,cnt_to_Immune)):
                 person_index = group_index * self.people_per_day  + i
                 p  = people_to_immune[person_index]
-                events_to_add = p.immune_and_get_events(start_date = self.start_date, delta_time = timedelta(group_index))
+                ok , events_to_add = p.immune_and_get_events(start_date = self.start_date, delta_time = timedelta(group_index))
                 # print("id:{} cnt:{}".format(p.get_id(),len(events_to_add)))
                 ret += events_to_add
                 cnt_to_Immune  = cnt_to_Immune - 1

@@ -102,7 +102,7 @@ class DayStatistics(object):
     (not of complete InfectionData objects in order to save memory).
     Currently it saves single properties and pairs of properties.
     """
-    __slots__ = ('date', 'person_count', 'infection_data_projection', 'diff_infect')
+    __slots__ = ('date', 'person_count', 'infection_data_projection', 'diff_infect', 'infected_today')
 
     def __init__(self, date, changed_population):
         self.date = date
@@ -119,6 +119,7 @@ class DayStatistics(object):
             for person in changed_population
             if (person.get_infection_data() is not None) and (person.get_infection_data().date == date)
         )
+        self.infected_today = len(infected_today_stats)
         self.infection_data_projection = {
             key: Counter(stat[key] for stat in infected_today_stats)
             for key in InfectionData.get_keys()
@@ -466,6 +467,46 @@ class Statistics(object):
             key_str = "Total infected in {}".format(name)
             ret[key_str] += count
         return ret
+    def get_state_stratified_summary_table(self,table_format:TableFormat,is_relative = True):
+        """
+        Computes and returns summary data which is stratified
+        by the given disease states
+        :param states: The disease states by which to stratify the data
+        :param is_relative: Should the results be relative (i.e. the percentage
+        of people satisfying each property) or absolute numbers
+        :param shortened: Should this generate a short summary or
+        a more detailed one
+        :return: A concise readable text containing a table of
+        age-stratified results (delta deceased, delta infected, ...)
+        """
+        #Collecting the data
+        lst = []
+        for i in range(len(self._days_data)):
+            if self._days_data[i].person_count == 0:
+                tmp = (self._days_data[i].date,None)
+            else:
+                d = self._days_data[i].date
+                states_col = []
+                for reducted_person, count in self._days_data[i].person_count.items():
+                    for c in range(count):
+                        states_col.append(reducted_person.disease_state.name)
+                if self._days_data[i].infected_today > 0:
+                    seq(range(self._days_data[i].infected_today)).for_each(lambda x: states_col.append('infected_today'))
+                cnt = Counter(states_col)
+                tmp = (d,cnt)
+            lst.append(tmp)
+
+        
+        #Create corresponding string 
+        table = [[] for i in range(len(lst)+1)]
+        states = [state.name for state in DiseaseState] + ['infected_today']
+        table [0] = ["Dates"] + states
+        for i in range(1,len(lst)+1):
+            date,data = lst[i-1]
+            tmp = [str(data[s]) if s in data else '0' for s in states]
+            table[i] = [str(date)] + tmp
+        ans = table_format.format(table)
+        return ans
 
     def get_age_stratified_summary_table(
         self,
@@ -550,6 +591,17 @@ class Statistics(object):
                 f.write(make_summary_by_age_table(datas, table_format))
             with open(absolute_table_path + extension, 'w') as f:
                 f.write(make_summary_by_age_table(datas, table_format, False))
+    
+    def write_daily_delta(self, filename):
+        outpath = os.path.join(self._output_path, filename)
+        absolute_table_path = os.path.join(self._output_path, 'daily_delta_table')
+        for table_format in TableFormat:
+            extension = '.' + table_format.get_file_extension()
+            for path in (outpath, absolute_table_path):
+                assert not os.path.exists(path + extension), "Failed to create file '%s': file exists!" % (path + extension)
+            with open(outpath + extension, 'w') as f:
+                f.write(self.get_state_stratified_summary_table(table_format=table_format))
+
 
     def write_summary_file(self, filename, shortened=True):
         """
@@ -676,6 +728,8 @@ class Statistics(object):
         :return: A pair (new_x, new_ys) in the format of the input, only
         without any x-values for which all y-values are nan.
         """
+        if len(x) < len(ys):
+            ys = array(ys)[range(len(x))]
         masks = [isnan(y) for y in ys]
         mask = masks[0]
         for m in masks:

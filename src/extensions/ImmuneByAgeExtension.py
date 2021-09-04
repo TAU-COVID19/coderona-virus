@@ -5,6 +5,7 @@ from functional import seq
 from src.seir import DiseaseState
 from src.simulation.initial_infection_params import InitialImmuneType
 from src.simulation.simulation import Simulation
+from src.world import Person
 
 
 class ImmuneStrategy:
@@ -93,6 +94,11 @@ class ImmuneByAgeExtension(Simulation):
                f"self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n" + \
                f"strategy={str(self.immune_strategy)}"
 
+    def _register_events(self, person: Person):
+        ok, events = person.immune_and_get_events(start_date=self.parent._date, delta_time=timedelta(days=0))
+        if ok:
+            self.parent.register_events(events)
+
     def can_immune(self, state: DiseaseState) -> bool:
         if state in (DiseaseState.INCUBATINGPOSTLATENT, DiseaseState.ASYMPTOMATICINFECTIOUS,
                      DiseaseState.SUSCEPTIBLE):
@@ -161,8 +167,7 @@ class ImmuneByAgeExtension(Simulation):
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
                   f"immune % = {immuned}/{can_be_immuned} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}")
             seq(people_to_immune).take(min(count_to_percentage, self.max_people_to_immune_a_day)).for_each(
-                lambda person: self.parent.register_events(
-                    person.immune_and_get_events(start_date=self.parent._date, delta_time=timedelta(days=0))))
+                lambda person: self._register_events(person))
 
             # advance to the next age group only if you covered the current age group
             if len(people_to_immune) <= self.max_people_to_immune_a_day or \

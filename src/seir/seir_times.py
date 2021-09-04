@@ -2,6 +2,7 @@ import random as _random
 from scipy.stats import gamma
 from datetime import timedelta
 import warnings
+from enum import Enum
 
 from src.seir.disease_state import DiseaseState
 from src.util import Distribution
@@ -17,6 +18,9 @@ def daysdelta(days):
     """
     return timedelta(days=days)
 
+class machine_type(Enum):
+    SIR = 1 
+    SIRS = 2
 
 class StatisticalSeirTimesGeneration(object):
     """
@@ -292,8 +296,98 @@ class RealDataSeirTimesGeneration(StatisticalSeirTimesGeneration):
             cls.singleton = cls()
         return cls.singleton
 
+class SIRS(RealDataSeirTimesGeneration):
+    """
+    Smarter implementation of RealDataSeirTimesGeneration,
+    where instead of SIR model, we will implement SIRS model where 
+    a person from "Removed" contpartment will go again to "Susceptible"
+    contpatment
+    """
+    __slots__ =('susceptible_given_immuned_per_age',
+                '_immuned_before_susceptible_distribution')
+    
+    def __init__(self):
+        super().__init__()
+        params = Params.loader()['disease_parameters']
+        self.susceptible_given_immuned_per_age = params["susceptible_given_immuned_per_age"]
+        self._immuned_before_susceptible_distribution = self.generate_gamma_distribution(
+            params["Immuned_before_susceptible_gamma_params"]
+        )
+    
+    def prob_susptible_given_Immuned(self,person):
+        return self.access_table_per_age(self.susceptible_given_immuned_per_age,person)
 
-def sample_seir_times(person):
+    def sample_immune_stage(self, person):
+        if self.sample_bool(self.prob_susptible_given_Immuned(person)):
+            return daysdelta(self._immuned_before_susceptible_distribution.sample()), DiseaseState.SUSCEPTIBLE
+        else:
+            return daysdelta(self._immuned_before_susceptible_distribution.sample()), DiseaseState.IMMUNE
+    def sample_stage(self, person, stage):
+        """
+        Gets a person and a stage (disease state) he is in,
+        returns the next stage and the duration of the current stage
+        (could depend on the person's attributes, meaning his age)
+        :param person: The Person for which we wish to sample the stage
+        :return: A pair of:
+        (timedelta object which is the duration of the person's critical stage,
+         the stage the person will go through after completing this one)
+        """
+        if stage == DiseaseState.LATENT:
+            return self.sample_latent_stage(person)
+        if stage == DiseaseState.INCUBATINGPOSTLATENT:
+            return self.sample_postlatent_incubation_stage(person)
+        if stage == DiseaseState.ASYMPTOMATICINFECTIOUS:
+            return self.sample_asymptomatic_stage(person)
+        if stage == DiseaseState.SYMPTOMATICINFECTIOUS:
+            return self.sample_symptomatic_stage(person)
+        if stage == DiseaseState.CRITICAL:
+            return self.sample_critical_stage(person)
+        if stage == DiseaseState.IMMUNE:
+            #No while loop needed because sometime thid person will be immuned while 
+            #at the other time he will be susceptible
+            duration,next_state = self.sample_immune_stage(person)
+            return duration,next_state
+
+    def sample_seir_times(self, person):
+        """
+        Samples all stages and their durations for a given Person
+        :param person: A Person for which we wish to sample SEIRS stages and times
+        :return: A list of (stage, duration) for its disease progression,
+        where the first stage is LATENT and the final duration is None
+        """
+        rv = []
+        curr_stage = DiseaseState.LATENT
+        immune_cnt = 0
+        break_loop = False
+        while not(break_loop):
+            interval, next_stage = self.sample_stage(person, curr_stage)
+            rv.append((curr_stage, interval))
+            curr_stage = next_stage
+            if curr_stage == DiseaseState.IMMUNE:
+                immune_cnt += 1
+            if curr_stage in [DiseaseState.DECEASED,DiseaseState.SUSCEPTIBLE]:
+                break_loop = True
+            elif curr_stage == DiseaseState.IMMUNE and immune_cnt == 2:
+                break_loop =True    
+            else:
+                break_loop =False
+
+        rv.append((curr_stage, None))
+        return rv
+    
+    @classmethod
+    def make(cls):
+        """
+        Use this instead of the constructor of the function in order to only
+        construct this object once (otherwise this would be wasteful in
+        running time, no reason not to do it)
+        :return: A SIRS object
+        """
+        if cls.singleton is None:
+            cls.singleton = cls()
+        return cls.singleton
+
+def sample_seir_times(sir_type:machine_type ,person):
     """
     Samples and returns the SEIR stages and durations for a given Person
     (depends on his age)
@@ -301,4 +395,8 @@ def sample_seir_times(person):
     :return: A list of (stage, duration) for its disease progression,
     where the first stage is LATENT and the final duration is None
     """
-    return RealDataSeirTimesGeneration.make().sample_seir_times(person)
+       
+    if sir_type == machine_type.SIR:
+        return RealDataSeirTimesGeneration.make().sample_seir_times(person)
+    elif sir_type == machine_type.SIRS:
+        return SIRS.make().sample_seir_times(person)

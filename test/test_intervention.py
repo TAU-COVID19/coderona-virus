@@ -1,12 +1,13 @@
 from datetime import timedelta
 import json
 import os
-from src.seir.disease_state import DiseaseState
 import pytest
 import random
+from test.conftest import helpers
 
 from src.run_utils import SimpleJob, run, INITIAL_DATE
 from src.seir import daysdelta
+from src.seir.disease_state import DiseaseState
 from src.simulation.event import DayEvent
 from src.simulation.interventions import *
 from src.simulation.initial_infection_params import SmartInitialInfectionParams
@@ -109,10 +110,10 @@ def test_school_isolation_intervention_simulation():
     summary = results.get_summary_data_for_age_group((4, 12))
     assert summary["Total infected in school"] + summary["Total infected in initial_group"] == summary["Total infected"]
 
-def test_SymptomaticIsolationIntervention_Genarete_events():
+def test_SymptomaticIsolationIntervention_Genarete_events(helpers):
     #pretesting
-    #clear output dir
-    
+    helpers.clean_outputs()
+
     config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)

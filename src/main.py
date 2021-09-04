@@ -201,7 +201,7 @@ def main():
                                                                                                 minimum_infectiousness_age)
                                                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                    days=120,
+                                                                                    days=20,
                                                                                     city_name=city_name,
                                                                                     scale=scale,
                                                                                     infection_params=NaiveInitialInfectionParams(

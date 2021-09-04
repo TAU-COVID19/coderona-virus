@@ -1,11 +1,12 @@
 from copy import deepcopy
 from collections import Counter
+from datetime import timedelta
 from enum import Enum
 from functools import cmp_to_key
 import logging
 import os
 import random as random
-from datetime import timedelta
+
 from src.seir import seir_times
 from src.seir.disease_state import DiseaseState
 from src.simulation.event import DayEvent
@@ -23,46 +24,6 @@ class ORDER(Enum):
     ASCENDING=1,
     DESCENDING=2,
 
-
-def person_comperator_ASCENDING(a:Person,b:Person):
-    """
-    Compare persons by their age for ASCENDING sort
-    """
-    return a.get_age() - b.get_age()
-
-def person_comperator_DESCENDING(a:Person,b:Person):
-    """
-    Compare persons by their age for DESCENDING sort
-    """
-    return b.get_age() - a.get_age()
-
-def house_comperator_ASCENDING(a:Household,b:Household):
-        """
-        Compare households by their youngest person
-        """
-        #Get the persons we whish to sort 
-        a_people = a.get_people()
-        b_people = b.get_people()
-        #Sort the persons by their age in ascending way 
-        a_people = sorted(a_people,key = cmp_to_key(person_comperator_ASCENDING))
-        b_people = sorted(b_people,key = cmp_to_key(person_comperator_ASCENDING))
-        #compare the youngest persons of each house
-        return a_people[0].get_age() - b_people[0].get_age()
-    
-def house_comperator_DESCENDING(a:Household,b:Household):
-    """
-    Compare households by their youngest person
-    """
-    #Get the persons we whish to sort 
-    a_people = a.get_people()
-    b_people = b.get_people()
-    #Sort the persons by their age in ascending way 
-    a_people = sorted(a_people,key = cmp_to_key(person_comperator_DESCENDING))
-    b_people = sorted(b_people,key = cmp_to_key(person_comperator_DESCENDING))
-    #compare the youngest persons of each house
-    return b_people[0].get_age() - a_people[0].get_age()
-    
-    
 class Simulation(object):
     """
     An object which runs a single simulation, holding a world,
@@ -135,8 +96,6 @@ class Simulation(object):
         # save all the events that create the interventions behavior on the simulation
         for inter in self.interventions:
             self.register_events(inter.generate_events(self._world))
-
-        # print(f"Simulation() ImmuneByAgeExtension params {str(extension_params['ImmuneByAgeExtension'])}")
 
     def simulate_day(self):
         """
@@ -239,15 +198,14 @@ class Simulation(object):
         else:
             population = [p for p in self._world.all_people()]
 
-    #Doing best effort to infect and immune the people in our world
+        #Doing best effort to infect and immune the people in our world
         #after talking to Noam we first infect the ones we can and immune the rest
         num_infected = min(num_infected ,len(population))
-        # TODO the percentage should be out of the people who CAN BE IMMUNED and not out of the complete population
-        tmp_num_immuned = int(round(len(population) * per_to_immune * Immune_compliance))
+        adults = [p for p in population if p.get_age() > min_age]
+        tmp_num_immuned = int(round(len(adults) * per_to_immune * Immune_compliance))
         num_immuned = min(len(population) - num_infected,tmp_num_immuned)
         assert len(population) >= num_infected + num_immuned \
             , "Trying to immune:{} infect:{} people out of {}".format(num_immuned, num_infected, len(population))
-        adults = [p for p in population if p.get_age() > min_age]
         used_adults =0 
         used_persons = {}
         #First set the people that aren't immune to be infected
@@ -263,30 +221,27 @@ class Simulation(object):
 
         num_immuned = min(len(adults)-used_adults,num_immuned )
         if order == ORDER.ASCENDING:
-            adults = sorted(adults,key = cmp_to_key(person_comperator_ASCENDING))
+            adults = sorted(adults,key = cmp_to_key(Person.person_comperator_ASCENDING))
         elif order == ORDER.DESCENDING:
-            adults = sorted(adults,key = cmp_to_key(person_comperator_DESCENDING))
+            adults = sorted(adults,key = cmp_to_key(Person.person_comperator_DESCENDING))
         else:
             adults = random.sample(adults,len(adults))
-        #Second set- immune persons that are above min_age and we are able to immune
-        Immuned_until_now =0
-
-        print(f"infect_random_set() going to immune {num_immuned} people out of {len(population)} in an {str(order)}")
+        # Second set- immune persons that are above min_age and we are able to immune
+        Immuned_until_now =0 
         while Immuned_until_now < num_immuned: #we start to count from zero therefor we need one more person
-            # assert False, "Immune code should NOT run! we use the one from the extension"
-            Selected_persons = adults[Immuned_until_now:]
+            Selected_persons = adults[Immuned_until_now:num_immuned]
             delta_days =0 
             immuned_today =0 
             for p in Selected_persons:
-                if (p.get_id() not in used_persons) :
-                    # TODO can it be that by the time that this person will need to get immune, he will not be in a
-                    # TODO disease state that allows him to get immune?
-                    self.register_events(p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days) ))
+                if (p.get_id() not in used_persons):
+                    ok,events =  p.immune_and_get_events(start_date = self._date, delta_time = timedelta(days =delta_days))
+                    self.register_events(events)
                     # print("immuning id:{} on {}".format(p.get_id(),self._date + timedelta(days =delta_days)))
-                    num_immuned = num_immuned-1
                     used_persons[p.get_id()] = p
-                    immuned_today += 1
-                    Immuned_until_now += 1
+                    if ok:
+                        immuned_today += 1
+                        num_immuned = num_immuned-1
+                        Immuned_until_now += 1
                     if immuned_today == people_per_day:
                         delta_days += 1 
                         immuned_today = 0
@@ -314,7 +269,7 @@ class Simulation(object):
         if per_to_immune is None:
             per_to_immune = 0.0
         if city_name is not None:
-            tmp_households = [h for h in self._world.get_all_city_households() if h._city.get_name() == city_name.lower()]
+            tmp_households = [h for h in self._world.get_all_city_households() if h._city == city_name]
         else:
             tmp_households = [h for h in self._world.get_all_city_households()]
         
@@ -328,10 +283,9 @@ class Simulation(object):
         if Sort_order == ORDER.NONE:
                 households = random.sample(households,len(households))
         elif Sort_order ==  ORDER.ASCENDING:
-                # TODO the sorting logic is very strange...
-                households = sorted(households,key=cmp_to_key(house_comperator_ASCENDING))
+                households = sorted(households,key=cmp_to_key(Household.house_comperator_ASCENDING))
         elif Sort_order == ORDER.DESCENDING:
-                households = sorted(households,key=cmp_to_key(house_comperator_DESCENDING))
+                households = sorted(households,key=cmp_to_key(Household.house_comperator_DESCENDING))
 
         num_infected = min(self._world.num_people(),num_infected)
         #Immune only some percentage of adults, that agreed to be immuned
@@ -350,7 +304,6 @@ class Simulation(object):
                 # print("Infecting person id:{} on date:{}".format(person.get_id(),self._date))
         
         while (cnt_people_to_immun > 0) and (people_per_day > 0)and (household_index < len(households)):
-            assert False, "Immune code should NOT run! we use the one from the extension"
             cnt_people_to_immun_today  = people_per_day
             while (cnt_people_to_immun_today > 0) and (household_index < len(households)):
                 persons_to_immune = [ p for p in households[household_index].get_people() \
@@ -358,11 +311,14 @@ class Simulation(object):
                 if Sort_order == ORDER.NONE:
                     cnt_immune_in_house =0
                     for i in range(min(len(persons_to_immune),cnt_people_to_immun_today)):
-                        self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                        ok, events  = persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta))
+                        self.register_events(events)
+                        #Dror
                         used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
                         # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                        cnt_people_to_immun_today -= 1
-                        cnt_people_to_immun -= 1
+                        if ok : 
+                            cnt_people_to_immun_today -= 1
+                            cnt_people_to_immun -= 1
                         cnt_immune_in_house += 1 
                     if cnt_immune_in_house == len(persons_to_immune):
                         household_index += 1
@@ -370,19 +326,23 @@ class Simulation(object):
                     i=0
                     cnt_immune_in_house =0
                     while i < min(len(persons_to_immune),cnt_people_to_immun_today):
-                        self.register_events(persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                        ok,events = persons_to_immune[i].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta))
+                        self.register_events(events)
                         used_persons[persons_to_immune[i].get_id()] = persons_to_immune[i]
                         # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                        cnt_people_to_immun_today -= 1
-                        cnt_people_to_immun -= 1
+                        if ok:
+                            cnt_people_to_immun_today -= 1
+                            cnt_people_to_immun -= 1
                         cnt_immune_in_house += 1 
                         for j in range(i+1,min(len(persons_to_immune),cnt_people_to_immun_today)):
                             if (persons_to_immune[j] not in used_persons) and ((persons_to_immune[i].get_age() // 10) == (persons_to_immune[j].get_age() // 10)):
-                                self.register_events(persons_to_immune[j].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta)))
+                                ok,events = persons_to_immune[j].immune_and_get_events(start_date = self._date, delta_time = timedelta(days=days_delta))
+                                self.register_events(events)
                                 used_persons[persons_to_immune[j].get_id()] = persons_to_immune[j]
                                 # print("Immune person id:{} date:{}".format(persons_to_immune[i].get_id(),self._date + timedelta(days=days_delta)))
-                                cnt_people_to_immun_today -= 1
-                                cnt_people_to_immun -= 1
+                                if ok:
+                                    cnt_people_to_immun_today -= 1
+                                    cnt_people_to_immun -= 1
                                 cnt_immune_in_house += 1 
                                 i += 1
                         if cnt_immune_in_house == len(persons_to_immune):
@@ -507,11 +467,14 @@ class Simulation(object):
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():
             self.stats.plot_daily_sum(name, data_to_plot)
+        #return this function 
+        # self.stats.write_daily_delta('dailydelta')
         self.stats.write_summary_file('summary')
         self.stats.write_summary_file('summary_long', shortened=False)
         if self.stats._r0_data:
             self.stats.plot_r0_data('r0_data_' + name)
         self.stats.write_params()
+        self.stats.write_daily_delta('daily_delta')
         self.stats.write_inputs(self)
         self.stats.write_interventions_inputs_csv()
         
