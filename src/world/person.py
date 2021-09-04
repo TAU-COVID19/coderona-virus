@@ -328,8 +328,9 @@ class Person(object):
         for state,date_change in states_and_times:
             if state != DiseaseState.SUSCEPTIBLE:
                 break
-        assert self._infection_data is None, \
-            "Infecting someone who is already infected id:" + str(self.get_id())
+        assert ((self.state_machine_type == machine_type.SIR) and (self._infection_data is None)) or \
+                (self.state_machine_type == machine_type.SIRS), \
+            "Infecting someone who is already infected id:{} machine_type:{}".format(str(self.get_id()),self.state_machine_type.name)
         self.set_disease_state(DiseaseState.LATENT)
         self._infection_data = InfectionData(self, date + date_change, environment, infection_transmitter)
         # print("in infect_and_get_events id:{} disease_state:{} states_and_times:{}"\

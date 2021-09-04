@@ -201,8 +201,9 @@ def test_SIRS_second_infection():
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
     Params.load_from(os.path.join(os.path.dirname(__file__),"tests_params_files", paramsDataPath), override=True)
-
+    Params.loader()["person"]["state_macine_type"] = "SIRS"
     p=Person(30)
+
     event_lst = p.infect_and_get_events(INITIAL_DATE,InitialGroup.initial_group())
     p.set_disease_state(DiseaseState.SUSCEPTIBLE)
     event_lst2 = p.infect_and_get_events(INITIAL_DATE,InitialGroup.initial_group())
