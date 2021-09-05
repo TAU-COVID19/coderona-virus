@@ -24,16 +24,18 @@ class Categories:
         else:
             self.household = "GENERAL"
         self.immune_per_day = 0
+        self.initial_infected = 0
         for i in range(len(parameters)):
             if 'imm_per_day' in parameters[i]:
                 self.immune_per_day = parameters[i].split('=')[1]
-        self.initial_infected = 0
-        for i in range(len(parameters)):
             if 'inf=' in parameters[i]:
                 self.initial_infected = parameters[i].split('=')[1]
+            if 'comp=' in parameters[i]:
+                self.compliance = parameters[i].split('=')[1]
 
     def __str__(self):
-        return f"{self.city}\nINT={self.intervention}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n{self.household}\n{self.order}"
+        return f"{self.city}\nINT={self.intervention}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n"\
+               f"{self.household}\n{self.order}\ncompliance={self.compliance}"
 
 
 def sort_runs(a, b):
@@ -146,6 +148,7 @@ if __name__ == "__main__":
                         "initial_infected": c.initial_infected,
                         "immune_per_day": c.immune_per_day,
                         "immune_order": str(c),
+                        "compliance": c.compliance,
                         "total_infected": daily[0], "std_infected": daily[1], "total_critical": daily[2], "std_critical": daily[3],
                        "max_infected": daily[4], "std_max_infected": daily[5], "max_critical": daily[6], "std_max_critical": daily[7]},
                        ignore_index=True)
@@ -159,19 +162,19 @@ if __name__ == "__main__":
 
     df.to_csv(f"../outputs/{sys.argv[1]}/results.csv")
 
-    categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day"])
+    categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day", "compliance"])
 
 
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
-    fig.set_figheight(80)
+    fig.set_figheight(len(categories) * 20)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
 
     category_i = 0
     for category in categories:
-        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}'
+        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}, compliance={category[0][4]}'
         df = category[1]
 
         # plot a separator line between each category
