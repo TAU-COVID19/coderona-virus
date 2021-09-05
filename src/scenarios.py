@@ -604,8 +604,8 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     asi_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=0.8,
-        delay=ci_delay,
+        compliance=compliance,
+        delay=0,
         max_age=18,
         entry_states=(
             DiseaseState.INCUBATINGPOSTLATENT,
@@ -621,7 +621,7 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     household_intervention = HouseholdIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=compliance,
+        compliance=1,
         delay_on_enter=hi_delay
     )
     school_closer_intervention = SchoolClosureIntervention(
@@ -635,8 +635,8 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     interventions = [sd_intervention,
                      ci_intervention,
                       household_intervention,
-                     # school_closer_intervention,
-                     asi_intervention
+                    school_closer_intervention,
+                     #asi_intervention
                       ]
     return interventions
 def children_specific_noHH_interventions(compliance, ci_delay, hi_delay):
