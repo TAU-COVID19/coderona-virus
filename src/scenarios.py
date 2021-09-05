@@ -652,6 +652,7 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
         duration=timedelta(120),
         compliance=0.7,
         delay=0,
+        min_age=6,
         max_age=18,
         entry_states=(
             DiseaseState.INCUBATINGPOSTLATENT,
