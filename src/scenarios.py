@@ -635,8 +635,8 @@ def children_specific_HH_interventions(compliance, ci_delay, hi_delay):
     interventions = [sd_intervention,
                      ci_intervention,
                       household_intervention,
-                     # school_closer_intervention,
-                     asi_intervention
+                    school_closer_intervention,
+                     #asi_intervention
                       ]
     return interventions
 def children_specific_noHH_interventions(compliance, ci_delay, hi_delay):
