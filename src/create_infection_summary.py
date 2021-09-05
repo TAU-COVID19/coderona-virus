@@ -85,14 +85,14 @@ def get_daily_info(root_path):
     infected_sum = []
     infected_max = []
 
-    number_of_dates = 0
+    number_of_samples = 0
     for i in range(1000):
         data = get_sample_line(root_path, i, "integral", 1)
         daily_delta = get_daily_column(root_path, sample=i, column=9)
-        if data is not None:
+        if data is not None and daily_delta is not None:
             infected_sum.append(sum(daily_delta))
             infected_max.append(max(data))
-            number_of_dates = len(daily_delta)
+            number_of_samples += 1
         else:
             break
 
