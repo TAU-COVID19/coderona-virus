@@ -1,11 +1,9 @@
-from src.seir.seir_times import machine_type
-import numpy as _np
-import json
-import random
-import os
-from copy import copy
+
 from collections import namedtuple
+from copy import copy
 from datetime import date, timedelta
+from enum import Enum
+import numpy as _np
 
 from src.simulation.event import (
     Event,
@@ -13,9 +11,9 @@ from src.simulation.event import (
     EmptyTrigger,
     DiseaseStateChangeEffect
 )
-from src.seir import DiseaseState
-from src.seir import sample_seir_times
+from src.seir import DiseaseState,sample_seir_times
 from src.simulation.params import Params
+from src.util.Enumerations import machine_type
 from src.world.infection_data import InfectionData
 
 
@@ -338,8 +336,9 @@ class Person(object):
         for state,date_change in states_and_times:
             if state != DiseaseState.SUSCEPTIBLE:
                 break
-        assert self._infection_data is None, \
-            "Infecting someone who is already infected id:" + str(self.get_id())
+        assert ((self.state_machine_type == machine_type.SIR) and (self._infection_data is None)) or \
+                (self.state_machine_type == machine_type.SIRS), \
+            "Infecting someone who is already infected id:{} machine_type:{}".format(str(self.get_id()),self.state_machine_type.name)
         self.set_disease_state(DiseaseState.LATENT)
         self._infection_data = InfectionData(self, date + date_change, environment, infection_transmitter)
         # print("in infect_and_get_events id:{} disease_state:{} states_and_times:{}"\

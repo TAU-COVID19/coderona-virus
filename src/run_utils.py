@@ -463,7 +463,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
     The run of the jobs can be multi processed, with each simulation as a unique process, and can use cached population
     to save time.
     """
-    config_path = os.path.dirname(__file__) + "/config.json"
+    config_path =os.path.join(os.path.dirname(__file__), "config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         percentStr = ConfigData['CPU_percent']
