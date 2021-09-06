@@ -686,6 +686,23 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
                      asi_intervention
                       ]
     return interventions
+def only_children_asymptomatic_detection(compliance, ci_delay, hi_delay):
+    # to simulate detection of asymptomatic children at school
+    asi_intervention = SymptomaticIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(120),
+        compliance=0.7,
+        delay=0,
+        min_age=6,
+        max_age=18,
+        entry_states=(
+            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.ASYMPTOMATICINFECTIOUS
+        )
+    )
+
+    interventions = [asi_intervention]
+    return interventions
 def children_specific_noHH_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
