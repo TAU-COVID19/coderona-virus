@@ -5,6 +5,10 @@ import statistics
 import pandas
 from matplotlib import pyplot
 from typing import List
+from collections import namedtuple
+
+# can draw either bars or boxplot
+draw_bar = False
 
 
 class Categories:
@@ -98,10 +102,17 @@ def remove_outliers(data: List[float], method="stdev"):
         lower, upper = q25 - cut_off, q75 + cut_off
 
     outliers_removed = [x for x in data if lower < x < upper]
-    return outliers_removed
+    outliers = [x for x in data if x > upper or x < lower]
+    return outliers_removed, outliers
 
 
-def get_daily_info(root_path):
+DAILY_INFO = namedtuple("DAILY_INFO", ("infected_sum_mean", "infected_sum_stdev", "infected_sum",
+                                       "critical_sum_mean", "critical_sum_stdev", "critical_sum",
+                                       "infected_max_mean", "infected_max_stdev", "infected_max",
+                                       "critical_max_mean", "critical_max_stdev", "critical_max"))
+
+
+def get_daily_info(root_path) -> DAILY_INFO:
     infected_sum = []
     infected_max = []
 
@@ -116,19 +127,6 @@ def get_daily_info(root_path):
         else:
             break
 
-    # infected_sum = []
-    # for i in range(1000):
-    #     susceptible = get_sample_line(root_path, i, "daily", 3, as_is=True)
-    #     immune = get_sample_line(root_path, i, "daily", 4, as_is=True)
-    #     total_infected = []
-    #     if susceptible is not None and immune is not None:
-    #         for day in range(1, len(susceptible)):
-    #             total_infected.append(-susceptible[day] - immune[day])
-    #     if len(total_infected) > 0:
-    #         infected_sum.append(sum(total_infected))
-    #     else:
-    #         break
-
     critical_sum = []
     critical_max = []
 
@@ -140,16 +138,25 @@ def get_daily_info(root_path):
         else:
             break
 
-    infected_sum = remove_outliers(infected_sum, method="percentile")
-    critical_sum = remove_outliers(critical_sum, method="percentile")
-    infected_max = remove_outliers(infected_max, method="percentile")
-    critical_max = remove_outliers(critical_max, method="percentile")
+    infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
+    critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
+    infected_max_no_outliers, infected_max_outliers = remove_outliers(infected_max, method="percentile")
+    critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
 
-    return statistics.mean(infected_sum), statistics.stdev(infected_sum), \
-           statistics.mean(critical_sum), statistics.stdev(critical_sum), \
-           statistics.mean(infected_max), statistics.stdev(infected_max), \
-           statistics.mean(critical_max), statistics.stdev(critical_max)
-
+    return DAILY_INFO(
+        infected_sum=infected_sum,
+        infected_sum_mean=statistics.mean(infected_sum),
+        infected_sum_stdev=statistics.stdev(infected_sum),
+        critical_sum=critical_sum,
+        critical_sum_mean=statistics.mean(critical_sum),
+        critical_sum_stdev=statistics.stdev(critical_sum),
+        infected_max=infected_max,
+        infected_max_mean=statistics.mean(infected_max),
+        infected_max_stdev=statistics.stdev(infected_max),
+        critical_max=critical_max,
+        critical_max_mean=statistics.mean(critical_max),
+        critical_max_stdev=statistics.stdev(critical_max)
+    )
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -173,10 +180,23 @@ if __name__ == "__main__":
                         "immune_per_day": c.immune_per_day,
                         "immune_order": str(c),
                         "compliance": c.compliance,
-                        "total_infected": daily[0], "std_infected": daily[1], "total_critical": daily[2],
-                        "std_critical": daily[3],
-                        "max_infected": daily[4], "std_max_infected": daily[5], "max_critical": daily[6],
-                        "std_max_critical": daily[7]},
+
+                        "total_infected": daily.infected_sum_mean,
+                        "std_infected": daily.infected_sum_stdev,
+                        "infected_sum": daily.infected_sum,
+
+                        "total_critical": daily.critical_sum_mean,
+                        "std_critical": daily.critical_sum_stdev,
+                        "critical_sum": daily.critical_sum,
+
+                        "max_infected": daily.infected_max_mean,
+                        "std_max_infected": daily.infected_max_stdev,
+                        "infected_max": daily.infected_max,
+
+                        "max_critical": daily.critical_max_mean,
+                        "std_max_critical": daily.critical_max_stdev,
+                        "critical_max": daily.critical_max
+                        },
                        ignore_index=True)
 
         # daily_integral = seq.csv(f"../outputs/{sys.argv[1]}/{one_run}/{daily_integral_filename}")
@@ -205,27 +225,43 @@ if __name__ == "__main__":
         axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes,
                              clip_on=False)
 
-        axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
-        axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10,
-                                 ecolor="cornflowerblue", fmt=".")
+        if draw_bar:
+            axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
+            axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10,
+                                     ecolor="cornflowerblue", fmt=".")
+        else:
+            axs[category_i].boxplot(df["infected_sum"], labels=df["immune_order"])
+
         axs[category_i].set_title(f"Total Infected ({title})")
         category_i += 1
 
-        axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
-        axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10,
-                                 ecolor="slateblue", fmt=".")
+        if draw_bar:
+            axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
+            axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10,
+                                     ecolor="slateblue", fmt=".")
+        else:
+            axs[category_i].boxplot(df["critical_sum"], labels=df["immune_order"])
+
         axs[category_i].set_title(f"Total Critical ({title})")
         category_i += 1
 
-        axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
-        axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
-                                 ecolor="cornflowerblue", fmt=".")
+        if draw_bar:
+            axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
+            axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
+                                     ecolor="cornflowerblue", fmt=".")
+        else:
+            axs[category_i].boxplot(df["infected_max"], labels=df["immune_order"])
+
         axs[category_i].set_title(f"Max Infected ({title})")
         category_i += 1
 
-        axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
-        axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
-                                 ecolor="slateblue", fmt=".")
+        if draw_bar:
+            axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
+            axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
+                                     ecolor="slateblue", fmt=".")
+        else:
+            axs[category_i].boxplot(df["critical_max"], labels=df["immune_order"])
+
         axs[category_i].set_title(f"Max Critical ({title})")
 
         category_i += 1
