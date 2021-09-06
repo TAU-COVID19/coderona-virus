@@ -4,6 +4,7 @@ from functional import seq
 import statistics
 import pandas
 from matplotlib import pyplot
+from typing import List
 
 
 class Categories:
@@ -34,7 +35,7 @@ class Categories:
                 self.compliance = parameters[i].split('=')[1]
 
     def __str__(self):
-        return f"{self.city}\nINT={self.intervention}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n"\
+        return f"{self.city}\nINT={self.intervention}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
                f"{self.household}\n{self.order}\ncompliance={self.compliance}"
 
 
@@ -59,7 +60,7 @@ def find_file_containing(root_dir, containing_string):
 
 def calc_cumulative_stddev(means, stddevs, repetitions):
     for i in range(len(means)):
-        a = stddevs[i]^2 * (repetitions -1) + repetitions*(sum(means)/len(means) - means[i])
+        a = stddevs[i] ^ 2 * (repetitions - 1) + repetitions * (sum(means) / len(means) - means[i])
 
 
 def get_sample_line(root_path, sample, amit_graph_type, line, as_is=False):
@@ -73,6 +74,7 @@ def get_sample_line(root_path, sample, amit_graph_type, line, as_is=False):
             return [max(0, float(x)) for x in data[line][1:]]
     return None
 
+
 def get_daily_column(root_path, sample, column):
     filename = f"{root_path}/sample_{sample}/daily_delta.csv"
     if os.path.isfile(filename):
@@ -80,6 +82,24 @@ def get_daily_column(root_path, sample, column):
         print(f'get_daily_column() of sample {sample}, line start with {data[0][column]}')
         return [max(0, float(x[column])) for x in data[1:]]
     return None
+
+
+def remove_outliers(data: List[float], method="stdev"):
+    if method == "stdev":
+        data_mean, data_std = statistics.mean(data), statistics.stdev(data)
+        # identify outliers
+        cut_off = data_std * 3
+        lower, upper = data_mean - cut_off, data_mean + cut_off
+    else:  # use percentile
+        from numpy import percentile
+        q25, q75 = percentile(data, 25), percentile(data, 75)
+        iqr = q75 - q25
+        cut_off = iqr * 1.5
+        lower, upper = q25 - cut_off, q75 + cut_off
+
+    outliers_removed = [x for x in data if lower < x < upper]
+    return outliers_removed
+
 
 def get_daily_info(root_path):
     infected_sum = []
@@ -120,6 +140,10 @@ def get_daily_info(root_path):
         else:
             break
 
+    infected_sum = remove_outliers(infected_sum, method="percentile")
+    critical_sum = remove_outliers(critical_sum, method="percentile")
+    infected_max = remove_outliers(infected_max, method="percentile")
+    critical_max = remove_outliers(critical_max, method="percentile")
 
     return statistics.mean(infected_sum), statistics.stdev(infected_sum), \
            statistics.mean(critical_sum), statistics.stdev(critical_sum), \
@@ -149,8 +173,10 @@ if __name__ == "__main__":
                         "immune_per_day": c.immune_per_day,
                         "immune_order": str(c),
                         "compliance": c.compliance,
-                        "total_infected": daily[0], "std_infected": daily[1], "total_critical": daily[2], "std_critical": daily[3],
-                       "max_infected": daily[4], "std_max_infected": daily[5], "max_critical": daily[6], "std_max_critical": daily[7]},
+                        "total_infected": daily[0], "std_infected": daily[1], "total_critical": daily[2],
+                        "std_critical": daily[3],
+                        "max_infected": daily[4], "std_max_infected": daily[5], "max_critical": daily[6],
+                        "std_max_critical": daily[7]},
                        ignore_index=True)
 
         # daily_integral = seq.csv(f"../outputs/{sys.argv[1]}/{one_run}/{daily_integral_filename}")
@@ -159,11 +185,9 @@ if __name__ == "__main__":
         # index_of_max_infected = infected.index(max_infected)
         # std_infected = daily_integral[3][1:][index_of_max_infected]
 
-
     df.to_csv(f"../outputs/{sys.argv[1]}/results.csv")
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day", "compliance"])
-
 
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
@@ -178,29 +202,33 @@ if __name__ == "__main__":
         df = category[1]
 
         # plot a separator line between each category
-        axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes, clip_on=False)
+        axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes,
+                             clip_on=False)
 
         axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
-        axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
+        axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10,
+                                 ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Total Infected ({title})")
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
-        axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10, ecolor="slateblue", fmt=".")
+        axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10,
+                                 ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Total Critical ({title})")
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
-        axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10, ecolor="cornflowerblue", fmt=".")
+        axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
+                                 ecolor="cornflowerblue", fmt=".")
         axs[category_i].set_title(f"Max Infected ({title})")
         category_i += 1
 
         axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
-        axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10, ecolor="slateblue", fmt=".")
+        axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
+                                 ecolor="slateblue", fmt=".")
         axs[category_i].set_title(f"Max Critical ({title})")
 
         category_i += 1
-
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 

@@ -35,14 +35,16 @@ class InfectionData(object):
                 "infection_env_long": self.environment._full_name,
                 "infected_age": self.infected.get_state().age,
                 "infector_age": None,
-                "infector_disease_state": None
+                "infector_disease_state": None,
+                "disease_state": self.infected.get_disease_state()
             }
         return {
             "infection_env_short": self.environment.name,
             "infection_env_long": self.environment._full_name,
             "infected_age": self.infected.get_state().age,
             "infector_age": self.transmitter.get_state().age,
-            "infector_disease_state": self.transmitter.get_state().disease_state
+            "infector_disease_state": self.transmitter.get_state().disease_state,
+            "disease_state": self.infected.get_disease_state()
         }
 
     @staticmethod
