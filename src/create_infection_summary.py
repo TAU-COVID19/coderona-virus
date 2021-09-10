@@ -8,7 +8,8 @@ from typing import List
 from collections import namedtuple
 
 # can draw either bars or boxplot
-draw_bar = False
+draw_bar = True
+draw_points_on_graph = False
 
 
 class Categories:
@@ -152,10 +153,10 @@ def get_daily_info(root_path) -> DAILY_INFO:
         else:
             break
 
-    # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
-    # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
-    # infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community, method="percentile")
-    # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
+    infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
+    critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
+    infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community, method="percentile")
+    critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
 
     return DAILY_INFO(
         infected_sum=infected_sum,
@@ -243,6 +244,8 @@ if __name__ == "__main__":
             axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
             axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10,
                                      ecolor="cornflowerblue", fmt=".")
+            if draw_points_on_graph:
+                axs[category_i].plot(df["immune_order"], df["infected_sum"].to_list(), "o")
         else:
             axs[category_i].boxplot(df["infected_sum"], labels=df["immune_order"])
 
@@ -253,6 +256,8 @@ if __name__ == "__main__":
             axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
             axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10,
                                      ecolor="slateblue", fmt=".")
+            if draw_points_on_graph:
+                axs[category_i].plot(df["immune_order"], df["critical_sum"].to_list(), "o")
         else:
             axs[category_i].boxplot(df["critical_sum"], labels=df["immune_order"])
 
@@ -263,6 +268,8 @@ if __name__ == "__main__":
             axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
             axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
                                      ecolor="cornflowerblue", fmt=".")
+            if draw_points_on_graph:
+                axs[category_i].plot(df["immune_order"], df["infected_max"].to_list(), "o")
         else:
             axs[category_i].boxplot(df["infected_max"], labels=df["immune_order"])
 
@@ -273,6 +280,8 @@ if __name__ == "__main__":
             axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
             axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
                                      ecolor="slateblue", fmt=".")
+            if draw_points_on_graph:
+                axs[category_i].plot(df["immune_order"], df["critical_max"].to_list(), "o")
         else:
             axs[category_i].boxplot(df["critical_max"], labels=df["immune_order"])
 
