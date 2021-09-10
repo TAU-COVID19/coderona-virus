@@ -6,6 +6,7 @@ from src.seir import DiseaseState
 from src.simulation.initial_infection_params import InitialImmuneType
 from src.simulation.simulation import Simulation
 from src.world import Person
+from src.world.environments.neighborhood import NeighborhoodCommunity
 
 
 class ImmuneStrategy:
@@ -13,7 +14,8 @@ class ImmuneStrategy:
     ASCENDING: int = 1,
     DESCENDING: int = 2,
 
-    def __init__(self, order: int, immune_by_households: bool, immune_everybody_in_the_house: bool):
+    def __init__(self, order: int, immune_by_households: bool, immune_everybody_in_the_house: bool,
+                 immune_by_neighborhood: bool):
         """
         if self.immune_by_households then if immune_everybody_in_the_house is True as well,
         then if vaccinating one person at home, we will vaccinate ALL the household
@@ -21,6 +23,7 @@ class ImmuneStrategy:
         self.order = order
         self.immune_by_households = immune_by_households
         self.immune_everybody_in_the_house = immune_everybody_in_the_house
+        self.immune_by_neighborhood = immune_by_neighborhood
 
     def get_order(self):
         return self.order
@@ -28,12 +31,17 @@ class ImmuneStrategy:
     def is_by_households(self):
         return self.immune_by_households
 
+    def is_by_neighborhood(self):
+        return self.immune_by_neighborhood
+
     def is_immune_everybody_in_the_house(self):
         return self.immune_everybody_in_the_house
 
     def __str__(self):
         by_household = "Random"
-        if self.immune_by_households:
+        if self.immune_by_neighborhood:
+            by_household = "By Neighborhood"
+        elif self.immune_by_households:
             if self.immune_everybody_in_the_house:
                 by_household = "By Household, All or nothing"
             else:
@@ -74,19 +82,24 @@ class ImmuneByAgeExtension(Simulation):
             order=extension_parameters.order.value,
             immune_by_households=extension_parameters.immune_source in
                                  [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE],
-            immune_everybody_in_the_house=extension_parameters.immune_source == InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE)
+            immune_everybody_in_the_house=extension_parameters.immune_source == InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE,
+            immune_by_neighborhood=extension_parameters.immune_source == InitialImmuneType.BY_NEIGHBORHOOD)
 
         # internal state. do not change!
         self.parent = parent
-        if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
-            self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
-            self.state_min_age_to_immune = self.state_max_age_to_immune - 10
-        elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
-            self.state_min_age_to_immune = self.min_age_to_immune
-            self.state_max_age_to_immune = math.floor((self.min_age_to_immune + 15) / 10) * 10
-        else:
+        if self.immune_strategy.immune_by_neighborhood:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.max_age_to_immune
+        else:
+            if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
+                self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
+                self.state_min_age_to_immune = self.state_max_age_to_immune - 10
+            elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
+                self.state_min_age_to_immune = self.min_age_to_immune
+                self.state_max_age_to_immune = math.floor((self.min_age_to_immune + 15) / 10) * 10
+            else:
+                self.state_min_age_to_immune = self.min_age_to_immune
+                self.state_max_age_to_immune = self.max_age_to_immune
 
     def __str__(self):
         return f"ImmuneByAgeExtension() immune_percentage={self.target_immune_percentage}\n" + \
@@ -107,8 +120,14 @@ class ImmuneByAgeExtension(Simulation):
             return False
 
     def start_of_day_processing(self):
-
         pass
+
+    def count_sick_people(self, people):
+        c = seq(people).count(lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS])
+        return c
+
+    def get_age_category(self, p: Person):
+        return p.get_age_category()
 
     def end_of_day_processing(self):
         """
@@ -129,14 +148,30 @@ class ImmuneByAgeExtension(Simulation):
         people_to_immune = []
 
         target_percentage_index = max(0, int(self.state_min_age_to_immune / 10))
-        target_percentage_index = min(len(self.target_immune_percentage)-1, target_percentage_index)
+        target_percentage_index = min(len(self.target_immune_percentage) - 1, target_percentage_index)
         target_percentage = self.target_immune_percentage[target_percentage_index]
 
         # print(f"Immune: self.state_min_age_to_immune={self.state_min_age_to_immune}, "
         #       f"target={target_percentage}, "
         #       f"immuned_percentage={immuned_percentage}")
         if not self.finished:
-            if self.immune_strategy.is_by_households():
+            if self.immune_strategy.is_by_neighborhood():
+                neighborhoods = seq(self.parent._world.all_environments).filter(
+                    lambda e: isinstance(e, NeighborhoodCommunity))
+                sick_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
+                    lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
+                index_of_max = sick_per_neighborhood.to_list().index(sick_per_neighborhood.max())
+
+                print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={sick_per_neighborhood}...")
+
+                people_to_immune = [p for p in neighborhoods[index_of_max].get_people()
+                 if (self.can_immune(p.get_disease_state())) and
+                 (p.get_age_category() > self.min_age_to_immune) and
+                 (p.get_age_category() <= self.max_age_to_immune)]
+                people_to_immune.sort(key=self.get_age_category,
+                                      reverse=self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING)
+
+            elif self.immune_strategy.is_by_households():
                 households = [h for h in self.parent._world.get_all_city_households()]
                 for h in households:
                     if self.immune_strategy.is_immune_everybody_in_the_house():
@@ -161,7 +196,6 @@ class ImmuneByAgeExtension(Simulation):
                                     if (self.can_immune(p.get_disease_state())) and
                                     (p.get_age_category() > self.state_min_age_to_immune) and
                                     (p.get_age_category() <= self.state_max_age_to_immune)]
-            random.shuffle(people_to_immune)
             count_to_percentage = math.floor(max(0, target_percentage * can_be_immuned - immuned))
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
@@ -172,7 +206,9 @@ class ImmuneByAgeExtension(Simulation):
             # advance to the next age group only if you covered the current age group
             if len(people_to_immune) <= self.max_people_to_immune_a_day or \
                     immuned_percentage >= target_percentage:
-                if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
+                if self.immune_strategy.immune_by_neighborhood:
+                    pass
+                elif self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
                     if self.state_min_age_to_immune <= self.min_age_to_immune:
                         self.finished = True
                     self.state_min_age_to_immune = max(self.state_min_age_to_immune - 10, self.min_age_to_immune)
@@ -186,3 +222,6 @@ class ImmuneByAgeExtension(Simulation):
                     pass  # do nothing
                 else:
                     assert False, "immune_strategy is Out Of Range!"
+            else:
+                print(f"IMMUNE NOTHING people_to_immune={len(people_to_immune)} while self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n"
+                      f"immuned_percentage={immuned_percentage}, target_percentage={target_percentage}")

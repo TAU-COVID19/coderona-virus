@@ -9,7 +9,7 @@ from collections import namedtuple
 
 # can draw either bars or boxplot
 draw_bar = True
-draw_points_on_graph = False
+draw_points_on_graph = True
 
 
 class Categories:

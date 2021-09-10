@@ -25,6 +25,7 @@ class InitialImmuneType(Enum):
     GENERAL_POPULATION = 1
     HOUSEHOLDS = 2
     HOUSEHOLDS_ALL_AT_ONCE = 3
+    BY_NEIGHBORHOOD = 4
 
 
 class NaiveInitialInfectionParams(InitialInfectionParams):
@@ -51,11 +52,14 @@ class NaiveInitialInfectionParams(InitialInfectionParams):
         if self.immune_source == InitialImmuneType.GENERAL_POPULATION:
             sim.infect_random_set(self.num_to_infect, str(self), per_to_Immune, self.Immune_compliance, self.order, \
                                   self.city_name_to_infect, self.min_age, people_per_day=self.people_per_day)
-        if self.immune_source in [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE]:
+        elif self.immune_source in [InitialImmuneType.HOUSEHOLDS, InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE, InitialImmuneType.BY_NEIGHBORHOOD]:
             sim.immune_households_infect_others(self.num_to_infect, str(self), per_to_Immune,
                                                 self.Immune_compliance, self.order, \
                                                 self.city_name_to_infect, self.min_age,
                                                 people_per_day=self.people_per_day)
+        else:
+            print(f"infect_simulation() ERROR!! {self.immune_source} is not handled!!!")
+            exit(-100)
 
     def __str__(self):
         if self.city_name_to_infect is None:
