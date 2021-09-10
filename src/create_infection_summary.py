@@ -1,6 +1,6 @@
 import sys
 import os
-from functional import seq
+from functional import seq, pipeline
 import statistics
 import pandas
 from matplotlib import pyplot
@@ -67,10 +67,11 @@ def calc_cumulative_stddev(means, stddevs, repetitions):
         a = stddevs[i] ^ 2 * (repetitions - 1) + repetitions * (sum(means) / len(means) - means[i])
 
 
-def get_sample_line(root_path, sample, amit_graph_type, line, as_is=False):
+def get_sample_line(root_path, sample, amit_graph_type, line_name, as_is=False):
     filename = f"{root_path}/sample_{sample}/amit_graph_{amit_graph_type}.csv"
     if os.path.isfile(filename):
         data = seq.csv(filename)
+        line = [i for i in range(data.len()) if data[i][0] == line_name][0]
         print(f'get_sample_line() of {amit_graph_type}, sample {sample}, line start with {data[line][0]}')
         if as_is:
             return [float(x) for x in data[line][1:]]
@@ -79,10 +80,11 @@ def get_sample_line(root_path, sample, amit_graph_type, line, as_is=False):
     return None
 
 
-def get_daily_column(root_path, sample, column):
+def get_daily_column(root_path, sample, column_name):
     filename = f"{root_path}/sample_{sample}/daily_delta.csv"
     if os.path.isfile(filename):
-        data = seq.csv(filename)
+        data: pipeline.Sequence = seq.csv(filename)
+        column = [i for i in range(data[0].len()) if data[0][i] == column_name][0]
         print(f'get_daily_column() of sample {sample}, line start with {data[0][column]}')
         return [max(0, float(x[column])) for x in data[1:]]
     return None
@@ -114,15 +116,25 @@ DAILY_INFO = namedtuple("DAILY_INFO", ("infected_sum_mean", "infected_sum_stdev"
 
 def get_daily_info(root_path) -> DAILY_INFO:
     infected_sum = []
-    infected_max = []
+    max_infectious_in_community = []
 
     number_of_samples = 0
     for i in range(1000):
-        data = get_sample_line(root_path, i, "integral", 1)
-        daily_delta = get_daily_column(root_path, sample=i, column=9)
-        if data is not None and daily_delta is not None:
-            infected_sum.append(sum(daily_delta))
-            infected_max.append(max(data))
+        # infected_today = get_sample_line(root_path, i, "integral", 1)
+        # critical_today = get_daily_column(root_path, sample=i, column=9)
+        # if infected_today is not None and critical_today is not None:
+        #     infected_sum.append(sum(critical_today))
+        #     max_infectious_in_community.append(max(infected_today))
+        #     number_of_samples += 1
+        # else:
+        #     break
+
+        infected_today = get_daily_column(root_path, sample=i, column_name="infected_today")
+        total_infected_in_community = get_sample_line(root_path, i, "integral", line_name="infected_0_99")
+
+        if infected_today is not None and total_infected_in_community is not None:
+            infected_sum.append(sum(infected_today))
+            max_infectious_in_community.append(max(total_infected_in_community))
             number_of_samples += 1
         else:
             break
@@ -131,17 +143,19 @@ def get_daily_info(root_path) -> DAILY_INFO:
     critical_max = []
 
     for i in range(1000):
-        data = get_sample_line(root_path, sample=i, amit_graph_type="integral", line=2)
-        if data is not None:
-            critical_sum.append(sum(data))
-            critical_max.append(max(data))
+        critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
+        total_critical_in_community = get_sample_line(root_path, sample=i, amit_graph_type="integral", line_name="critical_0_99")
+
+        if critical_today is not None and total_critical_in_community is not None:
+            critical_sum.append(sum(critical_today))
+            critical_max.append(max(total_critical_in_community))
         else:
             break
 
-    infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
-    critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
-    infected_max_no_outliers, infected_max_outliers = remove_outliers(infected_max, method="percentile")
-    critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
+    # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
+    # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
+    # infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community, method="percentile")
+    # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
 
     return DAILY_INFO(
         infected_sum=infected_sum,
@@ -150,9 +164,9 @@ def get_daily_info(root_path) -> DAILY_INFO:
         critical_sum=critical_sum,
         critical_sum_mean=statistics.mean(critical_sum),
         critical_sum_stdev=statistics.stdev(critical_sum),
-        infected_max=infected_max,
-        infected_max_mean=statistics.mean(infected_max),
-        infected_max_stdev=statistics.stdev(infected_max),
+        infected_max=max_infectious_in_community,
+        infected_max_mean=statistics.mean(max_infectious_in_community),
+        infected_max_stdev=statistics.stdev(max_infectious_in_community),
         critical_max=critical_max,
         critical_max_mean=statistics.mean(critical_max),
         critical_max_stdev=statistics.stdev(critical_max)
