@@ -75,6 +75,7 @@ class ImmuneByAgeExtension(Simulation):
             0.92,  # AGE 80-89
             0.91  # AGE 90-99
         ]
+
         self.min_age_to_immune = extension_parameters.min_age
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = extension_parameters.people_per_day
@@ -90,6 +91,7 @@ class ImmuneByAgeExtension(Simulation):
         if self.immune_strategy.immune_by_neighborhood:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.max_age_to_immune
+            self.target_immune_percentage = [extension_parameters.per_to_Immune] * len(self.target_immune_percentage)
         else:
             if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
                 self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
@@ -100,6 +102,7 @@ class ImmuneByAgeExtension(Simulation):
             else:
                 self.state_min_age_to_immune = self.min_age_to_immune
                 self.state_max_age_to_immune = self.max_age_to_immune
+                self.target_immune_percentage = [extension_parameters.per_to_Immune] * len(self.target_immune_percentage)
 
     def __str__(self):
         return f"ImmuneByAgeExtension() immune_percentage={self.target_immune_percentage}\n" + \
