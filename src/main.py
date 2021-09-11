@@ -229,7 +229,7 @@ def main():
                                         #             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                         #             num_repetitions=3, initial_num_infected=initial_num_infected)]
     # this start the run of the jobs
-    run(jobs, multi_processed=False, with_population_caching=False, verbosity=False)
+    run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 
 
 if __name__ == "__main__":
