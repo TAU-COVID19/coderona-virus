@@ -14,6 +14,7 @@ from src.simulation.simulation import Simulation
 from src.simulation.params import Params
 from src.world import Person
 from src.world.world import World
+from src.world.population_generation import population_loader,generate_city
 
 #Test the amount of the  created Immune
 def test_CreateDeltaFile(helpers):
@@ -56,4 +57,33 @@ def test_CreateDeltaFile(helpers):
     assert tbl.iloc[0,DiseaseState.SUSCEPTIBLE.value] == 10
     assert tbl.iloc[3,DiseaseState.ASYMPTOMATICINFECTIOUS.value] == 10
     assert tbl.iloc[6,DiseaseState.IMMUNE.value] == 10
+
+#Test the amount of the  created Immune
+def test_CreateDeltaFileAtlit(helpers):
+    helpers.clean_outputs()
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+    Params.loader()["person"]["state_macine_type"] = "SIR"
+
+    DiseaseState.init_infectiousness_list()
+    pop = population_loader.PopulationLoader(citiesDataPath)
+    my_world = pop.get_world(city_name = 'Atlit',scale = 1,is_smart= False)
+
+    sim = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    sim.infect_random_set(num_infected =500, infection_doc = "")
+    sim.run_simulation(num_days=180,name="test")
+    #assert events dictionary is not empty
+    txt = sim.stats.get_state_stratified_summary_table(table_format=TableFormat.CSV)
+    test_data = StringIO(txt)
     
+    tbl = pd.read_csv(test_data)
+    cnt_start  = tbl.iloc[0,DiseaseState.SUSCEPTIBLE.value] + tbl.iloc[0,DiseaseState.LATENT.value] 
+    cnt_end  = 0
+    for i in range(len(tbl)):
+        cnt_end = cnt_end + tbl.iloc[i,DiseaseState.IMMUNE.value] + tbl.iloc[i,DiseaseState.DECEASED.value] 
+    plug_number = len([p for p in sim._world.all_people() if p.get_disease_state() == DiseaseState.SUSCEPTIBLE])
+    assert cnt_start >= cnt_end + plug_number
