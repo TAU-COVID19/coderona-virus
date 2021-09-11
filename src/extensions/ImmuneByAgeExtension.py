@@ -59,7 +59,7 @@ class ImmuneByAgeExtension(Simulation):
         # super().__init__(world, initial_date)
         self.finished = False
         extension_parameters = parent._extension_params["ImmuneByAgeExtension"]
-        print(f"ImmuneByAgeExtension() extension_parameters {str(extension_parameters)}")
+        # print(f"ImmuneByAgeExtension() extension_parameters {str(extension_parameters)}")
         # change the following parameters to affect the vaccination flow
         self.days_since_start = 0
         # self.target_immune_percentage = extension_parameters.per_to_Immune
@@ -162,7 +162,7 @@ class ImmuneByAgeExtension(Simulation):
                     lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
                 index_of_max = sick_per_neighborhood.to_list().index(sick_per_neighborhood.max())
 
-                print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={sick_per_neighborhood}...")
+                # print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={sick_per_neighborhood}...")
 
                 people_to_immune = [p for p in neighborhoods[index_of_max].get_people()
                  if (self.can_immune(p.get_disease_state())) and
@@ -222,6 +222,6 @@ class ImmuneByAgeExtension(Simulation):
                     pass  # do nothing
                 else:
                     assert False, "immune_strategy is Out Of Range!"
-            else:
-                print(f"IMMUNE NOTHING people_to_immune={len(people_to_immune)} while self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n"
-                      f"immuned_percentage={immuned_percentage}, target_percentage={target_percentage}")
+            # else:
+            #     print(f"IMMUNE NOTHING people_to_immune={len(people_to_immune)} while self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n"
+            #           f"immuned_percentage={immuned_percentage}, target_percentage={target_percentage}")
