@@ -70,9 +70,6 @@ def get_datas_to_plot():
         ],
         "deceased": [
             DiseaseState.DECEASED
-        ],
-        "immuned": [
-            DiseaseState.IMMUNE
         ]
     }
     return {
