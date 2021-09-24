@@ -608,7 +608,7 @@ def children_school_closure_intervention(compliance, ci_delay, hi_delay):
         delay=0,
         max_age=18,
         entry_states=(
-            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.LATENT,
             DiseaseState.ASYMPTOMATICINFECTIOUS
         )
     )
@@ -652,10 +652,10 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
         duration=timedelta(120),
         compliance=0.7,
         delay=0,
-        min_age=6,
-        max_age=18,
+        # min_age=6,
+        # max_age=18,
         entry_states=(
-            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.LATENT,
             DiseaseState.ASYMPTOMATICINFECTIOUS
         )
     )
@@ -671,19 +671,11 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
         compliance=1,
         delay_on_enter=hi_delay
     )
-    school_closer_intervention = SchoolClosureIntervention(
-        start_date=INITIAL_DATE,
-        duration=daysdelta(120),
-        compliance=1.0,
-        proportion_of_envs=1,
-        city_name='all',
-        age_segment=(6, 18)
-    )
-    interventions = [sd_intervention,
-                     ci_intervention,
-                      household_intervention,
-                    #school_closer_intervention,
-                     asi_intervention
+    interventions = [
+        sd_intervention,
+        ci_intervention,
+        household_intervention,
+        asi_intervention
                       ]
     return interventions
 def only_children_asymptomatic_detection(compliance, ci_delay, hi_delay):
@@ -696,7 +688,7 @@ def only_children_asymptomatic_detection(compliance, ci_delay, hi_delay):
         min_age=6,
         max_age=18,
         entry_states=(
-            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.LATENT,
             DiseaseState.ASYMPTOMATICINFECTIOUS
         )
     )

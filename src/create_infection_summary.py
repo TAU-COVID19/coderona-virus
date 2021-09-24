@@ -1,3 +1,4 @@
+import math
 import sys
 import os
 from functional import seq, pipeline
@@ -27,8 +28,13 @@ class Categories:
             self.household = "HH_ALL_AT_ONCE"
         elif "HOUSEHOLD" in one_run:
             self.household = "HOUSEHOLD"
-        else:
+        elif "BY_NEIGHBORHOOD" in one_run:
+            self.household = "BY_NEIGHBORHOOD"
+        elif "GENERAL" in one_run:
             self.household = "GENERAL"
+        else:
+            print(f"ERROR! unknown order! in {one_run}")
+            exit(-1)
         self.immune_per_day = 0
         self.initial_infected = 0
         for i in range(len(parameters)):
@@ -61,11 +67,6 @@ def get_run_folders(root_dir):
 def find_file_containing(root_dir, containing_string):
     file_name = [x for x in os.listdir(root_dir) if containing_string in x and "csv" in x]
     return file_name[0]
-
-
-def calc_cumulative_stddev(means, stddevs, repetitions):
-    for i in range(len(means)):
-        a = stddevs[i] ^ 2 * (repetitions - 1) + repetitions * (sum(means) / len(means) - means[i])
 
 
 def get_sample_line(root_path, sample, amit_graph_type, line_name, as_is=False):
@@ -115,6 +116,10 @@ DAILY_INFO = namedtuple("DAILY_INFO", ("infected_sum_mean", "infected_sum_stdev"
                                        "critical_max_mean", "critical_max_stdev", "critical_max"))
 
 
+def stderr(data):
+    return statistics.stdev(data)/math.sqrt(len(data))
+
+
 def get_daily_info(root_path) -> DAILY_INFO:
     infected_sum = []
     max_infectious_in_community = []
@@ -161,16 +166,16 @@ def get_daily_info(root_path) -> DAILY_INFO:
     return DAILY_INFO(
         infected_sum=infected_sum,
         infected_sum_mean=statistics.mean(infected_sum),
-        infected_sum_stdev=statistics.stdev(infected_sum),
+        infected_sum_stdev=stderr(infected_sum),
         critical_sum=critical_sum,
         critical_sum_mean=statistics.mean(critical_sum),
-        critical_sum_stdev=statistics.stdev(critical_sum),
+        critical_sum_stdev=stderr(critical_sum),
         infected_max=max_infectious_in_community,
         infected_max_mean=statistics.mean(max_infectious_in_community),
-        infected_max_stdev=statistics.stdev(max_infectious_in_community),
+        infected_max_stdev=stderr(max_infectious_in_community),
         critical_max=critical_max,
         critical_max_mean=statistics.mean(critical_max),
-        critical_max_stdev=statistics.stdev(critical_max)
+        critical_max_stdev=stderr(critical_max)
     )
 
 if __name__ == "__main__":
@@ -233,8 +238,11 @@ if __name__ == "__main__":
 
     category_i = 0
     for category in categories:
+        print("\n\n")
         title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}, compliance={category[0][4]}'
         df = category[1]
+
+        print(f"{category[1].scenario}")
 
         # plot a separator line between each category
         axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes,

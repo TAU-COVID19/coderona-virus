@@ -86,12 +86,14 @@ class ImmuneByAgeExtension(Simulation):
             immune_everybody_in_the_house=extension_parameters.immune_source == InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE,
             immune_by_neighborhood=extension_parameters.immune_source == InitialImmuneType.BY_NEIGHBORHOOD)
 
+        if extension_parameters.per_to_Immune is not None:
+            self.target_immune_percentage = [extension_parameters.per_to_Immune] * len(self.target_immune_percentage)
+
         # internal state. do not change!
         self.parent = parent
         if self.immune_strategy.immune_by_neighborhood:
             self.state_min_age_to_immune = self.min_age_to_immune
             self.state_max_age_to_immune = self.max_age_to_immune
-            self.target_immune_percentage = [extension_parameters.per_to_Immune] * len(self.target_immune_percentage)
         else:
             if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
                 self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
@@ -102,7 +104,6 @@ class ImmuneByAgeExtension(Simulation):
             else:
                 self.state_min_age_to_immune = self.min_age_to_immune
                 self.state_max_age_to_immune = self.max_age_to_immune
-                self.target_immune_percentage = [extension_parameters.per_to_Immune] * len(self.target_immune_percentage)
 
     def __str__(self):
         return f"ImmuneByAgeExtension() immune_percentage={self.target_immune_percentage}\n" + \
@@ -116,7 +117,9 @@ class ImmuneByAgeExtension(Simulation):
             self.parent.register_events(events)
 
     def can_immune(self, state: DiseaseState) -> bool:
-        if state in (DiseaseState.INCUBATINGPOSTLATENT, DiseaseState.ASYMPTOMATICINFECTIOUS,
+        if state in (DiseaseState.LATENT,
+                     DiseaseState.INCUBATINGPOSTLATENT,
+                     DiseaseState.ASYMPTOMATICINFECTIOUS,
                      DiseaseState.SUSCEPTIBLE):
             return True
         else:
@@ -142,11 +145,11 @@ class ImmuneByAgeExtension(Simulation):
             lambda p: p.get_disease_state() == DiseaseState.IMMUNE and
                       (self.state_min_age_to_immune < p.get_age_category() <= self.state_max_age_to_immune)
         )
-        can_be_immuned = seq(self.parent._world.all_people()).count(
-            lambda p: (self.can_immune(p.get_disease_state()) or (p.get_disease_state() == DiseaseState.IMMUNE)) and
+        population = seq(self.parent._world.all_people()).count(
+            lambda p: (p.get_disease_state() != DiseaseState.DECEASED) and
                       (self.state_min_age_to_immune < p.get_age_category() <= self.state_max_age_to_immune)
         )
-        immuned_percentage = (immuned / can_be_immuned) if can_be_immuned > 0 else 1.0
+        immuned_percentage = (immuned / population) if population > 0 else 1.0
 
         people_to_immune = []
 
@@ -163,7 +166,16 @@ class ImmuneByAgeExtension(Simulation):
                     lambda e: isinstance(e, NeighborhoodCommunity))
                 sick_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
                     lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
-                index_of_max = sick_per_neighborhood.to_list().index(sick_per_neighborhood.max())
+                asymptomatic_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
+                    lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and ('quarantine' in p.routine_changes.keys())))
+
+                # DEBUG
+                # people_to_debug_routine = neighborhoods.flat_map(lambda n: seq(n.get_people()).filter(
+                #     lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and ('quarantine' in p.routine_changes.keys())).map(lambda p: p.routine_changes))
+                # people_to_debug_routine.filter(lambda r: r != {}).for_each(lambda r: print(f">>>DDD>>> {r}"))
+
+                all_people_to_consider = sick_per_neighborhood.zip(asymptomatic_per_neighborhood).map(lambda x: x[0]+x[1])
+                index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
 
                 # print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={sick_per_neighborhood}...")
 
@@ -199,15 +211,15 @@ class ImmuneByAgeExtension(Simulation):
                                     if (self.can_immune(p.get_disease_state())) and
                                     (p.get_age_category() > self.state_min_age_to_immune) and
                                     (p.get_age_category() <= self.state_max_age_to_immune)]
-            count_to_percentage = math.floor(max(0, target_percentage * can_be_immuned - immuned))
+            count_to_percentage = math.floor(max(0, target_percentage * population - immuned))
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
-                  f"immune % = {immuned}/{can_be_immuned} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}")
-            seq(people_to_immune).take(min(count_to_percentage, self.max_people_to_immune_a_day)).for_each(
-                lambda person: self._register_events(person))
+                  f"immune % = {immuned}/{population} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}")
+            people_to_immune = seq(people_to_immune).take(min(count_to_percentage, self.max_people_to_immune_a_day))
+            people_to_immune.for_each(lambda person: self._register_events(person))
 
             # advance to the next age group only if you covered the current age group
-            if len(people_to_immune) <= self.max_people_to_immune_a_day or \
+            if people_to_immune.len() < self.max_people_to_immune_a_day or \
                     immuned_percentage >= target_percentage:
                 if self.immune_strategy.immune_by_neighborhood:
                     pass
