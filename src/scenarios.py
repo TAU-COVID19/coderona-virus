@@ -634,8 +634,8 @@ def children_school_closure_intervention(compliance, ci_delay, hi_delay):
     )
     interventions = [sd_intervention,
                      ci_intervention,
-                      household_intervention,
-                    school_closer_intervention,
+                     household_intervention,
+                     school_closer_intervention,
                      #asi_intervention
                       ]
     return interventions
