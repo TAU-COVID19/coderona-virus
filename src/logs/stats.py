@@ -19,7 +19,7 @@ from src.world import InfectionData
 from src.logs.summary import make_summary_by_age_table, TableFormat
 from src.simulation.params import Params
 from src.seir import DiseaseState
-from src.world import RedactedPersonAndEnv
+from src.world import RedactedPersonAndEnv,World
 from src.logs.r0_data import calculate_r0_data
 
 
@@ -107,7 +107,7 @@ class DayStatistics(object):
         self.person_count.subtract(
             person.get_last_state()
             for person in changed_population
-        )
+        ) 
         #for each person that change state today get dictionary of date
         infected_today_stats = list(
             person.get_infection_data().get_stats()
@@ -149,7 +149,8 @@ class Statistics(object):
         'max_date',
         '_params_at_init',
         'all_environment_names',
-        'full_env_name_to_short_env_name'
+        'full_env_name_to_short_env_name',
+        '_hood_data',
     )
 
     def __init__(self, output_path, world):
@@ -163,6 +164,7 @@ class Statistics(object):
         self.num_infected = 0
         self.min_date = None
         self.max_date = None
+        self._hood_data= {}
         self.all_environment_names = set([env._full_name for env in world.all_environments])
         self.all_environment_names.add('initial_group')
         self.full_env_name_to_short_env_name = {'initial_group': 'initial_group'}
@@ -172,7 +174,7 @@ class Statistics(object):
             self.full_env_name_to_short_env_name[env._full_name] = env.name
         self._params_at_init = Params.loader()
 
-    def add_daily_data(self, daily_data):
+    def add_daily_data(self, daily_data: DayStatistics,world:World):
         """
         Register the data of this day
         """
@@ -180,7 +182,26 @@ class Statistics(object):
         self._days_data.append(daily_data)
         self.num_infected += self._days_data[-1].diff_infect
         self.update_date_range(daily_data.date)
+        #Counts how many are sick in each neighborhood
+        hood_data = {}
+        for person in world.all_people():
+            if person.get_disease_state().is_infected():
+                hoodID = person.get_neighberhood().get_neighborhood_id()
+                if hoodID not in hood_data:
+                    hood_data[hoodID] = 1 
+                else:
+                    hood_data[hoodID] +=1
+        self._hood_data[daily_data.date] = hood_data
 
+    def get_neiborhood_data(self,date,hood_id):
+        '''
+        Returns the number of infected people which lives in certain neighborhood
+        '''
+        if self._hood_data == None:             return 0
+        if date not in self._hood_data:         return 0 
+        if hood_id not in self._hood_data[date]:return 0
+        return  self._hood_data[date][hood_id]
+            
     def mark_ending(self, all_people):
         """
         Mark this as a complete simulation and save more detailed data

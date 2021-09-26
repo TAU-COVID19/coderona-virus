@@ -1,10 +1,15 @@
 from datetime import date
-import random
+import json
 from numpy.lib.function_base import median
-from src.world.environments.homogeneous_environment import HomogeneousEnvironment
+import os
+import random
+
 from src.simulation.params import Params
-from src.world.person import Person
 from src.seir.disease_state import DiseaseState
+from src.world.person import Person
+from src.world.population_generation import population_loader
+from src.world.environments.homogeneous_environment import HomogeneousEnvironment
+from src.world.environments import NeighborhoodCommunity
 
 def test_propagate_infection(params_path):
     """
@@ -98,3 +103,22 @@ def test_single_person_infected_contact1(params_path):
     infections.append(num_of_infections)
     
     assert num_of_infections == 0 
+
+def test_neiborhoods_diff_IDs():
+    '''
+    Test different neiborhood get different ids
+    '''
+    file_path = os.path.dirname(__file__) + "/../src/config.json"
+    with open(file_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        citiesDataPath = ConfigData['CitiesFilePath']
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
+    pop = population_loader.PopulationLoader(citiesDataPath)
+    my_world = pop.get_world(city_name = 'Atlit',scale = 1,is_smart= True)
+
+    sample = []
+    for env in my_world.all_environments:
+        if env.name == "neighborhood_community":
+            sample.append(env)
+    assert not(sample[0].get_neighborhood_id() == sample[1].get_neighborhood_id())

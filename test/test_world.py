@@ -1,13 +1,15 @@
-import os
 import json
+import os
 import random
+
 from functools import cmp_to_key
 from src.run_utils import INITIAL_DATE 
-from src.seir import DiseaseState
+from src.seir import DiseaseState,daysdelta 
 from src.simulation.params import Params
 from src.simulation.simulation import Simulation,ORDER
 from src.world import Person
 from src.world.environments.household import Household
+from src.world.environments.neighborhood import NeighborhoodCommunity
 from src.world.population_generation import population_loader
 from src.world.population_generation import generate_city
 from src.world.world import World
@@ -609,3 +611,92 @@ def test_sortHouseholdsAscendingandAndDescending():
     houses = sorted(houses,key = cmp_to_key(Household.house_comperator_DESCENDING))
     assert 98 in [p.get_age() for p in houses[0].get_people()]
 
+def test_count_infected_in_hood():
+    '''
+    Test that we gather the right data about the infected persons 
+    in each neighborhood.
+    '''
+    config_path = os.path.join(os.path.dirname(__file__),"..","src","config.json")
+    with open(config_path) as json_data_file:
+        ConfigData = json.load(json_data_file)
+        paramsDataPath = ConfigData['ParamsFilePath']
+    Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
+    Params.loader()["person"]["state_macine_type"] = "SIR"
+    DiseaseState.init_infectiousness_list()
+
+    #create diff enviroments
+    house1 = Household(city = None,contact_prob_between_each_two_people=1)
+    house2 = Household(city = None,contact_prob_between_each_two_people=1)
+    
+    house1Ages  = [98,95,5]    
+    house2Ages  = [94,6]    
+    
+    house1Lst = list(map(Person, house1Ages))
+    house2Lst = list(map(Person, house2Ages))
+    
+    #register people to diff env
+    house1.sign_up_for_today(house1Lst[0],1)
+    house1.sign_up_for_today(house1Lst[1],1)
+    house1.sign_up_for_today(house1Lst[2],1)
+
+    house2.sign_up_for_today(house2Lst[0],1)
+    house2.sign_up_for_today(house2Lst[1],1)
+
+    assert len(house1.get_people()) == 3
+    assert len(house2.get_people()) == 2
+    
+    n1 = NeighborhoodCommunity(city= None,contact_prob_between_each_two_people= 1)
+    n2 = NeighborhoodCommunity(city= None,contact_prob_between_each_two_people= 1)
+
+    states_table1 = ((DiseaseState.LATENT,daysdelta(3)),
+                        (DiseaseState.ASYMPTOMATICINFECTIOUS,daysdelta(3)),
+                        (DiseaseState.IMMUNE, daysdelta(3)),
+                        (DiseaseState.IMMUNE, None))
+    states_table2 = ((DiseaseState.IMMUNE, daysdelta(3)),
+                    (DiseaseState.IMMUNE, None))
+
+    events_acc = []
+    for person in house1.get_people():
+        person.add_environment(n1)
+        events = person.gen_and_register_events_from_seir_times(date = INITIAL_DATE,states_and_times= states_table1)
+        events_acc += events
+    
+    for person in house2.get_people():
+        person.add_environment(n2)
+        events = person.gen_and_register_events_from_seir_times(date = INITIAL_DATE,states_and_times= states_table2)
+        events_acc += events
+
+    env_arr = [house1,house2,n1,n2]
+    persons_arr = []
+    persons_arr += house1Lst
+    persons_arr += house2Lst
+
+    my_world = World(
+        all_people = persons_arr,
+        all_environments=env_arr,
+        generating_city_name = "test",
+        generating_scale = 1,)
+
+    my_simulation = Simulation(world = my_world, initial_date= INITIAL_DATE)
+    my_simulation.register_events(events_acc)
+
+    for i in range(4):
+        d1 = my_simulation.stats.get_neiborhood_data(INITIAL_DATE + daysdelta(i),n1.get_neighborhood_id())
+        d2 = my_simulation.stats.get_neiborhood_data(INITIAL_DATE + daysdelta(i),n2.get_neighborhood_id())
+        assert d1 == 0 ,  "Day:" + str(i)
+        assert d2 == 0 ,  "Day:" + str(i)
+        my_simulation.simulate_day()
+    
+    for i in range(3):
+        d1 = my_simulation.stats.get_neiborhood_data(INITIAL_DATE + daysdelta(i+3),n1.get_neighborhood_id())
+        d2 = my_simulation.stats.get_neiborhood_data(INITIAL_DATE + daysdelta(i+3),n2.get_neighborhood_id())
+        assert d1 == 3 , "Day:" + str(3 + i)
+        assert d2 == 0 , "Day:" + str(3 + i)
+        my_simulation.simulate_day()
+
+    for i in range(3):
+        d1 = my_simulation.stats.get_neiborhood_data(INITIAL_DATE,n1.get_neighborhood_id())
+        d2 = my_simulation.stats.get_neiborhood_data(INITIAL_DATE,n2.get_neighborhood_id())
+        assert d1 == 0 , "Day:" + str(6 + i)
+        assert d2 == 0 , "Day:" + str(6 + i)
+        my_simulation.simulate_day()

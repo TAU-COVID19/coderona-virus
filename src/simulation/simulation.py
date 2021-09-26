@@ -129,7 +129,7 @@ class Simulation(object):
             self._date,
             changed_population
         )
-        self.stats.add_daily_data(daily_data)
+        self.stats.add_daily_data(daily_data,self._world)
         for person in changed_population:
             person.save_state()
 
