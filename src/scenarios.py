@@ -650,7 +650,7 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
     asi_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=0.7,
+        compliance=0.5,
         delay=0,
         min_age=6,
         max_age=18,

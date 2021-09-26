@@ -1,17 +1,13 @@
-import logging
 import json
-import numpy as np
+import logging
 import os
-from datetime import date, timedelta
-from socket import gethostname
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # Adding the src folder to PYTHONPATH
 
 from src.scenarios import *
 from src.seir import DiseaseState
-from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams, \
-    InitialImmuneType
+from src.simulation.initial_infection_params import NaiveInitialInfectionParams, InitialImmuneType
 from src.logs import make_age_and_state_datas_to_plot
 from src.simulation.params import Params
 from src.simulation.simulation import ORDER
@@ -170,7 +166,7 @@ def main():
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1), ("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [1]:
-                            for order in [ORDER.DESCENDING, ORDER.ASCENDING, ORDER.NONE]:
+                            for order in [ORDER.DESCENDING, ORDER.ASCENDING]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
                                         # people aging less than minimum_infectioness_age will not infect others
