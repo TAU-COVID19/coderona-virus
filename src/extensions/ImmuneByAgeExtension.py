@@ -9,6 +9,23 @@ from src.world import Person
 from src.world.environments.neighborhood import NeighborhoodCommunity
 
 
+class NeighborhoodStatistics:
+    def __init__(self):
+        self._look_back_days = 7
+        self._sick_recently = {}
+
+    def push(self, neighborhood_id: int, item: int) -> None:
+        if neighborhood_id not in self._sick_recently:
+            self._sick_recently[neighborhood_id] = seq([])
+
+        self._sick_recently[neighborhood_id] = seq(item) + self._sick_recently[neighborhood_id]
+        if self._sick_recently[neighborhood_id].len() > self._look_back_days:
+            self._sick_recently[neighborhood_id].drop_right(1)
+
+    def average(self, neighborhood_id: int) -> int:
+        return self._sick_recently[neighborhood_id].average()
+
+
 class ImmuneStrategy:
     NONE: int = 0,
     ASCENDING: int = 1,
@@ -79,6 +96,7 @@ class ImmuneByAgeExtension(Simulation):
         self.min_age_to_immune = extension_parameters.min_age
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = extension_parameters.people_per_day
+        self.historical_neighborhood_data = NeighborhoodStatistics()
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
             order=extension_parameters.order.value,
             immune_by_households=extension_parameters.immune_source in
@@ -169,15 +187,18 @@ class ImmuneByAgeExtension(Simulation):
                 asymptomatic_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
                     lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and ('quarantine' in p.routine_changes.keys())))
 
-                # DEBUG
-                # people_to_debug_routine = neighborhoods.flat_map(lambda n: seq(n.get_people()).filter(
-                #     lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and ('quarantine' in p.routine_changes.keys())).map(lambda p: p.routine_changes))
-                # people_to_debug_routine.filter(lambda r: r != {}).for_each(lambda r: print(f">>>DDD>>> {r}"))
-
+                # take into account both the symptomatic and the asymptomatic (which we detected)
+                # sick people in the neighborhood
                 all_people_to_consider = sick_per_neighborhood.zip(asymptomatic_per_neighborhood).map(lambda x: x[0]+x[1])
+                # average those numbers over 1 week
+                all_people_to_consider = neighborhoods.zip(all_people_to_consider).map(lambda x: (
+                                            self.historical_neighborhood_data.push(x[0], x[1]),
+                                            self.historical_neighborhood_data.average(x[0]))).map(lambda x: x[1])
+
+                # find which neighborhood have the biggest amount of sick people, and vaccinate them first
                 index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
 
-                # print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={sick_per_neighborhood}...")
+                # print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={all_people_to_consider}...")
 
                 people_to_immune = [p for p in neighborhoods[index_of_max].get_people()
                  if (self.can_immune(p.get_disease_state())) and
