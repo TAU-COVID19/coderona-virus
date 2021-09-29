@@ -1,17 +1,13 @@
-import logging
 import json
-import numpy as np
+import logging
 import os
-from datetime import date, timedelta
-from socket import gethostname
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # Adding the src folder to PYTHONPATH
 
 from src.scenarios import *
 from src.seir import DiseaseState
-from src.simulation.initial_infection_params import NaiveInitialInfectionParams, SmartInitialInfectionParams, \
-    InitialImmuneType
+from src.simulation.initial_infection_params import NaiveInitialInfectionParams, InitialImmuneType
 from src.logs import make_age_and_state_datas_to_plot
 from src.simulation.params import Params
 from src.simulation.simulation import ORDER
@@ -132,9 +128,9 @@ def main():
         # "paper_2_comp_9": paper_2_comp_9,
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        "Empty_scenario": Empty_scenario,
-        #"children_school_closure_intervention": children_school_closure_intervention,
-        #"children_asymptomatic_detection_intervention": children_asymptomatic_detection_intervention,
+        #"Empty_scenario": Empty_scenario,
+        "children_school_closure_intervention": children_school_closure_intervention,
+        "children_asymptomatic_detection_intervention": children_asymptomatic_detection_intervention,
         #"only_children_asymptomatic_detection":only_children_asymptomatic_detection
         #"noHH_children_specific_interventions": children_specific_noHH_interventions,
         #"HH_adult_specific_interventions": adult_specific_HH_interventions,
@@ -166,7 +162,7 @@ def main():
 
     for target_immune_percentage, immune_compliance in [(0.8, 1.0)]:  # [(0.0,1),(0.5,1)]:
         for people_per_day in [800]:
-            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18),(InitialImmuneType.HOUSEHOLDS, 18), (InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE, 18), (InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
+            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18),(InitialImmuneType.HOUSEHOLDS, 18), (InitialImmuneType.BY_NEIGHBORHOOD, 18), (InitialImmuneType.HOUSEHOLDS_ALL_AT_ONCE,18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1), ("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [1]:
