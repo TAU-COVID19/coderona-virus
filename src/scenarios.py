@@ -447,19 +447,19 @@ def householdisolation_sd_interventions(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
-        compliance=compliance,
+        compliance=1,
         delay=ci_delay
     )
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
-        compliance=compliance,
+        compliance=0.9,
         age_range=(0, 99)
     )
     household_intervention = HouseholdIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
-        compliance=compliance,
+        compliance=1,
         delay_on_enter=hi_delay
     )
     interventions = [sd_intervention,
@@ -600,18 +600,6 @@ def children_school_closure_intervention(compliance, ci_delay, hi_delay):
         compliance=1,
         delay=ci_delay
     )
-    # to simulate detection of asymptomatic children at school
-    asi_intervention = SymptomaticIsolationIntervention(
-        start_date=INITIAL_DATE,
-        duration=timedelta(120),
-        compliance=0.7,
-        delay=0,
-        max_age=18,
-        entry_states=(
-            DiseaseState.LATENT,
-            DiseaseState.ASYMPTOMATICINFECTIOUS
-        )
-    )
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
@@ -635,8 +623,7 @@ def children_school_closure_intervention(compliance, ci_delay, hi_delay):
     interventions = [sd_intervention,
                      ci_intervention,
                      household_intervention,
-                     school_closer_intervention,
-                     #asi_intervention
+                     school_closer_intervention
                       ]
     return interventions
 def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay):
@@ -650,7 +637,7 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
     asi_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=0.5,
+        compliance=compliance,
         delay=0,
         min_age=6,
         max_age=18,
