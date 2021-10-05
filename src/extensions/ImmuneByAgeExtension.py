@@ -97,6 +97,7 @@ class ImmuneByAgeExtension(Simulation):
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = extension_parameters.people_per_day
         self.historical_neighborhood_data = NeighborhoodStatistics()
+        self.completed_neighborhood = []
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
             order=extension_parameters.order.value,
             immune_by_households=extension_parameters.immune_source in
@@ -181,7 +182,7 @@ class ImmuneByAgeExtension(Simulation):
         if not self.finished:
             if self.immune_strategy.is_by_neighborhood():
                 neighborhoods = seq(self.parent._world.all_environments).filter(
-                    lambda e: isinstance(e, NeighborhoodCommunity))
+                    lambda e: isinstance(e, NeighborhoodCommunity) and e.get_neighborhood_id() not in self.completed_neighborhood)
                 sick_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
                     lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
                 asymptomatic_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
@@ -198,7 +199,7 @@ class ImmuneByAgeExtension(Simulation):
                 # find which neighborhood have the biggest amount of sick people, and vaccinate them first
                 index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
 
-                # print(f"Immune neighborhood {index_of_max}, sick_per_neighborhood={all_people_to_consider}...")
+                # print(f"Immune neighborhood {index_of_max}, neighborhood_id={neighborhoods[index_of_max].get_neighborhood_id()}, sick_per_neighborhood={all_people_to_consider}...")
 
                 people_to_immune = [p for p in neighborhoods[index_of_max].get_people()
                  if (self.can_immune(p.get_disease_state())) and
@@ -206,6 +207,10 @@ class ImmuneByAgeExtension(Simulation):
                  (p.get_age_category() <= self.max_age_to_immune)]
                 people_to_immune.sort(key=self.get_age_category,
                                       reverse=self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING)
+                # are we done with this neighborhood?
+                if len(people_to_immune) < self.max_people_to_immune_a_day:
+                    print(f"completed neighborhood {neighborhoods[index_of_max].get_neighborhood_id()}")
+                    self.completed_neighborhood += [neighborhoods[index_of_max].get_neighborhood_id()]
 
             elif self.immune_strategy.is_by_households():
                 households = [h for h in self.parent._world.get_all_city_households()]
