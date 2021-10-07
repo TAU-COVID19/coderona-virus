@@ -196,6 +196,11 @@ class ImmuneByAgeExtension(Simulation):
                                             self.historical_neighborhood_data.push(x[0], x[1]),
                                             self.historical_neighborhood_data.average(x[0]))).map(lambda x: x[1])
 
+                if all_people_to_consider.len() == 0:
+                    print(f"Immune neighborhood() FINISHED PROCESSING THE CITY! all neighborhoods are empty!")
+                    self.finished = True
+                    return
+
                 # find which neighborhood have the biggest amount of sick people, and vaccinate them first
                 index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
 
