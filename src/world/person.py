@@ -47,7 +47,8 @@ class Person(object):
         'last_state',
         '_seir_times',
         'state_machine_type',
-        '_minimum_infectiousness_age'
+        '_minimum_infectiousness_age', 
+		'_my_neighborhood',
     )
     num_people_so_far = 0
 
@@ -101,6 +102,7 @@ class Person(object):
         self._infection_data = None
         # Table that currespond to seir times and events so it will be easier to mange
         self._seir_times= None
+        self._my_neighborhood = None
         self._num_infections = 0
         #if StartAsRecovered:
         #    self.last_state =RedactedPerson(self.get_age(), self.get_disease_state())
@@ -153,9 +155,14 @@ class Person(object):
         This should only be called when generating a population! not mid-simulation!
         """
         assert environment.name not in self._current_routine
+        if environment.name == "neighborhood_community":
+            self._my_neighborhood = environment
         self._environments[environment.name] = environment
         self._current_routine[environment.name] = 1
         self._change()
+
+    def get_neighberhood(self):
+        return self._my_neighborhood
 
     def get_age(self):
         """
