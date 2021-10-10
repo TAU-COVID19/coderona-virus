@@ -1,16 +1,17 @@
 import math
-import sys
 import os
-from functional import seq, pipeline
 import statistics
-import pandas
-from matplotlib import pyplot
-from typing import List
+import sys
 from collections import namedtuple
+from typing import List
+
+import pandas
+from functional import seq, pipeline
+from matplotlib import pyplot
 
 # can draw either bars or boxplot
 draw_bar = True
-draw_points_on_graph = True
+draw_points_on_graph = False
 
 
 class Categories:
@@ -46,7 +47,7 @@ class Categories:
                 self.compliance = parameters[i].split('=')[1]
 
     def __str__(self):
-        return f"{self.city}\nINT={self.intervention}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
+        return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
                f"{self.household}\n{self.order}\ncompliance={self.compliance}"
 
 
@@ -158,10 +159,10 @@ def get_daily_info(root_path) -> DAILY_INFO:
         else:
             break
 
-    infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
-    critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
-    infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community, method="percentile")
-    critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
+    # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
+    # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
+    # infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community, method="percentile")
+    # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
 
     return DAILY_INFO(
         infected_sum=infected_sum,
