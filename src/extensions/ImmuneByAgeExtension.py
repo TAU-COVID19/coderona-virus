@@ -22,7 +22,7 @@ class NeighborhoodStatistics:
 
         self._sick_recently[neighborhood_id] = seq(item) + self._sick_recently[neighborhood_id]
         if self._sick_recently[neighborhood_id].len() > self._look_back_days:
-            self._sick_reccaently[neighborhood_id].drop_right(1)
+            self._sick_recently[neighborhood_id] = self._sick_recently[neighborhood_id].take(self._look_back_days)
 
     def average(self, neighborhood_id: int) -> int:
         return self._sick_recently[neighborhood_id].average()
@@ -98,6 +98,7 @@ class ImmuneByAgeExtension(Simulation):
         self.min_age_to_immune = extension_parameters.min_age
         self.max_age_to_immune = 100
         self.max_people_to_immune_a_day = extension_parameters.people_per_day
+        self.carry_over_vaccinations = 0
         self.historical_neighborhood_data = NeighborhoodStatistics()
         self.completed_neighborhood = []
         self.immune_strategy: ImmuneStrategy = ImmuneStrategy(
@@ -130,6 +131,7 @@ class ImmuneByAgeExtension(Simulation):
         return f"ImmuneByAgeExtension() immune_percentage={self.target_immune_percentage}\n" + \
                f"min_age={self.min_age_to_immune}, max_age={self.max_age_to_immune}\n" + \
                f"self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n" + \
+               f"carry_over_vaccinations_from_yesterday={self.carry_over_vaccinations}\n" + \
                f"strategy={str(self.immune_strategy)}"
 
     def _register_events(self, person: Person):
@@ -192,9 +194,9 @@ class ImmuneByAgeExtension(Simulation):
 
                 # take into account both the symptomatic and the asymptomatic (which we detected)
                 # sick people in the neighborhood
-                all_people_to_consider = sick_per_neighborhood.zip(asymptomatic_per_neighborhood).map(lambda x: x[0]+x[1])
+                sick_or_asymptomatic = sick_per_neighborhood.zip(asymptomatic_per_neighborhood).map(lambda x: x[0]+x[1])
                 # average those numbers over 1 week
-                all_people_to_consider = neighborhoods.zip(all_people_to_consider).map(lambda x: (
+                all_people_to_consider = neighborhoods.zip(sick_or_asymptomatic).map(lambda x: (
                                             self.historical_neighborhood_data.push(x[0], x[1]),
                                             self.historical_neighborhood_data.average(x[0]))).map(lambda x: x[1])
 
@@ -215,7 +217,7 @@ class ImmuneByAgeExtension(Simulation):
                 people_to_immune.sort(key=self.get_age_category,
                                       reverse=self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING)
                 # are we done with this neighborhood?
-                if len(people_to_immune) < self.max_people_to_immune_a_day:
+                if len(people_to_immune) < self.max_people_to_immune_a_day + self.carry_over_vaccinations:
                     print(f"completed neighborhood {neighborhoods[index_of_max].get_neighborhood_id()}", flush=False)
                     self.completed_neighborhood += [neighborhoods[index_of_max].get_neighborhood_id()]
 
@@ -237,7 +239,7 @@ class ImmuneByAgeExtension(Simulation):
                                              if (self.can_immune(p.get_disease_state())) and
                                              (p.get_age_category() > self.state_min_age_to_immune) and
                                              (p.get_age_category() <= self.state_max_age_to_immune)]
-                    if len(people_to_immune) > self.max_people_to_immune_a_day:
+                    if len(people_to_immune) > self.max_people_to_immune_a_day + self.carry_over_vaccinations:
                         break
             else:
                 people_to_immune = [p for p in self.parent._world.all_people()
@@ -247,12 +249,16 @@ class ImmuneByAgeExtension(Simulation):
             count_to_percentage = math.floor(max(0, target_percentage * population - immuned))
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
+                  f"carry_over_vaccinations={self.carry_over_vaccinations}, " +
                   f"immune % = {immuned}/{population} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}", flush=False)
-            people_to_immune = seq(people_to_immune).take(min(count_to_percentage, self.max_people_to_immune_a_day))
+            num_of_people_to_immune = min(count_to_percentage, self.max_people_to_immune_a_day + self.carry_over_vaccinations)
+            people_to_immune = seq(people_to_immune).take(num_of_people_to_immune)
             people_to_immune.for_each(lambda person: self._register_events(person))
 
             # advance to the next age group only if you covered the current age group
-            if people_to_immune.len() < self.max_people_to_immune_a_day or \
+            if count_to_percentage == 0:
+                self.finished = True
+            if people_to_immune.len() < (self.max_people_to_immune_a_day + self.carry_over_vaccinations) or \
                     immuned_percentage >= target_percentage:
                 if self.immune_strategy.immune_by_neighborhood:
                     pass
@@ -270,6 +276,9 @@ class ImmuneByAgeExtension(Simulation):
                     pass  # do nothing
                 else:
                     assert False, "immune_strategy is Out Of Range!"
+
+            self.carry_over_vaccinations = num_of_people_to_immune - people_to_immune.len()
+
             # else:
             #     print(f"IMMUNE NOTHING people_to_immune={len(people_to_immune)} while self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n"
             #           f"immuned_percentage={immuned_percentage}, target_percentage={target_percentage}", flush=False)
