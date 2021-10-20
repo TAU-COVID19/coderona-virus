@@ -1,6 +1,6 @@
 import math
 import random
-from datetime import timedelta
+from datetime import timedelta, date
 from functional import seq
 # from fn import _
 from src.seir import DiseaseState
@@ -8,7 +8,8 @@ from src.simulation.initial_infection_params import InitialImmuneType
 from src.simulation.simulation import Simulation
 from src.world import Person
 from src.world.environments.neighborhood import NeighborhoodCommunity
-
+from src.logs.r0_data import calculate_r0_instantaneous
+from src.w import W
 
 
 class NeighborhoodStatistics:
@@ -186,39 +187,54 @@ class ImmuneByAgeExtension(Simulation):
         if not self.finished:
             if self.immune_strategy.is_by_neighborhood():
                 neighborhoods = seq(self.parent._world.all_environments).filter(
-                    lambda e: isinstance(e, NeighborhoodCommunity) and e.get_neighborhood_id() not in self.completed_neighborhood)
-                sick_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
-                    lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
-                asymptomatic_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).count(
-                    lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and ('quarantine' in p.routine_changes.keys())))
-
-                # take into account both the symptomatic and the asymptomatic (which we detected)
-                # sick people in the neighborhood
-                sick_or_asymptomatic = sick_per_neighborhood.zip(asymptomatic_per_neighborhood).map(lambda x: x[0]+x[1])
-                # average those numbers over 1 week
-                all_people_to_consider = neighborhoods.zip(sick_or_asymptomatic).map(lambda x: (
-                                            self.historical_neighborhood_data.push(x[0], x[1]),
-                                            self.historical_neighborhood_data.average(x[0]))).map(lambda x: x[1])
-
-                if all_people_to_consider.len() == 0:
-                    print(f"Immune neighborhood() FINISHED PROCESSING THE CITY! all neighborhoods are empty!", flush=False)
-                    self.finished = True
-                    return
+                    lambda e: isinstance(e,
+                                         NeighborhoodCommunity) and e.get_neighborhood_id() not in self.completed_neighborhood)
+                # sick_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).filter(
+                #     lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
+                # asymptomatic_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).filter(
+                #     lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and (
+                #                 'quarantine' in p.routine_changes.keys())))
+                #
+                # count_sick_per_neighborhood = sick_per_neighborhood.map(lambda n: n.len())
+                # count_asymptomatic_per_neighborhood = asymptomatic_per_neighborhood.map(lambda n: n.len())
+                #
+                # # take into account both the symptomatic and the asymptomatic (which we detected)
+                # # sick people in the neighborhood
+                # sick_or_asymptomatic = count_sick_per_neighborhood.zip(count_asymptomatic_per_neighborhood).map(
+                #     lambda x: x[0] + x[1])
+                # # average those numbers over 1 week
+                # all_people_to_consider = neighborhoods.zip(sick_or_asymptomatic).map(lambda x: (
+                #     self.historical_neighborhood_data.push(x[0], x[1]),
+                #     self.historical_neighborhood_data.average(x[0]))).map(lambda x: x[1])
+                #
+                # if all_people_to_consider.len() == 0:
+                #     print(f"Immune neighborhood() FINISHED PROCESSING THE CITY! all neighborhoods are empty!",
+                #           flush=False)
+                #     self.finished = True
+                #     return
 
                 # find which neighborhood have the biggest amount of sick people, and vaccinate them first
-                index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
+                # index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
+
+                # r_per_neighborhood = neighborhoods.map(
+                #     lambda neighborhood: calculate_r0_instantaneous(neighborhood.get_people(), self.parent._date, 7))
+                r_per_neighborhood = neighborhoods.map(
+                    lambda neighborhood: self.calculate_r0_instantaneous_per_neighborhood(self.parent._date, neighborhood, 7))
+
+                index_of_max = r_per_neighborhood.to_list().index(r_per_neighborhood.max())
 
                 # print(f"Immune neighborhood {index_of_max}, neighborhood_id={neighborhoods[index_of_max].get_neighborhood_id()}, sick_per_neighborhood={all_people_to_consider}...", flush=False)
+                # print(f"Immune neighborhood {index_of_max}, neighborhood_id={neighborhoods[index_of_max].get_neighborhood_id()}, r_per_neighborhood={r_per_neighborhood}...", flush=False)
 
                 people_to_immune = [p for p in neighborhoods[index_of_max].get_people()
-                 if (self.can_immune(p.get_disease_state())) and
-                 (p.get_age_category() > self.min_age_to_immune) and
-                 (p.get_age_category() <= self.max_age_to_immune)]
+                                    if (self.can_immune(p.get_disease_state())) and
+                                    (p.get_age_category() > self.min_age_to_immune) and
+                                    (p.get_age_category() <= self.max_age_to_immune)]
                 people_to_immune.sort(key=self.get_age_category,
                                       reverse=self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING)
                 # are we done with this neighborhood?
                 if len(people_to_immune) < self.max_people_to_immune_a_day + self.carry_over_vaccinations:
-                    print(f"completed neighborhood {neighborhoods[index_of_max].get_neighborhood_id()}", flush=False)
+                    # print(f"completed neighborhood {neighborhoods[index_of_max].get_neighborhood_id()}", flush=False)
                     self.completed_neighborhood += [neighborhoods[index_of_max].get_neighborhood_id()]
 
             elif self.immune_strategy.is_by_households():
@@ -250,8 +266,10 @@ class ImmuneByAgeExtension(Simulation):
             print(f"ImmuneByAgeExtension({str(self.immune_strategy)}, (day {self.days_since_start}), " +
                   f"age {self.state_min_age_to_immune}-{self.state_max_age_to_immune}, immune {self.max_people_to_immune_a_day} a day, " +
                   f"carry_over_vaccinations={self.carry_over_vaccinations}, " +
-                  f"immune % = {immuned}/{population} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}", flush=False)
-            num_of_people_to_immune = min(count_to_percentage, self.max_people_to_immune_a_day + self.carry_over_vaccinations)
+                  f"immune % = {immuned}/{population} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}",
+                  flush=False)
+            num_of_people_to_immune = min(count_to_percentage,
+                                          self.max_people_to_immune_a_day + self.carry_over_vaccinations)
             people_to_immune = seq(people_to_immune).take(num_of_people_to_immune)
             people_to_immune.for_each(lambda person: self._register_events(person))
 
@@ -282,3 +300,25 @@ class ImmuneByAgeExtension(Simulation):
             # else:
             #     print(f"IMMUNE NOTHING people_to_immune={len(people_to_immune)} while self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n"
             #           f"immuned_percentage={immuned_percentage}, target_percentage={target_percentage}", flush=False)
+
+    def calculate_r0_instantaneous_per_neighborhood(self, today: date,
+                                                    neighborhood: NeighborhoodCommunity,
+                                                    look_back_days: int = 7) -> float:
+        """calculates the instantaneous r based on a look back of look_back_days days"""
+
+        # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7325187/
+        w = W()
+        look_back_days = w.w_len()
+
+        infected_today = self.parent.stats.get_neiborhood_data(today - timedelta(days=1), neighborhood.get_neighborhood_id())
+        weighted_infected_last_week = max(seq([w.get_w(i) *
+                                               self.parent.stats.get_neiborhood_data(today - timedelta(days=i+1),
+                                                                                     neighborhood.get_neighborhood_id())
+                                               for i in range(1, look_back_days)]).sum(), 1)
+
+        if infected_today == 0 or weighted_infected_last_week == 0:
+            return 0
+
+        instantaneous_reproductive = infected_today / weighted_infected_last_week
+
+        return instantaneous_reproductive

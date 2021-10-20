@@ -5,7 +5,6 @@ from src.simulation.params import Params
 import os
 import json
 
-
 class W:
     def __init__(self):
         p_hulon = 0.793

@@ -189,7 +189,7 @@ class Statistics(object):
         #Counts how many are sick in each neighborhood
         hood_data = {}
         for person in world.all_people():
-            if person.get_disease_state().is_infected():
+            if person.get_disease_state() == DiseaseState.SYMPTOMATICINFECTIOUS:
                 hoodID = person.get_neighberhood().get_neighborhood_id()
                 if hoodID not in hood_data:
                     hood_data[hoodID] = 1 
