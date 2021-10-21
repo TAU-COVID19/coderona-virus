@@ -2,13 +2,11 @@ import math
 import random
 from datetime import timedelta, date
 from functional import seq
-# from fn import _
 from src.seir import DiseaseState
 from src.simulation.initial_infection_params import InitialImmuneType
 from src.simulation.simulation import Simulation
 from src.world import Person
 from src.world.environments.neighborhood import NeighborhoodCommunity
-from src.logs.r0_data import calculate_r0_instantaneous
 from src.w import W
 
 
