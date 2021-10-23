@@ -7,7 +7,7 @@ import time
 from collections import namedtuple
 from functional import seq
 
-from typing import List, Dict
+from typing import List
 from src.world import Person
 from src.world.infection_data import InfectionData
 from src.w import W
@@ -32,6 +32,38 @@ def load_population_to_file() -> List[Person]:
     with open('population.pkl', 'r') as f:
         population = pickle.load(f)
         return population
+
+
+def calculate_r0_instantaneous(population: List[Person], today: date, look_back_days: int = 7) -> float:
+    """calculates the instantaneous r based on a look back of look_back_days days"""
+    infected_per_day_dict = {}
+
+    def infected_recently(p: Person, today: date, look_back_days: int = 7):
+        infection_data = p.get_infection_data()
+        return infection_data is not None and \
+               infection_data.date is not None and \
+               (today >= infection_data.date >= today - timedelta(days=look_back_days))
+
+    def add_to_dict(x):
+        infected_per_day_dict[x[0]] = len(x[1])
+
+    infected_per_day = seq(population).filter(lambda p: infected_recently(p, today, look_back_days)).group_by(
+        lambda p: p.get_infection_data().date)
+    infected_per_day.for_each(add_to_dict)
+
+    if infected_per_day.len() == 0:
+        return 0
+
+    # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7325187/
+    w = W()
+    look_back_days = w.w_len()
+
+    instantaneous_reproductive = infected_per_day_dict.get(today, 0) \
+                                 / max(seq([w.get_w(i) *
+                                        infected_per_day_dict.get(today-timedelta(days=i), 0)
+                                for i in range(1, look_back_days)]).sum(), 1)
+
+    return instantaneous_reproductive
 
 
 def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_age=100):
@@ -75,7 +107,7 @@ def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_ag
     #                        ).to_list()
     # print(f"calculate_r0_data() filtered the list from {number_of_people_before} to {len(population)} (-{number_of_people_before-len(population)}) people for {min_age}<ages<{max_age} ")
 
-	# rs is dictionary for each person how many he has infected every day
+    # rs is dictionary for each person how many he has infected every day
     # a dictionary where the key is a Person and the
     # value is the [infection date, number-of-people-that-this-person-infected]
     # note: rs is calculated even for dates after "max_date"
@@ -91,30 +123,31 @@ def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_ag
             if infection_data.transmitter is not None:
                 # rs_original[infection_data.transmitter][1] += 1
                 rs[infection_data.transmitter] = \
-                    RS(rs[infection_data.transmitter].infection_date, rs[infection_data.transmitter].people_infected_by_me + 1)
-                #if rs_original[infection_data.transmitter][1] != rs[infection_data.transmitter].people_infected_by_me:
+                    RS(rs[infection_data.transmitter].infection_date,
+                       rs[infection_data.transmitter].people_infected_by_me + 1)
+                # if rs_original[infection_data.transmitter][1] != rs[infection_data.transmitter].people_infected_by_me:
                 #    print("ERRORRRRRRRR people_infected_by_me!")
-                #if rs_original[infection_data.transmitter][0] is not None and rs_original[infection_data.transmitter][0] != rs[infection_data.transmitter].infection_date:
+                # if rs_original[infection_data.transmitter][0] is not None and rs_original[infection_data.transmitter][0] != rs[infection_data.transmitter].infection_date:
                 #    print("ERROR!!!!!DATE !")
 
     valid_infections = any(p.get_infection_data().date is not None for p in population
-                                if (p.get_infection_data() is not None)
+                           if (p.get_infection_data() is not None)
                            )
     if not valid_infections:
         return None
 
-    #The last date someone got infected
+    # The last date someone got infected
     max_infection_date = max(p.get_infection_data().date for p in population
-                                if (p.get_infection_data() is not None) and
-                                (p.get_infection_data().date is not None)
+                             if (p.get_infection_data() is not None) and
+                             (p.get_infection_data().date is not None)
                              )
-    #The first date someone got infected
+    # The first date someone got infected
     min_infection_date = min(p.get_infection_data().date for p in population
-                                if (p.get_infection_data() is not None) and
-                                (p.get_infection_data().date is not None)
+                             if (p.get_infection_data() is not None) and
+                             (p.get_infection_data().date is not None)
                              )
-							 
-	#Generating dictionary date:num of infectors, num of infected, how much every person contributed to the infection every day
+
+    # Generating dictionary date:num of infectors, num of infected, how much every person contributed to the infection every day
     InfectionByDate = namedtuple('InfectionByDate',
                                  'infected_today infected_by_someone_who_got_infected_today smoothed_infected_by_someone_who_got_infected_today')
     # r0_by_infection_date_pre_division_original = {
@@ -134,7 +167,7 @@ def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_ag
     # TODO: also, the "infections" may count people who got infected After the max_infection_date
     # TODO: Ask what's the difference between: r0_by_infection_date_pre_division[date][1]
     #       and r0_by_infection_date_pre_division[date][2] ?
-	# ???? TODO should it be "for data, infected_by in rs.values():" ????
+    # ???? TODO should it be "for data, infected_by in rs.values():" ????
     for infected_by in rs.values():
         if infected_by.infection_date is not None:
             # the date is the date where the person got sick
@@ -214,7 +247,8 @@ def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_ag
         if date <= max_date
     ])
     instantaneous_reproductive = [
-        infected_per_day[i]/max(seq([w.get_w(j) * infected_per_day[i-j] for j in range(1,look_back_days)]).sum(), 1)
+        infected_per_day[i] / max(seq([w.get_w(j) * infected_per_day[i - j] for j in range(1, look_back_days)]).sum(),
+                                  1)
         for i in range(look_back_days, len(infected_per_day))
     ]
     instantaneous_reproductive = [0.0] * look_back_days + instantaneous_reproductive
@@ -225,4 +259,5 @@ def calculate_r0_data(population: List[Person], max_date=None, min_age=0, max_ag
     population_size = len(population)
     # R-Effective = R0 * (suceptible / population-size)
     # estimated_r0 = [(r / (susceptibles.get(d) / population_size)) for r, d in zip(avg_r0, dates)]
-    return {'dates': dates, 'smoothed_avg_r0': smoothed_avg_r0, 'avg_r0': avg_r0, 'estimated_r0': [], 'instantaneous_r': instantaneous_reproductive}
+    return {'dates': dates, 'smoothed_avg_r0': smoothed_avg_r0, 'avg_r0': avg_r0, 'estimated_r0': [],
+            'instantaneous_r': instantaneous_reproductive}

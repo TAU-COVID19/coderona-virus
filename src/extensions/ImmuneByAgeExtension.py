@@ -173,7 +173,7 @@ class ImmuneByAgeExtension(Simulation):
         )
         immuned_percentage = (immuned / population) if population > 0 else 1.0
 
-        people_to_immune = []
+        people_vaccinated_today = []
 
         target_percentage_index = max(0, int(self.state_min_age_to_immune / 10))
         target_percentage_index = min(len(self.target_immune_percentage) - 1, target_percentage_index)
@@ -224,14 +224,14 @@ class ImmuneByAgeExtension(Simulation):
                 # print(f"Immune neighborhood {index_of_max}, neighborhood_id={neighborhoods[index_of_max].get_neighborhood_id()}, sick_per_neighborhood={all_people_to_consider}...", flush=False)
                 # print(f"Immune neighborhood {index_of_max}, neighborhood_id={neighborhoods[index_of_max].get_neighborhood_id()}, r_per_neighborhood={r_per_neighborhood}...", flush=False)
 
-                people_to_immune = [p for p in neighborhoods[index_of_max].get_people()
+                people_vaccinated_today = [p for p in neighborhoods[index_of_max].get_people()
                                     if (self.can_immune(p.get_disease_state())) and
                                     (p.get_age_category() > self.min_age_to_immune) and
                                     (p.get_age_category() <= self.max_age_to_immune)]
-                people_to_immune.sort(key=self.get_age_category,
+                people_vaccinated_today.sort(key=self.get_age_category,
                                       reverse=self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING)
                 # are we done with this neighborhood?
-                if len(people_to_immune) < self.max_people_to_immune_a_day + self.carry_over_vaccinations:
+                if len(people_vaccinated_today) < self.max_people_to_immune_a_day + self.carry_over_vaccinations:
                     # print(f"completed neighborhood {neighborhoods[index_of_max].get_neighborhood_id()}", flush=False)
                     self.completed_neighborhood += [neighborhoods[index_of_max].get_neighborhood_id()]
 
@@ -244,19 +244,20 @@ class ImmuneByAgeExtension(Simulation):
                                 lambda p: self.can_immune(p.get_disease_state()) and
                                           (p.get_age_category() > self.state_min_age_to_immune) and
                                           (p.get_age_category() <= self.state_max_age_to_immune)) > 0:
-                            people_to_immune += [p for p in h.get_people()
+                            people_vaccinated_today += [p for p in h.get_people()
                                                  if (self.can_immune(p.get_disease_state())) and
                                                  (p.get_age_category() >= 18) and
                                                  (p.get_age_category() <= self.state_max_age_to_immune)]
                     else:
-                        people_to_immune += [p for p in h.get_people()
+                        people_vaccinated_today += [p for p in h.get_people()
                                              if (self.can_immune(p.get_disease_state())) and
                                              (p.get_age_category() > self.state_min_age_to_immune) and
                                              (p.get_age_category() <= self.state_max_age_to_immune)]
-                    if len(people_to_immune) > self.max_people_to_immune_a_day + self.carry_over_vaccinations:
+                    # do we have enough people to vaccinate today?
+                    if len(people_vaccinated_today) > self.max_people_to_immune_a_day + self.carry_over_vaccinations:
                         break
             else:
-                people_to_immune = [p for p in self.parent._world.all_people()
+                people_vaccinated_today = [p for p in self.parent._world.all_people()
                                     if (self.can_immune(p.get_disease_state())) and
                                     (p.get_age_category() > self.state_min_age_to_immune) and
                                     (p.get_age_category() <= self.state_max_age_to_immune)]
@@ -266,15 +267,15 @@ class ImmuneByAgeExtension(Simulation):
                   f"carry_over_vaccinations={self.carry_over_vaccinations}, " +
                   f"immune % = {immuned}/{population} = {immuned_percentage * 100.0:.1f} count_to_percentage={count_to_percentage}",
                   flush=False)
-            num_of_people_to_immune = min(count_to_percentage,
+            num_can_be_vaccinated_today = min(count_to_percentage,
                                           self.max_people_to_immune_a_day + self.carry_over_vaccinations)
-            people_to_immune = seq(people_to_immune).take(num_of_people_to_immune)
-            people_to_immune.for_each(lambda person: self._register_events(person))
+            people_vaccinated_today = seq(people_vaccinated_today).take(num_can_be_vaccinated_today)
+            people_vaccinated_today.for_each(lambda person: self._register_events(person))
 
             # advance to the next age group only if you covered the current age group
             if count_to_percentage == 0:
                 self.finished = True
-            if people_to_immune.len() < (self.max_people_to_immune_a_day + self.carry_over_vaccinations) or \
+            if people_vaccinated_today.len() < (self.max_people_to_immune_a_day + self.carry_over_vaccinations) or \
                     immuned_percentage >= target_percentage:
                 if self.immune_strategy.immune_by_neighborhood:
                     pass
@@ -293,7 +294,9 @@ class ImmuneByAgeExtension(Simulation):
                 else:
                     assert False, "immune_strategy is Out Of Range!"
 
-            self.carry_over_vaccinations = num_of_people_to_immune - people_to_immune.len()
+            self.carry_over_vaccinations = num_can_be_vaccinated_today - people_vaccinated_today.len()
+            if self.carry_over_vaccinations < 0:
+                print(f"!!!!!!!!!!!! self.carry_over_vaccinations={self.carry_over_vaccinations} is NEGATIVE !!!!!!!!!!")
 
             # else:
             #     print(f"IMMUNE NOTHING people_to_immune={len(people_to_immune)} while self.max_people_to_immune_a_day={self.max_people_to_immune_a_day}\n"
