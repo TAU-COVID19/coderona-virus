@@ -162,6 +162,7 @@ class ImmuneByAgeExtension(Simulation):
         if portion of population that is immune > self.ImmunePortion Do nothing
         else immune by the selected ImmuneStrategy
         """
+        self.carry_over_vaccinations = 0
         self.days_since_start += 1
         immuned = seq(self.parent._world.all_people()).count(
             lambda p: p.get_disease_state() == DiseaseState.IMMUNE and
