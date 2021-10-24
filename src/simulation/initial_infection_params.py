@@ -27,6 +27,9 @@ class InitialImmuneType(Enum):
     HOUSEHOLDS_ALL_AT_ONCE = 3
     BY_NEIGHBORHOOD = 4
 
+    def __str__(self):
+        return self.name
+
 
 class NaiveInitialInfectionParams(InitialInfectionParams):
     """

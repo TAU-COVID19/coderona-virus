@@ -274,8 +274,6 @@ class ImmuneByAgeExtension(Simulation):
             people_vaccinated_today.for_each(lambda person: self._register_events(person))
 
             # advance to the next age group only if you covered the current age group
-            if count_to_percentage == 0:
-                self.finished = True
             if people_vaccinated_today.len() < (self.max_people_to_immune_a_day + self.carry_over_vaccinations) or \
                     immuned_percentage >= target_percentage:
                 if self.immune_strategy.immune_by_neighborhood:
@@ -284,7 +282,7 @@ class ImmuneByAgeExtension(Simulation):
                     if self.state_min_age_to_immune <= self.min_age_to_immune:
                         self.finished = True
                     self.state_min_age_to_immune = max(self.state_min_age_to_immune - 10, self.min_age_to_immune)
-                    self.state_max_age_to_immune -= 10
+                    self.state_max_age_to_immune = self.state_min_age_to_immune + 10
                 elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
                     if self.state_max_age_to_immune >= self.max_age_to_immune:
                         self.finished = True

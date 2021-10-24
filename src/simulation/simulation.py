@@ -24,6 +24,9 @@ class ORDER(Enum):
     ASCENDING=1,
     DESCENDING=2,
 
+    def __str__(self):
+        return self.name
+
 class Simulation(object):
     """
     An object which runs a single simulation, holding a world,
@@ -439,7 +442,7 @@ class Simulation(object):
                 ExtensionType = getattr(mod,ExtName)
                 extensions = extensions + [ExtensionType(self)]
 
-        self.print_hh_statistics()
+        # self.print_hh_statistics()
 
         for day in range(num_days):
             for ext in extensions:
