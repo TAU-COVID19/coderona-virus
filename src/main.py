@@ -129,8 +129,8 @@ def main():
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         #"Empty_scenario": Empty_scenario,
-        "children_school_closure_intervention": children_school_closure_intervention,
-        "children_asymptomatic_detection_intervention": children_asymptomatic_detection_intervention,
+        "school_closure": children_school_closure_intervention,
+        "asymptomatic_detection": children_asymptomatic_detection_intervention,
         #"only_children_asymptomatic_detection":only_children_asymptomatic_detection
         #"noHH_children_specific_interventions": children_specific_noHH_interventions,
         #"HH_adult_specific_interventions": adult_specific_HH_interventions,
