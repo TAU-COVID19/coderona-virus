@@ -453,7 +453,7 @@ def householdisolation_sd_interventions(compliance, ci_delay, hi_delay):
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
-        compliance=0.9,
+        compliance=compliance,
         age_range=(0, 99)
     )
     household_intervention = HouseholdIsolationIntervention(
