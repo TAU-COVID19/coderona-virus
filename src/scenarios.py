@@ -453,7 +453,7 @@ def householdisolation_sd_interventions(compliance, ci_delay, hi_delay):
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
-        compliance=compliance,
+        compliance=0.8,
         age_range=(0, 99)
     )
     household_intervention = HouseholdIsolationIntervention(
@@ -603,7 +603,7 @@ def children_school_closure_intervention(compliance, ci_delay, hi_delay):
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=0.9,
+        compliance=0.8,
         age_range=(0, 99)
     )
     household_intervention = HouseholdIsolationIntervention(
@@ -626,6 +626,8 @@ def children_school_closure_intervention(compliance, ci_delay, hi_delay):
                      school_closer_intervention
                       ]
     return interventions
+
+
 def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay):
     ci_intervention = SymptomaticIsolationIntervention(
         start_date=INITIAL_DATE,
@@ -649,7 +651,7 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
     sd_intervention = SocialDistancingIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(120),
-        compliance=0.9,
+        compliance=0.8,
         age_range=(0, 99)
     )
     household_intervention = HouseholdIsolationIntervention(
