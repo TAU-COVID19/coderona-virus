@@ -106,7 +106,7 @@ def main():
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions,
         # "reality1" : scenario_reality1,
-        #"hh_isolation": householdisolation_sd_interventions,
+        "hh_isolation": householdisolation_sd_interventions,
         # "check" : scenario_check,
         # "reality2" : scenario_reality2,
         # "reality3": scenario_reality3,
