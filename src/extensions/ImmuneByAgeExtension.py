@@ -196,35 +196,12 @@ class ImmuneByAgeExtension(Simulation):
                 neighborhoods = seq(self.parent._world.all_environments).filter(
                     lambda e: isinstance(e,
                                          NeighborhoodCommunity) and e.get_neighborhood_id() not in self.completed_neighborhood)
-                # sick_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).filter(
-                #     lambda p: p.get_disease_state() in [DiseaseState.SYMPTOMATICINFECTIOUS]))
-                # asymptomatic_per_neighborhood = neighborhoods.map(lambda n: seq(n.get_people()).filter(
-                #     lambda p: (p.get_disease_state() in [DiseaseState.ASYMPTOMATICINFECTIOUS]) and (
-                #                 'quarantine' in p.routine_changes.keys())))
-                #
-                # count_sick_per_neighborhood = sick_per_neighborhood.map(lambda n: n.len())
-                # count_asymptomatic_per_neighborhood = asymptomatic_per_neighborhood.map(lambda n: n.len())
-                #
-                # # take into account both the symptomatic and the asymptomatic (which we detected)
-                # # sick people in the neighborhood
-                # sick_or_asymptomatic = count_sick_per_neighborhood.zip(count_asymptomatic_per_neighborhood).map(
-                #     lambda x: x[0] + x[1])
-                # # average those numbers over 1 week
-                # all_people_to_consider = neighborhoods.zip(sick_or_asymptomatic).map(lambda x: (
-                #     self.historical_neighborhood_data.push(x[0], x[1]),
-                #     self.historical_neighborhood_data.average(x[0]))).map(lambda x: x[1])
-                #
-                # if all_people_to_consider.len() == 0:
-                #     print(f"Immune neighborhood() FINISHED PROCESSING THE CITY! all neighborhoods are empty!",
-                #           flush=False)
-                #     self.finished = True
-                #     return
 
-                # find which neighborhood have the biggest amount of sick people, and vaccinate them first
-                # index_of_max = all_people_to_consider.to_list().index(all_people_to_consider.max())
+                if neighborhoods.len() == 0:
+                    print(f"No more neighborhoods to vaccinate! (day {self.days_since_start})", flush=False)
+                    self.finished = True
+                    return
 
-                # r_per_neighborhood = neighborhoods.map(
-                #     lambda neighborhood: calculate_r0_instantaneous(neighborhood.get_people(), self.parent._date, 7))
                 r_per_neighborhood = neighborhoods.map(
                     lambda neighborhood: self.calculate_r0_instantaneous_per_neighborhood(self.parent._date,
                                                                                           neighborhood, 7))
