@@ -48,17 +48,21 @@ class ImmuneStrategy:
 
     def get_description(self, days_since_start: int = None):
         by_household = "Random"
+        order = self.order
+        immune_by_neighborhood_overide = self.immune_by_neighborhood and days_since_start is not None and days_since_start <= 7
+        if immune_by_neighborhood_overide:
+            order = self.DESCENDING
         if self.immune_by_neighborhood:
-            if days_since_start is None or days_since_start>7:
+            if not immune_by_neighborhood_overide:
                 by_household = "By Neighborhood"
         elif self.immune_by_households:
             if self.immune_everybody_in_the_house:
                 by_household = "By Household, All or nothing"
             else:
                 by_household = "By Household"
-        if self.order == self.ASCENDING:
+        if order == self.ASCENDING:
             return "ASCENDING" + ", " + by_household
-        elif self.order == self.DESCENDING:
+        elif order == self.DESCENDING:
             return "DESCENDING" + ", " + by_household
         else:
             return "ANY_AGE" + ", " + by_household
@@ -111,10 +115,10 @@ class ImmuneByAgeExtension(Simulation):
             self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
             self.state_min_age_to_immune = self.state_max_age_to_immune - 10
         else:
-            if self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
+            if self.get_order() == ImmuneStrategy.DESCENDING:
                 self.state_max_age_to_immune = math.floor((self.max_age_to_immune + 5) / 10) * 10
                 self.state_min_age_to_immune = self.state_max_age_to_immune - 10
-            elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
+            elif self.get_order() == ImmuneStrategy.ASCENDING:
                 self.state_min_age_to_immune = self.min_age_to_immune
                 self.state_max_age_to_immune = math.floor((self.min_age_to_immune + 15) / 10) * 10
             else:
@@ -135,6 +139,12 @@ class ImmuneByAgeExtension(Simulation):
         # in the first Week of a neighborhood Immune strategy, we would like to vaccinate the elderly people
         # then, in the next weeks, continue with the neighborhood Immune strategy
         return self.immune_strategy.immune_by_neighborhood and self.days_since_start > 7
+
+    def get_order(self):
+        if self.immune_strategy.immune_by_neighborhood and self.days_since_start <= 7:
+            return ImmuneStrategy.DESCENDING
+        else:
+            return self.immune_strategy.get_order()
 
     def is_immune_everybody_in_the_house(self):
         return self.immune_strategy.immune_everybody_in_the_house
@@ -171,11 +181,11 @@ class ImmuneByAgeExtension(Simulation):
         self.days_since_start += 1
         immuned = seq(self.parent._world.all_people()).count(
             lambda p: p.get_disease_state() == DiseaseState.IMMUNE and
-                      (self.state_min_age_to_immune < p.get_age_category() <= self.state_max_age_to_immune)
+                      (self.min_age_to_immune < p.get_age_category() <= self.max_age_to_immune)
         )
         population = seq(self.parent._world.all_people()).count(
             lambda p: (p.get_disease_state() != DiseaseState.DECEASED) and
-                      (self.state_min_age_to_immune < p.get_age_category() <= self.state_max_age_to_immune)
+                      (self.min_age_to_immune < p.get_age_category() <= self.max_age_to_immune)
         )
         immuned_percentage = (immuned / population) if population > 0 else 1.0
 
@@ -216,7 +226,7 @@ class ImmuneByAgeExtension(Simulation):
                                            (p.get_age_category() > self.min_age_to_immune) and
                                            (p.get_age_category() <= self.max_age_to_immune)]
                 people_vaccinated_today.sort(key=self.get_age_category,
-                                             reverse=self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING)
+                                             reverse=self.get_order() == ImmuneStrategy.DESCENDING)
                 # are we done with this neighborhood?
                 if len(people_vaccinated_today) < self.max_people_to_immune_a_day + self.carry_over_vaccinations:
                     # print(f"completed neighborhood {neighborhoods[index_of_max].get_neighborhood_id()}", flush=False)
@@ -264,17 +274,17 @@ class ImmuneByAgeExtension(Simulation):
                     immuned_percentage >= target_percentage:
                 if self.is_by_neighborhood():
                     pass
-                elif self.immune_strategy.get_order() == ImmuneStrategy.DESCENDING:
+                elif self.get_order() == ImmuneStrategy.DESCENDING:
                     if self.state_min_age_to_immune <= self.min_age_to_immune:
                         self.finished = True
                     self.state_min_age_to_immune = max(self.state_min_age_to_immune - 10, self.min_age_to_immune)
                     self.state_max_age_to_immune = self.state_min_age_to_immune + 10
-                elif self.immune_strategy.get_order() == ImmuneStrategy.ASCENDING:
+                elif self.get_order() == ImmuneStrategy.ASCENDING:
                     if self.state_max_age_to_immune >= self.max_age_to_immune:
                         self.finished = True
                     self.state_max_age_to_immune = min(self.state_max_age_to_immune + 10, self.max_age_to_immune)
                     self.state_min_age_to_immune = self.state_max_age_to_immune - 10
-                elif self.immune_strategy.get_order() == ImmuneStrategy.NONE:
+                elif self.get_order() == ImmuneStrategy.NONE:
                     pass  # do nothing
                 else:
                     assert False, "immune_strategy is Out Of Range!"
