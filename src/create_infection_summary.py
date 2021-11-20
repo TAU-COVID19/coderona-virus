@@ -111,14 +111,15 @@ def remove_outliers(data: List[float], method="stdev"):
     return outliers_removed, outliers
 
 
-DAILY_INFO = namedtuple("DAILY_INFO", ("infected_sum_mean", "infected_sum_stdev", "infected_sum",
+DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
+                                       "infected_sum_mean", "infected_sum_stdev", "infected_sum",
                                        "critical_sum_mean", "critical_sum_stdev", "critical_sum",
                                        "infected_max_mean", "infected_max_stdev", "infected_max",
                                        "critical_max_mean", "critical_max_stdev", "critical_max"))
 
 
 def stderr(data):
-    return statistics.stdev(data)/math.sqrt(len(data))
+    return statistics.stdev(data) / math.sqrt(len(data))
 
 
 def get_daily_info(root_path) -> DAILY_INFO:
@@ -151,7 +152,8 @@ def get_daily_info(root_path) -> DAILY_INFO:
 
     for i in range(1000):
         critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
-        total_critical_in_community = get_sample_line(root_path, sample=i, amit_graph_type="integral", line_name="critical_0_99")
+        total_critical_in_community = get_sample_line(root_path, sample=i, amit_graph_type="integral",
+                                                      line_name="critical_0_99")
 
         if critical_today is not None and total_critical_in_community is not None:
             critical_sum.append(sum(critical_today))
@@ -165,6 +167,7 @@ def get_daily_info(root_path) -> DAILY_INFO:
     # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
 
     return DAILY_INFO(
+        number_of_samples=number_of_samples,
         infected_sum=infected_sum,
         infected_sum_mean=statistics.mean(infected_sum),
         infected_sum_stdev=stderr(infected_sum),
@@ -179,6 +182,7 @@ def get_daily_info(root_path) -> DAILY_INFO:
         critical_max_stdev=stderr(critical_max)
     )
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("ERROR! please provide one argument which is the date/time of the run")
@@ -188,11 +192,18 @@ if __name__ == "__main__":
     df = pandas.DataFrame(columns=["scenario", "city", "initial_infected", "immune_per_day",
                                    "immune_order", "total_infected", "std_infected", "total_critical", "std_critical",
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
+    last_number_of_samples = None
     for one_run in all_runs:
         # daily_csv_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_daily")
         # daily_integral_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_integral")
 
         daily = get_daily_info(f"../outputs/{sys.argv[1]}/{one_run}")
+        if last_number_of_samples is None:
+            last_number_of_samples = daily.number_of_samples
+        if last_number_of_samples != daily.number_of_samples:
+            print(f"ERROR!! ERROR!! INCONSISTENT NUMBER OF SAMPLES!!! last_number_of_samples={last_number_of_samples} "
+                  f"while current number of samples = {daily.number_of_samples}")
+            exit(-2)
         c = Categories(one_run)
         df = df.append({"scenario": one_run,
                         "city": c.city,
