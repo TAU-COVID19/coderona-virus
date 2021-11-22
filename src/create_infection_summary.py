@@ -26,13 +26,13 @@ class Categories:
         else:
             self.order = "NONE"
         if "HOUSEHOLDS_ALL_AT_ONCE" in one_run:
-            self.household = "HH_ALL_AT_ONCE"
+            self.vaccination_strategy = "HH_ALL_AT_ONCE"
         elif "HOUSEHOLD" in one_run:
-            self.household = "HOUSEHOLD"
+            self.vaccination_strategy = "HOUSEHOLD"
         elif "BY_NEIGHBORHOOD" in one_run:
-            self.household = "BY_NEIGHBORHOOD"
+            self.vaccination_strategy = "BY_NEIGHBORHOOD"
         elif "GENERAL" in one_run:
-            self.household = "GENERAL"
+            self.vaccination_strategy = "GENERAL"
         else:
             print(f"ERROR! unknown order! in {one_run}")
             exit(-1)
@@ -48,7 +48,7 @@ class Categories:
 
     def __str__(self):
         return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
-               f"{self.household}\n{self.order}\ncompliance={self.compliance}"
+               f"{self.vaccination_strategy}\n{self.order}\ncompliance={self.compliance}"
 
 
 def sort_runs(a, b):
@@ -111,7 +111,7 @@ def remove_outliers(data: List[float], method="stdev"):
     return outliers_removed, outliers
 
 
-DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
+DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples", "daily_infection",
                                        "infected_sum_mean", "infected_sum_stdev", "infected_sum",
                                        "critical_sum_mean", "critical_sum_stdev", "critical_sum",
                                        "infected_max_mean", "infected_max_stdev", "infected_max",
@@ -127,6 +127,8 @@ def get_daily_info(root_path) -> DAILY_INFO:
     max_infectious_in_community = []
 
     number_of_samples = 0
+    daily_infection = None
+
     for i in range(1000):
         # infected_today = get_sample_line(root_path, i, "integral", 1)
         # critical_today = get_daily_column(root_path, sample=i, column=9)
@@ -142,10 +144,16 @@ def get_daily_info(root_path) -> DAILY_INFO:
 
         if infected_today is not None and total_infected_in_community is not None:
             infected_sum.append(sum(infected_today))
+            if daily_infection is None:
+                daily_infection = seq(infected_today)
+            else:
+                daily_infection = daily_infection.zip(seq(infected_today)).map(lambda x: x[0] + x[1])
             max_infectious_in_community.append(max(total_infected_in_community))
             number_of_samples += 1
         else:
             break
+
+    daily_infection = daily_infection.map(lambda x: x/number_of_samples)
 
     critical_sum = []
     critical_max = []
@@ -168,6 +176,7 @@ def get_daily_info(root_path) -> DAILY_INFO:
 
     return DAILY_INFO(
         number_of_samples=number_of_samples,
+        daily_infection=daily_infection.to_list(),
         infected_sum=infected_sum,
         infected_sum_mean=statistics.mean(infected_sum),
         infected_sum_stdev=stderr(infected_sum),
@@ -183,6 +192,37 @@ def get_daily_info(root_path) -> DAILY_INFO:
     )
 
 
+def select_daily_graph_colors(vaccination_strategy, vaccination_order):
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
+    lines = [(0, (5, 10)), (0, (1, 1)), (0, (5, 1)), (0, (3, 1, 1, 1, 1, 1)), (0, (10, 0))]
+
+    if vaccination_order == "DESCENDING":
+        line_color = colors[0]
+    else:
+        line_color = colors[1]
+
+    if vaccination_strategy == "GENERAL":
+        line_pattern = lines[0]
+    elif vaccination_strategy == "BY_NEIGHBORHOOD":
+        line_pattern = lines[1]
+    else:
+        line_pattern = lines[2]
+
+    line_label = f"{vaccination_strategy} - {vaccination_order}"
+
+    return line_color, line_pattern, line_label
+
+
+def draw_daily_graphs(df, ax):
+    for key, daily_results in enumerate(df["daily_infection"]):
+        color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
+                                                             df["order"].to_list()[key])
+        ax.plot(range(len(daily_results)), daily_results, label=label,
+                              color=color,
+                              linestyle=line_style)
+        ax.legend()
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("ERROR! please provide one argument which is the date/time of the run")
@@ -191,7 +231,7 @@ if __name__ == "__main__":
     all_runs = get_run_folders(f"../outputs/{sys.argv[1]}")
     df = pandas.DataFrame(columns=["scenario", "city", "initial_infected", "immune_per_day",
                                    "immune_order", "total_infected", "std_infected", "total_critical", "std_critical",
-                                   "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
+                                   "max_infevcted", "std_max_infected", "max_critical", "std_max_critical"])
     last_number_of_samples = None
     for one_run in all_runs:
         # daily_csv_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_daily")
@@ -212,7 +252,10 @@ if __name__ == "__main__":
                         "immune_per_day": c.immune_per_day,
                         "immune_order": str(c),
                         "compliance": c.compliance,
+                        "vaccination_strategy": c.vaccination_strategy,
+                        "order": c.order,
 
+                        "daily_infection": daily.daily_infection,
                         "total_infected": daily.infected_sum_mean,
                         "std_infected": daily.infected_sum_stdev,
                         "infected_sum": daily.infected_sum,
@@ -245,10 +288,15 @@ if __name__ == "__main__":
     fig.set_figwidth(16)
     fig.set_figheight(len(categories) * 20)
 
+    fig2, axs2 = pyplot.subplots(len(categories) * 4, 1)
+    fig2.set_figwidth(16)
+    fig2.set_figheight(len(categories) * 20)
+
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
 
     category_i = 0
+    daily_category_i = 0
     for category in categories:
         print("\n\n")
         title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}, compliance={category[0][4]}'
@@ -268,6 +316,10 @@ if __name__ == "__main__":
                 axs[category_i].plot(df["immune_order"], df["infected_sum"].to_list(), "o")
         else:
             axs[category_i].boxplot(df["infected_sum"], labels=df["immune_order"])
+
+        draw_daily_graphs(df, axs2[daily_category_i])
+        axs2[daily_category_i].set_title(f"Daily Infected ({title})")
+        daily_category_i += 1
 
         axs[category_i].set_title(f"Total Infected ({title})")
         category_i += 1
@@ -313,3 +365,6 @@ if __name__ == "__main__":
 
     fig.tight_layout(pad=7.0)
     fig.savefig(f"../outputs/{sys.argv[1]}/results.svg")
+
+    fig2.tight_layout(pad=7.0)
+    fig2.savefig(f"../outputs/{sys.argv[1]}/daily_results.svg")
