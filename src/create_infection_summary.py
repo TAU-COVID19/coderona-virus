@@ -111,7 +111,7 @@ def remove_outliers(data: List[float], method="stdev"):
     return outliers_removed, outliers
 
 
-DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples", "daily_infection",
+DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples", "daily_infection", "daily_critical_cases",
                                        "infected_sum_mean", "infected_sum_stdev", "infected_sum",
                                        "critical_sum_mean", "critical_sum_stdev", "critical_sum",
                                        "infected_max_mean", "infected_max_stdev", "infected_max",
@@ -153,10 +153,11 @@ def get_daily_info(root_path) -> DAILY_INFO:
         else:
             break
 
-    daily_infection = daily_infection.map(lambda x: x/number_of_samples)
+    daily_infection = daily_infection.map(lambda x: x / number_of_samples)
 
     critical_sum = []
     critical_max = []
+    daily_critical_cases = None
 
     for i in range(1000):
         critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
@@ -169,6 +170,13 @@ def get_daily_info(root_path) -> DAILY_INFO:
         else:
             break
 
+        if daily_critical_cases is None:
+            daily_critical_cases = seq(critical_today)
+        else:
+            daily_critical_cases = daily_critical_cases.zip(seq(critical_today)).map(lambda x: x[0] + x[1])
+
+    daily_critical_cases = daily_critical_cases.map(lambda x: x / number_of_samples)
+
     # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_sum, method="percentile")
     # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_sum, method="percentile")
     # infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community, method="percentile")
@@ -177,6 +185,7 @@ def get_daily_info(root_path) -> DAILY_INFO:
     return DAILY_INFO(
         number_of_samples=number_of_samples,
         daily_infection=daily_infection.to_list(),
+        daily_critical_cases=daily_critical_cases.to_list(),
         infected_sum=infected_sum,
         infected_sum_mean=statistics.mean(infected_sum),
         infected_sum_stdev=stderr(infected_sum),
@@ -213,14 +222,23 @@ def select_daily_graph_colors(vaccination_strategy, vaccination_order):
     return line_color, line_pattern, line_label
 
 
-def draw_daily_graphs(df, ax):
-    for key, daily_results in enumerate(df["daily_infection"]):
-        color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
-                                                             df["order"].to_list()[key])
-        ax.plot(range(len(daily_results)), daily_results, label=label,
-                              color=color,
-                              linestyle=line_style)
-        ax.legend()
+def draw_daily_graphs(df, ax, plot_infection_graph):
+    if plot_infection_graph:
+        for key, daily_results in enumerate(df["daily_infection"]):
+            color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
+                                                                 df["order"].to_list()[key])
+            ax.plot(range(len(daily_results)), daily_results, label=label,
+                    color=color,
+                    linestyle=line_style)
+            ax.legend()
+    else:  # plot daily critical cases
+        for key, daily_results in enumerate(df["daily_critical_cases"]):
+            color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
+                                                                 df["order"].to_list()[key])
+            ax.plot(range(len(daily_results)), daily_results, label=label,
+                    color=color,
+                    linestyle=line_style)
+            ax.legend()
 
 
 if __name__ == "__main__":
@@ -256,6 +274,7 @@ if __name__ == "__main__":
                         "order": c.order,
 
                         "daily_infection": daily.daily_infection,
+                        "daily_critical_cases": daily.daily_critical_cases,
                         "total_infected": daily.infected_sum_mean,
                         "std_infected": daily.infected_sum_stdev,
                         "infected_sum": daily.infected_sum,
@@ -317,8 +336,12 @@ if __name__ == "__main__":
         else:
             axs[category_i].boxplot(df["infected_sum"], labels=df["immune_order"])
 
-        draw_daily_graphs(df, axs2[daily_category_i])
+        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
         axs2[daily_category_i].set_title(f"Daily Infected ({title})")
+        daily_category_i += 1
+
+        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=False)
+        axs2[daily_category_i].set_title(f"Daily Critical Cases ({title})")
         daily_category_i += 1
 
         axs[category_i].set_title(f"Total Infected ({title})")
