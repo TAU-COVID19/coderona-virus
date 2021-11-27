@@ -7,12 +7,13 @@ import sys
 from collections import namedtuple
 from typing import List
 import numpy as np
-from w import W
-from src.simulation.params import Params
-
 import pandas
 from functional import seq, pipeline
 from matplotlib import pyplot
+
+from src.w import W
+from src.simulation.params import Params
+from categories import Categories
 
 
 class GraphType(Enum):
@@ -25,43 +26,6 @@ class GraphType(Enum):
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
 w = None
-
-
-class Categories:
-    def __init__(self, one_run):
-        parameters = one_run.split(',')
-        self.city = parameters[0]
-        self.intervention = parameters[1]
-        if "ASCENDING" in one_run:
-            self.order = "ASCENDING"
-        elif "DESCENDING" in one_run:
-            self.order = "DESCENDING"
-        else:
-            self.order = "NONE"
-        if "HOUSEHOLDS_ALL_AT_ONCE" in one_run:
-            self.vaccination_strategy = "HH_ALL_AT_ONCE"
-        elif "HOUSEHOLD" in one_run:
-            self.vaccination_strategy = "HOUSEHOLD"
-        elif "BY_NEIGHBORHOOD" in one_run:
-            self.vaccination_strategy = "BY_NEIGHBORHOOD"
-        elif "GENERAL" in one_run:
-            self.vaccination_strategy = "GENERAL"
-        else:
-            print(f"ERROR! unknown order! in {one_run}")
-            exit(-1)
-        self.immune_per_day = 0
-        self.initial_infected = 0
-        for i in range(len(parameters)):
-            if 'imm_per_day' in parameters[i]:
-                self.immune_per_day = parameters[i].split('=')[1]
-            if 'inf=' in parameters[i]:
-                self.initial_infected = parameters[i].split('=')[1]
-            if 'comp=' in parameters[i]:
-                self.compliance = parameters[i].split('=')[1]
-
-    def __str__(self):
-        return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
-               f"{self.vaccination_strategy}\n{self.order}\ncompliance={self.compliance}"
 
 
 def sort_runs(a, b):
@@ -205,78 +169,7 @@ def get_daily_info(root_path) -> DAILY_INFO:
     )
 
 
-def select_daily_graph_colors(vaccination_strategy, vaccination_order):
-    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
-    lines = [(0, (5, 10)), (0, (1, 1)), (0, (5, 1)), (0, (3, 1, 1, 1, 1, 1)), (0, (10, 0))]
-
-    if vaccination_order == "DESCENDING":
-        line_color = colors[0]
-    else:
-        line_color = colors[1]
-
-    if vaccination_strategy == "GENERAL":
-        line_pattern = lines[0]
-    elif vaccination_strategy == "BY_NEIGHBORHOOD":
-        line_pattern = lines[1]
-    else:
-        line_pattern = lines[2]
-
-    line_label = f"{vaccination_strategy} - {vaccination_order}"
-
-    return line_color, line_pattern, line_label
-
-
-def draw_daily_graphs(df, ax, plot_infection_graph):
-    if plot_infection_graph:
-        for key, daily_results in enumerate(df["daily_infection"]):
-            color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
-                                                                 df["order"].to_list()[key])
-            ax.plot(range(len(daily_results)), daily_results, label=label,
-                    color=color,
-                    linestyle=line_style)
-            ax.legend()
-    else:  # plot daily critical cases
-        for key, daily_results in enumerate(df["daily_critical_cases"]):
-            color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
-                                                                 df["order"].to_list()[key])
-            ax.plot(range(len(daily_results)), daily_results, label=label,
-                    color=color,
-                    linestyle=line_style)
-            ax.legend()
-
-
-def draw_daily_r_graph(df, ax):
-    print(f"draw_daily_r_graph() start...")
-    for key, daily_results in enumerate(df["daily_infection"]):
-        r = calculate_r0_instantaneous(daily_results)
-        color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
-                                                             df["order"].to_list()[key])
-        ax.plot(range(len(r)), r, label=label,
-                color=color,
-                linestyle=line_style)
-        ax.legend()
-    print(f"draw_daily_r_graph() complete.")
-
-
-def calculate_r0_instantaneous(infected_per_day: List[int], look_back_days: int = 7) -> List[float]:
-    """calculates the instantaneous r based on a look back of look_back_days days"""
-
-    r = []
-
-    for i in range(len(infected_per_day)):
-        if i <= look_back_days:
-            r.append(0)
-        else:
-            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7325187/
-            look_back_days = w.w_len()
-
-            r_today = infected_per_day[i] \
-                      / max(seq([w.get_w(i) *
-                                 infected_per_day[i - look_back]
-                                 for look_back in range(1, look_back_days)]).sum(), 1)
-            r.append(r_today)
-
-    return r
+from daily_graphs import *
 
 
 def set_axis_style(ax, labels):
@@ -290,11 +183,11 @@ def set_axis_style(ax, labels):
 
 
 if __name__ == "__main__":
-    config_path = os.path.join(os.path.dirname(__file__), "config.json")
+    config_path = os.path.join(os.path.dirname(__file__), "../config.json")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
-    Params.load_from(os.path.join(os.path.dirname(__file__), paramsDataPath), override=True)
+    Params.load_from(os.path.join(os.path.dirname(__file__), "../" + paramsDataPath), override=True)
     w = W()
 
     if len(sys.argv) != 2:
@@ -402,7 +295,7 @@ if __name__ == "__main__":
         axs2[daily_category_i].set_title(f"Total Critical Cases ({title})")
         daily_category_i += 1
 
-        draw_daily_r_graph(df, axs2[daily_category_i])
+        draw_daily_r_graph(df, axs2[daily_category_i], w)
         axs2[daily_category_i].set_title(f"Daily Instantaneous R ({title})")
         daily_category_i += 1
 
