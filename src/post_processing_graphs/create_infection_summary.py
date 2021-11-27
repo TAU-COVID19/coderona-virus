@@ -359,3 +359,5 @@ if __name__ == "__main__":
 
     fig2.tight_layout(pad=7.0)
     fig2.savefig(f"../../outputs/{sys.argv[1]}/daily_results.svg")
+
+#test
