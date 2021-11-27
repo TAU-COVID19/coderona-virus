@@ -184,17 +184,18 @@ def set_axis_style(ax, labels):
 
 if __name__ == "__main__":
     config_path = os.path.join(os.path.dirname(__file__), "../config.json")
+    root_path = os.path.join(os.path.dirname(__file__), "../../")
     with open(config_path) as json_data_file:
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
-    Params.load_from(os.path.join(os.path.dirname(__file__), "../" + paramsDataPath), override=True)
+    Params.load_from(os.path.join(root_path, "src/" + paramsDataPath), override=True)
     w = W()
 
     if len(sys.argv) != 2:
         print("ERROR! please provide one argument which is the date/time of the run")
         exit(-1)
 
-    all_runs = get_run_folders(f"../../outputs/{sys.argv[1]}")
+    all_runs = get_run_folders(f"{root_path}/outputs/{sys.argv[1]}")
     df = pandas.DataFrame(columns=["scenario", "city", "initial_infected", "immune_per_day",
                                    "immune_order", "total_infected", "std_infected", "total_critical", "std_critical",
                                    "max_infevcted", "std_max_infected", "max_critical", "std_max_critical"])
@@ -203,7 +204,7 @@ if __name__ == "__main__":
         # daily_csv_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_daily")
         # daily_integral_filename = find_file_containing(f"../outputs/{sys.argv[1]}/{one_run}", "amit_graph_integral")
 
-        daily = get_daily_info(f"../../outputs/{sys.argv[1]}/{one_run}")
+        daily = get_daily_info(f"{root_path}/outputs/{sys.argv[1]}/{one_run}")
         if last_number_of_samples is None:
             last_number_of_samples = daily.number_of_samples
         if last_number_of_samples != daily.number_of_samples:
@@ -247,7 +248,7 @@ if __name__ == "__main__":
         # index_of_max_infected = infected.index(max_infected)
         # std_infected = daily_integral[3][1:][index_of_max_infected]
 
-    df.to_csv(f"../../outputs/{sys.argv[1]}/results.csv")
+    df.to_csv(f"{root_path}/outputs/{sys.argv[1]}/results.csv")
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day", "compliance"])
 
@@ -355,9 +356,9 @@ if __name__ == "__main__":
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
     fig.tight_layout(pad=7.0)
-    fig.savefig(f"../../outputs/{sys.argv[1]}/results.svg")
+    fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results.svg")
 
     fig2.tight_layout(pad=7.0)
-    fig2.savefig(f"../../outputs/{sys.argv[1]}/daily_results.svg")
+    fig2.savefig(f"{root_path}/outputs/{sys.argv[1]}/daily_results.svg")
 
-#test
+
