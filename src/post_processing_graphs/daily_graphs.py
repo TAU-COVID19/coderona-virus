@@ -1,5 +1,6 @@
 from typing import List
 from functional import seq
+import numpy as np
 
 
 def select_daily_graph_colors(vaccination_strategy, vaccination_order):
@@ -26,19 +27,29 @@ def select_daily_graph_colors(vaccination_strategy, vaccination_order):
 def draw_daily_graphs(df, ax, plot_infection_graph):
     if plot_infection_graph:
         for key, daily_results in enumerate(df["daily_infection"]):
+            std_err = df["daily_infection_stderr"].tolist()[key]
             color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
                                                                  df["order"].to_list()[key])
             ax.plot(range(len(daily_results)), daily_results, label=label,
                     color=color,
                     linestyle=line_style)
+            # draw the confidence interval
+            lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
+            upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
+            ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             ax.legend()
     else:  # plot daily critical cases
         for key, daily_results in enumerate(df["daily_critical_cases"]):
+            std_err = df["daily_critical_stderr"].tolist()[key]
             color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
                                                                  df["order"].to_list()[key])
             ax.plot(range(len(daily_results)), daily_results, label=label,
                     color=color,
                     linestyle=line_style)
+            # draw the confidence interval
+            lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
+            upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
+            ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             ax.legend()
 
 
