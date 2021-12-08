@@ -157,7 +157,8 @@ if __name__ == "__main__":
         elif selected_graph_type == GraphType.BOX:
             axs[category_i].boxplot(df["infected_sum"], labels=df["immune_order"])
         else:
-            axs[category_i].violinplot(df["infected_sum"], showmedians=True, showextrema=False)
+            axs[category_i].violinplot(df["infected_sum"], showmedians=True, showextrema=False,
+                                       quantiles=[[0.25, 0.75]] * len(df["immune_order"]))
             set_axis_style(axs[category_i], df["immune_order"])
 
         draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
@@ -184,7 +185,8 @@ if __name__ == "__main__":
         elif selected_graph_type == GraphType.BOX:
             axs[category_i].boxplot(df["critical_sum"], labels=df["immune_order"])
         else:
-            parts = axs[category_i].violinplot(df["critical_sum"], showmedians=True, showextrema=False)
+            parts = axs[category_i].violinplot(df["critical_sum"], showmedians=True, showextrema=False,
+                                               quantiles=[[0.25, 0.75]] * len(df["immune_order"]))
             set_axis_style(axs[category_i], df["immune_order"])
             for pc in parts['bodies']:
                 pc.set_facecolor('#D43F3A')
@@ -203,7 +205,8 @@ if __name__ == "__main__":
         elif selected_graph_type == GraphType.BOX:
             axs[category_i].boxplot(df["infected_max"], labels=df["immune_order"])
         else:
-            axs[category_i].violinplot(df["infected_max"], showmedians=True, showextrema=False)
+            axs[category_i].violinplot(df["infected_max"], showmedians=True, showextrema=False,
+                                       quantiles=[[0.25, 0.75]] * len(df["immune_order"]))
             set_axis_style(axs[category_i], df["immune_order"])
 
         axs[category_i].set_title(f"Max Infected ({title})")
@@ -218,7 +221,8 @@ if __name__ == "__main__":
         elif selected_graph_type == GraphType.BOX:
             axs[category_i].boxplot(df["critical_max"], labels=df["immune_order"])
         else:
-            axs[category_i].violinplot(df["critical_max"], showmedians=True, showextrema=False)
+            axs[category_i].violinplot(df["critical_max"], showmedians=True, showextrema=False,
+                                       quantiles=[[0.25, 0.75]] * len(df["immune_order"]))
             set_axis_style(axs[category_i], df["immune_order"])
 
         axs[category_i].set_title(f"Max Critical ({title})")
