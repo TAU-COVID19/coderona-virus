@@ -69,7 +69,7 @@ def get_daily_column(root_path, sample, column_name):
         return [max(0, float(x[column])) for x in data[1:]]
     return None
 
-
+# remove outliers
 def remove_outliers(data: List[float], method="stdev"):
     if method == "stdev":
         data_mean, data_std = statistics.mean(data), statistics.stdev(data)
