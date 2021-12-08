@@ -189,8 +189,8 @@ if __name__ == "__main__":
                                                quantiles=[[0.25, 0.75]] * len(df["immune_order"]))
             set_axis_style(axs[category_i], df["immune_order"])
             for pc in parts['bodies']:
-                pc.set_facecolor('#D43F3A')
-                pc.set_edgecolor('black')
+                pc.set_facecolor('#EDB8C9')
+                #pc.set_edgecolor('black')
                 pc.set_alpha(1)
 
         axs[category_i].set_title(f"Total Critical ({title})")
