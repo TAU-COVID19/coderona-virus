@@ -130,7 +130,7 @@ def main():
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         #Empty_scenario": Empty_scenario,
         #"school_closure": children_school_closure_intervention,
-        "asymptomatic_detection": children_asymptomatic_detection_intervention,
+        #"asymptomatic_detection": children_asymptomatic_detection_intervention,
         #"only_children_asymptomatic_detection":only_children_asymptomatic_detection
         #"noHH_children_specific_interventions": children_specific_noHH_interventions,
         #"HH_adult_specific_interventions": adult_specific_HH_interventions,
@@ -213,7 +213,7 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=160))
+                                                                          num_repetitions=300))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
