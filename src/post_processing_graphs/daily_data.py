@@ -75,11 +75,11 @@ def get_daily_info(root_path) -> DAILY_INFO:
         if infected_today is not None and total_infected_in_community is not None:
             infected_sum.append(sum(infected_today))
             if daily_infection is None:
-                daily_infection = seq(infected_today)
-                daily_infection_full_data = np.array([infected_today])
+                daily_infection = seq(total_infected_in_community)
+                daily_infection_full_data = np.array([total_infected_in_community])
             else:
-                daily_infection = daily_infection.zip(seq(infected_today)).map(lambda x: x[0] + x[1])
-                daily_infection_full_data = np.append(daily_infection_full_data, [infected_today], axis=0)
+                daily_infection = daily_infection.zip(seq(total_infected_in_community)).map(lambda x: x[0] + x[1])
+                daily_infection_full_data = np.append(daily_infection_full_data, [total_infected_in_community], axis=0)
             max_infectious_in_community.append(max(total_infected_in_community))
             number_of_samples += 1
         else:
