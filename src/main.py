@@ -106,7 +106,7 @@ def main():
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions,
         # "reality1" : scenario_reality1,
-        "hh_isolation": householdisolation_sd_interventions,
+        #"hh_isolation": householdisolation_sd_interventions,
         # "check" : scenario_check,
         # "reality2" : scenario_reality2,
         # "reality3": scenario_reality3,
@@ -130,7 +130,7 @@ def main():
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         #Empty_scenario": Empty_scenario,
         #"school_closure": children_school_closure_intervention,
-        #"asymptomatic_detection": children_asymptomatic_detection_intervention,
+        "asymptomatic_detection": children_asymptomatic_detection_intervention,
         #"only_children_asymptomatic_detection":only_children_asymptomatic_detection
         #"noHH_children_specific_interventions": children_specific_noHH_interventions,
         #"HH_adult_specific_interventions": adult_specific_HH_interventions,
