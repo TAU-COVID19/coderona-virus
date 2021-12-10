@@ -76,7 +76,7 @@ def draw_violin_graph(ax, x, data):
     inds = np.arange(1, len(medians) + 1)
     ax.scatter(inds, medians, marker='o', color='white', s=30, zorder=3)
     ax.vlines(inds, quartile1, quartile3, color='k', linestyle='-', lw=5)
-    ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
+    # ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
 
 
 if __name__ == "__main__":
@@ -169,9 +169,9 @@ if __name__ == "__main__":
                 f'f"per-day={category[0][3]}, compliance={category[0][4]}'
         df = category[1]
 
-        # plot a separator line between each category
-        axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes,
-                             clip_on=False)
+        # # plot a separator line between each category
+        # axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes,
+        #                      clip_on=False)
 
         if selected_graph_type == GraphType.BAR:
             axs[category_i].bar(df["immune_order"], df["total_infected_in_the_community"], color="lightsteelblue")
@@ -216,38 +216,38 @@ if __name__ == "__main__":
         axs[category_i].set_title(f"Total Critical Today ({title})")
         category_i += 1
 
-        if selected_graph_type == GraphType.BAR:
-            axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
-            axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
-                                     ecolor="cornflowerblue", fmt=".")
-            if draw_points_on_graph:
-                axs[category_i].plot(df["immune_order"], df["infected_max"].to_list(), "o")
-        elif selected_graph_type == GraphType.BOX:
-            axs[category_i].boxplot(df["infected_max"], labels=df["immune_order"])
-        else:
-            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["infected_max"])
-
-        axs[category_i].set_title(f"Max Infected ({title})")
-        category_i += 1
-
-        if selected_graph_type == GraphType.BAR:
-            axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
-            axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
-                                     ecolor="slateblue", fmt=".")
-            if draw_points_on_graph:
-                axs[category_i].plot(df["immune_order"], df["critical_max"].to_list(), "o")
-        elif selected_graph_type == GraphType.BOX:
-            axs[category_i].boxplot(df["critical_max"], labels=df["immune_order"])
-        else:
-            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["critical_max"])
-
-        axs[category_i].set_title(f"Max Critical ({title})")
-
-        category_i += 1
+        # if selected_graph_type == GraphType.BAR:
+        #     axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
+        #     axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
+        #                              ecolor="cornflowerblue", fmt=".")
+        #     if draw_points_on_graph:
+        #         axs[category_i].plot(df["immune_order"], df["infected_max"].to_list(), "o")
+        # elif selected_graph_type == GraphType.BOX:
+        #     axs[category_i].boxplot(df["infected_max"], labels=df["immune_order"])
+        # else:
+        #     draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["infected_max"])
+        #
+        # axs[category_i].set_title(f"Max Infected ({title})")
+        # category_i += 1
+        #
+        # if selected_graph_type == GraphType.BAR:
+        #     axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
+        #     axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
+        #                              ecolor="slateblue", fmt=".")
+        #     if draw_points_on_graph:
+        #         axs[category_i].plot(df["immune_order"], df["critical_max"].to_list(), "o")
+        # elif selected_graph_type == GraphType.BOX:
+        #     axs[category_i].boxplot(df["critical_max"], labels=df["immune_order"])
+        # else:
+        #     draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["critical_max"])
+        #
+        # axs[category_i].set_title(f"Max Critical ({title})")
+        #
+        # category_i += 1
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
-    fig.tight_layout(pad=7.0)
+    fig.tight_layout(pad=12.0)
     fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results.svg")
 
     fig2.tight_layout(pad=7.0)
