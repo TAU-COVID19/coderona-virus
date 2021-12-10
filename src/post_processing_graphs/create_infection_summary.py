@@ -3,6 +3,7 @@ import sys
 from enum import Enum
 
 import pandas
+import seaborn
 from matplotlib import pyplot
 
 from categories import Categories
@@ -50,6 +51,13 @@ def set_axis_style(ax, labels):
     # ax.set_xlabel('Sample name')
 
 
+def prepare_seaborn_df(data, categories):
+    d = pandas.DataFrame(columns=["strategy", "data"])
+    for key, results in enumerate(data):
+        d = pandas.concat([d, pandas.DataFrame(data=[[categories[categories.index[key]], i] for i in results], columns=["strategy", "data"])])
+    return d
+
+
 def draw_violin_graph(ax, x, data):
     def adjacent_values(vals, q1, q3):
         upper_adjacent_value = q3 + (q3 - q1) * 1.5
@@ -58,6 +66,18 @@ def draw_violin_graph(ax, x, data):
         lower_adjacent_value = q1 - (q3 - q1) * 1.5
         lower_adjacent_value = np.clip(lower_adjacent_value, vals[0], q1)
         return lower_adjacent_value, upper_adjacent_value
+
+    ax.grid(True)
+    colors = ['hotpink', 'hotpink', 'lightskyblue', 'lightskyblue']
+    seaborn.set_palette(seaborn.color_palette(colors))
+    seaborn_df = prepare_seaborn_df(data, x)
+    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, ax=ax)
+    for violin, alpha in zip(ax.collections[::2], [1, 0.6, 1, 0.6]):
+        violin.set_alpha(alpha)
+    v.set_xlabel("Strategy", fontsize=18)
+    v.set_ylabel("", fontsize=18)
+    return
+
 
     parts = ax.violinplot(data, showmedians=True, showextrema=False, quantiles=[[0.25, 0.75]] * len(x))
     set_axis_style(ax, x)

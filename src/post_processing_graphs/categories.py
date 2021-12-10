@@ -15,7 +15,7 @@ class Categories:
         elif "HOUSEHOLD" in one_run:
             self.vaccination_strategy = "HOUSEHOLD"
         elif "BY_NEIGHBORHOOD" in one_run:
-            self.vaccination_strategy = "BY_NEIGHBORHOOD"
+            self.vaccination_strategy = "NEIGHBORHOOD"
         elif "GENERAL" in one_run:
             self.vaccination_strategy = "GENERAL"
         else:
@@ -32,6 +32,7 @@ class Categories:
                 self.compliance = parameters[i].split('=')[1]
 
     def __str__(self):
-        return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
-               f"{self.vaccination_strategy}\n{self.order}\ncompliance={self.compliance}"
+        return f"{self.vaccination_strategy}\n{self.order}"
+        # return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
+        #        f"{self.vaccination_strategy}\n{self.order}\ncompliance={self.compliance}"
 
