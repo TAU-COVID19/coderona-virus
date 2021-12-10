@@ -131,6 +131,7 @@ def get_daily_info(root_path) -> DAILY_INFO:
     # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_cumulative, method="percentile")
     # infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community,method="percentile")
     # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
+    # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
 
     return DAILY_INFO(
         number_of_samples=number_of_repetitions,

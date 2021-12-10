@@ -68,11 +68,12 @@ def draw_violin_graph(ax, x, data):
         return lower_adjacent_value, upper_adjacent_value
 
     ax.grid(True)
+    ax.tick_params(axis='both', which='major', labelsize=12)
     colors = ['hotpink', 'hotpink', 'lightskyblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
     v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, ax=ax)
-    for violin, alpha in zip(ax.collections[::2], [1, 0.6, 1, 0.6]):
+    for violin, alpha in zip(ax.collections[::2], [1, 0.5, 1, 0.6]):
         violin.set_alpha(alpha)
     v.set_xlabel("Strategy", fontsize=18)
     v.set_ylabel("", fontsize=18)
@@ -171,11 +172,11 @@ if __name__ == "__main__":
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day", "compliance"])
 
-    fig, axs = pyplot.subplots(len(categories) * 4, 1)
+    fig, axs = pyplot.subplots(len(categories) * 2, 1)
     fig.set_figwidth(16)
-    fig.set_figheight(len(categories) * 40)
+    fig.set_figheight(len(categories) * 25)
 
-    fig2, axs2 = pyplot.subplots(len(categories) * 4, 1)
+    fig2, axs2 = pyplot.subplots(len(categories) * 3, 1)
     fig2.set_figwidth(16)
     fig2.set_figheight(len(categories) * 20)
 
@@ -185,8 +186,7 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     for category in categories:
-        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, ' \
-                f'per-day={category[0][3]}, compliance={category[0][4]}'
+        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}, compliance={category[0][4]}'
         df = category[1]
 
         # # plot a separator line between each category
@@ -217,11 +217,11 @@ if __name__ == "__main__":
         daily_category_i += 1
 
         draw_daily_r_graph(df, axs2[daily_category_i], w)
-        axs2[daily_category_i].set_title(f"Daily Instantaneous R ({title})")
+        axs2[daily_category_i].set_title(f"Instantaneous R ({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
-        axs[category_i].set_title(f"Total Daily Infected ({title})")
+        axs[category_i].set_title(f"Total Infected\n{title}")
         category_i += 1
 
         if selected_graph_type == GraphType.BAR:
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         else:
             draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_critical_in_the_community"])
 
-        axs[category_i].set_title(f"Total Critical Today ({title})")
+        axs[category_i].set_title(f"Total Critical\n{title}")
         category_i += 1
 
         # if selected_graph_type == GraphType.BAR:
