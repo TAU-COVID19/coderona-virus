@@ -165,8 +165,8 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     for category in categories:
-        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, "' \
-                f'f"per-day={category[0][3]}, compliance={category[0][4]}'
+        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, ' \
+                f'per-day={category[0][3]}, compliance={category[0][4]}'
         df = category[1]
 
         # # plot a separator line between each category
@@ -188,14 +188,17 @@ if __name__ == "__main__":
 
         draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
         axs2[daily_category_i].set_title(f"Infected Cumulative Sum ({title})")
+        axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
         draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=False)
         axs2[daily_category_i].set_title(f"Critical Cumulative Sum ({title})")
+        axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
         draw_daily_r_graph(df, axs2[daily_category_i], w)
         axs2[daily_category_i].set_title(f"Daily Instantaneous R ({title})")
+        axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
         axs[category_i].set_title(f"Total Daily Infected ({title})")
