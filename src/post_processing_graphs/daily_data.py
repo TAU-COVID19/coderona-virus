@@ -49,7 +49,11 @@ def remove_outliers(data: List[float], method="stdev"):
     return outliers_removed, outliers
 
 
-DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples", "daily_infection", "daily_critical_cases",
+DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
+                                       "daily_infection",
+                                       "daily_critical_cases",
+                                       "total_infected_in_the_community", "total_infected_in_the_community_stderr",
+                                       "total_critical_in_the_community", "total_critical_in_the_community_stderr",
                                        "infected_cumulative_mean", "infected_cumulative_stdev",
                                        "critical_cumulative_mean", "critical_cumulative_stdev",
                                        "infected_max_mean", "infected_max_stdev", "infected_max",
@@ -72,21 +76,24 @@ def get_daily_info(root_path) -> DAILY_INFO:
     number_of_repetitions = 0
     daily_infection = None
     daily_infection_full_data = None
+    total_infected_in_community = None
 
     for i in range(1000):
         infected_today = get_daily_column(root_path, sample=i, column_name="infected_today")
-        total_infected_in_community = get_sample_line(root_path, i, "integral", line_name="infected_0_99")
+        total_infected_today = get_sample_line(root_path, i, "integral", line_name="infected_0_99")
 
-        if infected_today is not None and total_infected_in_community is not None:
+        if infected_today is not None and total_infected_today is not None:
             if daily_infection is None:
                 daily_infection = seq(infected_today)
                 daily_infection_full_data = np.array([infected_today])
                 infected_cumulative = np.array([cumulative_sum(infected_today)])
+                total_infected_in_community = np.array([total_infected_today])
             else:
                 daily_infection = daily_infection.zip(seq(infected_today)).map(lambda x: x[0] + x[1])
                 daily_infection_full_data = np.append(daily_infection_full_data, [infected_today], axis=0)
                 infected_cumulative = np.append(infected_cumulative, [cumulative_sum([infected_today])], axis=0)
-            max_infectious_in_community.append(max(total_infected_in_community))
+                total_infected_in_community = np.append(total_infected_in_community, [total_infected_today], axis=0)
+            max_infectious_in_community.append(max(total_infected_today))
             number_of_repetitions += 1
         else:
             break
@@ -97,27 +104,31 @@ def get_daily_info(root_path) -> DAILY_INFO:
     critical_max = []
     daily_critical_cases = None
     daily_critical_full_data = None
+    total_critical_in_community = None
 
     for i in range(1000):
         critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
-        total_critical_in_community = get_sample_line(root_path, sample=i, amit_graph_type="integral",
-                                                      line_name="critical_0_99")
+        total_critical_today = get_sample_line(root_path, sample=i, amit_graph_type="integral",
+                                               line_name="critical_0_99")
 
-        if critical_today is not None and total_critical_in_community is not None:
-            if critical_cumulative is None:
+        if critical_today is not None and total_critical_today is not None:
+            if total_critical_in_community is None:
                 critical_cumulative = np.array([cumulative_sum(critical_today)])
+                total_critical_in_community = np.array([total_critical_today])
             else:
                 critical_cumulative = np.append(critical_cumulative, [cumulative_sum([critical_today])], axis=0)
-            critical_max.append(max(total_critical_in_community))
+                total_critical_in_community = np.append(total_critical_in_community,
+                                                        [total_critical_today], axis=0)
+            critical_max.append(max(total_critical_today))
         else:
             break
 
         if daily_critical_cases is None:
-            daily_critical_cases = seq(total_critical_in_community)
-            daily_critical_full_data = np.array([total_critical_in_community])
+            daily_critical_cases = seq(critical_today)
+            daily_critical_full_data = np.array([critical_today])
         else:
-            daily_critical_cases = daily_critical_cases.zip(seq(total_critical_in_community)).map(lambda x: x[0] + x[1])
-            daily_critical_full_data = np.append(daily_critical_full_data, [total_critical_in_community], axis=0)
+            daily_critical_cases = daily_critical_cases.zip(seq(critical_today)).map(lambda x: x[0] + x[1])
+            daily_critical_full_data = np.append(daily_critical_full_data, [critical_today], axis=0)
 
     daily_critical_cases = daily_critical_cases.map(lambda x: x / number_of_repetitions)
 
@@ -130,12 +141,21 @@ def get_daily_info(root_path) -> DAILY_INFO:
         number_of_samples=number_of_repetitions,
         daily_infection=daily_infection.to_list(),
         daily_critical_cases=daily_critical_cases.to_list(),
-        # infected_cumulative=infected_cumulative,
+
+        total_infected_in_the_community=total_infected_in_community.mean(axis=0).tolist(),
+        total_infected_in_the_community_stderr=(
+                total_infected_in_community.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+
+        total_critical_in_the_community=total_critical_in_community.mean(axis=0).tolist(),
+        total_critical_in_the_community_stderr=(
+                total_critical_in_community.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+
         infected_cumulative_mean=infected_cumulative.mean(axis=0).tolist(),
         infected_cumulative_stdev=(infected_cumulative.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
-        # critical_cumulative=critical_cumulative,
+
         critical_cumulative_mean=critical_cumulative.mean(axis=0).tolist(),
         critical_cumulative_stdev=(critical_cumulative.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+
         infected_max=max_infectious_in_community,
         infected_max_mean=statistics.mean(max_infectious_in_community),
         infected_max_stdev=stderr(max_infectious_in_community),
