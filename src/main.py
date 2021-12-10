@@ -75,8 +75,8 @@ def get_datas_to_plot():
                                                              disease_state_groups=list(graphs.items()),
                                                              is_integral=False),
         'amit_graph_integral': make_age_and_state_datas_to_plot(age_groups=[(0, 99)],
-                                                             disease_state_groups=list(graphs.items()),
-                                                             is_integral=True)
+                                                                disease_state_groups=list(graphs.items()),
+                                                                is_integral=True)
     }
 
 
@@ -106,7 +106,7 @@ def main():
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions,
         # "reality1" : scenario_reality1,
-        #"hh_isolation": householdisolation_sd_interventions,
+        # "hh_isolation": householdisolation_sd_interventions,
         # "check" : scenario_check,
         # "reality2" : scenario_reality2,
         # "reality3": scenario_reality3,
@@ -128,15 +128,15 @@ def main():
         # "paper_2_comp_9": paper_2_comp_9,
         # "vaccinations_scenario_general": vaccinations_scenario_general,
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        #Empty_scenario": Empty_scenario,
-        #"school_closure": children_school_closure_intervention,
+        # Empty_scenario": Empty_scenario,
+        # "school_closure": children_school_closure_intervention,
         "asymptomatic_detection": children_asymptomatic_detection_intervention,
-        #"only_children_asymptomatic_detection":only_children_asymptomatic_detection
-        #"noHH_children_specific_interventions": children_specific_noHH_interventions,
-        #"HH_adult_specific_interventions": adult_specific_HH_interventions,
-        #"noHH_adult_specific_interventions": adult_specific_noHH_interventions,
-        #"HH_old_specific_interventions": old_specific_HH_interventions,
-        #"noHH_old_specific_interventions": old_specific_noHH_interventions,
+        # "only_children_asymptomatic_detection":only_children_asymptomatic_detection
+        # "noHH_children_specific_interventions": children_specific_noHH_interventions,
+        # "HH_adult_specific_interventions": adult_specific_HH_interventions,
+        # "noHH_adult_specific_interventions": adult_specific_noHH_interventions,
+        # "HH_old_specific_interventions": old_specific_HH_interventions,
+        # "noHH_old_specific_interventions": old_specific_noHH_interventions,
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -159,10 +159,11 @@ def main():
     # if caching option is on
 
     jobs = []
-#
+    #
     for target_immune_percentage, immune_compliance in [(0.8, 1.0)]:  # [(0.0,1),(0.5,1)]:
         for people_per_day in [800]:
-            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18), (InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
+            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18), (
+            InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1), ("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [0.7]:

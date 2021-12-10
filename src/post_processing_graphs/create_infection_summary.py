@@ -78,7 +78,6 @@ def draw_violin_graph(ax, x, data):
     ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
 
 
-
 if __name__ == "__main__":
     config_path = os.path.join(os.path.dirname(__file__), "../config.json")
     root_path = os.path.join(os.path.dirname(__file__), "../../")
@@ -98,7 +97,8 @@ if __name__ == "__main__":
                                    "immune_order", "compliance", "vaccination_strategy", "order",
                                    "daily_infection", "daily_infection_stderr",
                                    "daily_critical_cases", "daily_critical_stderr",
-                                   "total_infected", "std_infected", "total_critical", "std_critical",
+                                   "total_infected", "std_infected",
+                                   "critical_cumulative", "critical_cumulative_mean", 'critical_cumulative_stdev',
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
     last_number_of_samples = None
     for one_run in all_runs:
@@ -124,13 +124,13 @@ if __name__ == "__main__":
                         "daily_infection_stderr": daily.daily_infection_stderr,
                         "daily_critical_cases": daily.daily_critical_cases,
                         "daily_critical_stderr": daily.daily_critical_stderr,
-                        "total_infected": daily.infected_sum_mean,
-                        "std_infected": daily.infected_sum_stdev,
-                        "infected_sum": daily.infected_sum,
+                        "infected_cumulative_mean": daily.infected_cumulative_mean,
+                        "infected_cumulative_stdev": daily.infected_cumulative_stdev,
+                        # "infected_cumulative": daily.infected_cumulative,
 
-                        "total_critical": daily.critical_sum_mean,
-                        "std_critical": daily.critical_sum_stdev,
-                        "critical_sum": daily.critical_sum,
+                        "critical_cumulative_mean": daily.critical_cumulative_mean,
+                        "critical_cumulative_stdev": daily.critical_cumulative_stdev,
+                        # "critical_cumulative": daily.critical_cumulative,
 
                         "max_infected": daily.infected_max_mean,
                         "std_max_infected": daily.infected_max_stdev,
@@ -166,34 +166,32 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     for category in categories:
-        print("\n\n")
         title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, "' \
                 f'f"per-day={category[0][3]}, compliance={category[0][4]}'
         df = category[1]
-
-        print(f"{category[1].scenario}")
 
         # plot a separator line between each category
         axs[category_i].plot([-1, 1.5], [1.3, 1.3], color='palevioletred', lw=3, transform=axs[category_i].transAxes,
                              clip_on=False)
 
         if selected_graph_type == GraphType.BAR:
-            axs[category_i].bar(df["immune_order"], df["total_infected"], color="lightsteelblue")
-            axs[category_i].errorbar(df["immune_order"], df["total_infected"], yerr=df["std_infected"], capsize=10,
+            axs[category_i].bar(df["immune_order"], df["infected_cumulative_mean"], color="lightsteelblue")
+            axs[category_i].errorbar(df["immune_order"], df["infected_cumulative_mean"], yerr=df["std_infected"],
+                                     capsize=10,
                                      ecolor="cornflowerblue", fmt=".")
             if draw_points_on_graph:
-                axs[category_i].plot(df["immune_order"], df["infected_sum"].to_list(), "o")
+                axs[category_i].plot(df["immune_order"], df["infected_cumulative_mean"].to_list(), "o")
         elif selected_graph_type == GraphType.BOX:
-            axs[category_i].boxplot(df["infected_sum"], labels=df["immune_order"])
+            axs[category_i].boxplot(df["infected_cumulative_mean"], labels=df["immune_order"])
         else:
-            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["infected_sum"])
+            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["infected_cumulative_mean"])
 
         draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
-        axs2[daily_category_i].set_title(f"Daily Infected ({title})")
+        axs2[daily_category_i].set_title(f"Infected Cumulative Sum ({title})")
         daily_category_i += 1
 
         draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=False)
-        axs2[daily_category_i].set_title(f"Total Critical Cases ({title})")
+        axs2[daily_category_i].set_title(f"Critical Cumulative Sum ({title})")
         daily_category_i += 1
 
         draw_daily_r_graph(df, axs2[daily_category_i], w)
@@ -204,17 +202,17 @@ if __name__ == "__main__":
         category_i += 1
 
         if selected_graph_type == GraphType.BAR:
-            axs[category_i].bar(df["immune_order"], df["total_critical"], color="thistle")
-            axs[category_i].errorbar(df["immune_order"], df["total_critical"], yerr=df["std_critical"], capsize=10,
+            axs[category_i].bar(df["immune_order"], df["critical_cumulative_mean"], color="thistle")
+            axs[category_i].errorbar(df["immune_order"], df["critical_cumulative_mean"], yerr=df["critical_cumulative_stdev"], capsize=10,
                                      ecolor="slateblue", fmt=".")
             if draw_points_on_graph:
-                axs[category_i].plot(df["immune_order"], df["critical_sum"].to_list(), "o")
+                axs[category_i].plot(df["immune_order"], df["critical_cumulative_mean"].to_list(), "o")
         elif selected_graph_type == GraphType.BOX:
-            axs[category_i].boxplot(df["critical_sum"], labels=df["immune_order"])
+            axs[category_i].boxplot(df["critical_cumulative_mean"], labels=df["immune_order"])
         else:
-            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["critical_sum"])
+            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["critical_cumulative_mean"])
 
-        axs[category_i].set_title(f"Total Critical ({title})")
+        axs[category_i].set_title(f"Critical Cumulative Sum ({title})")
         category_i += 1
 
         if selected_graph_type == GraphType.BAR:
