@@ -214,7 +214,7 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=300))
+                                                                          num_repetitions=500))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
