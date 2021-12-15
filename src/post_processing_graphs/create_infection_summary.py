@@ -52,9 +52,6 @@ def plot_wilcoxon_ranksum_statistic(ax, data_per_strategy: pandas.DataFrame, str
             statistic, p_value = scipy.stats.ranksums(x=series_row, y=series_column, alternative='two-sided')
             row.append(f'{p_value:.3f}')
             this_label = strategies[strategies.index[key_column]]
-            this_label.replace('DESCENDING', 'DESC')
-            this_label.replace('ASCENDING', 'ASC')
-            this_label.replace('\n', ' ')
             labels.append(this_label)
         results.append(row)
 
@@ -105,7 +102,7 @@ def draw_violin_graph(ax, x, data):
     colors = ['hotpink', 'hotpink', 'lightskyblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
-    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, ax=ax)
+    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=2.5,  ax=ax)
     for violin, alpha in zip(ax.collections[::2], [1, 0.5, 1, 0.6]):
         violin.set_alpha(alpha)
     v.set_xlabel("Strategy", fontsize=18)
