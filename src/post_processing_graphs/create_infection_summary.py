@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
-    fig.set_figheight(len(categories) * 25)
+    fig.set_figheight(len(categories) * 30)
 
     fig2, axs2 = pyplot.subplots(len(categories) * 3, 1)
     fig2.set_figwidth(16)
