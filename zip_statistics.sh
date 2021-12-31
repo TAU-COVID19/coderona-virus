@@ -13,7 +13,7 @@ fi
 pushd `pwd`
 cd "outputs"
 pwd
-zip -r ../statistics_csv_"$1".zip "$1" -i \*daily_delta.csv \*amit_graph_integral.csv \*amit_graph_daily.csv \*amit_graph\*.csv
+zip -r ../statistics_csv_"$1".zip "$1" -i \*daily_delta.csv \*amit_graph_integral.csv \*amit_graph_daily.csv \*amit_graph\*.csv \*r0\*.csv
 popd
 pwd
 echo "------ Zipping Statistics - COMPLETE (statistics_csv.zip) ------"
