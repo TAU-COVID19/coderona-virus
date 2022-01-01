@@ -193,7 +193,9 @@ if __name__ == "__main__":
 
                         "max_critical": daily.critical_max_mean,
                         "std_max_critical": daily.critical_max_stdev,
-                        "critical_max": daily.critical_max
+                        "critical_max": daily.critical_max,
+                        "r_instantaneous": daily.r_instantaneous,
+                        "r_case_reproduction_number": daily.r_case_reproduction_number
                         },
                        ignore_index=True)
 
@@ -205,7 +207,7 @@ if __name__ == "__main__":
     fig.set_figwidth(16)
     fig.set_figheight(len(categories) * 30)
 
-    fig2, axs2 = pyplot.subplots(len(categories) * 3, 1)
+    fig2, axs2 = pyplot.subplots(len(categories) * 4, 1)
     fig2.set_figwidth(16)
     fig2.set_figheight(len(categories) * 20)
 
@@ -245,8 +247,14 @@ if __name__ == "__main__":
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
-        draw_daily_r_graph(df, axs2[daily_category_i], w)
+        # draw_daily_r_graph(df, axs2[daily_category_i], w)
+        draw_daily_r_graph_2(axs2[daily_category_i], df, use_r_instantaneous=True)
         axs2[daily_category_i].set_title(f"Instantaneous R ({title})")
+        axs2[daily_category_i].set_xlabel("Day")
+        daily_category_i += 1
+
+        draw_daily_r_graph_2(axs2[daily_category_i], df, use_r_instantaneous=False)
+        axs2[daily_category_i].set_title(f"Case Reproduction Number R ({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
