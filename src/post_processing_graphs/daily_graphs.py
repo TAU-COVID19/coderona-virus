@@ -53,6 +53,27 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             ax.legend()
 
 
+def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
+    for key, r_case_reproduction_number in enumerate(df["r_case_reproduction_number"]):
+        r_instantaneous = df["r_instantaneous"].to_list()[key]
+        if r_instantaneous is None:
+            return
+        color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
+                                                             df["order"].to_list()[key])
+
+        if use_r_instantaneous:
+            x = range(8, len(r_instantaneous))
+            ax.plot(x, r_instantaneous[8:], label=label,
+                    color=color,
+                    linestyle=line_style)
+        else:
+            x = range(0, len(r_case_reproduction_number))
+            ax.plot(x, r_case_reproduction_number, label=label,
+                    color=color,
+                    linestyle=line_style)
+        ax.plot(x, [1] * len(x), color="lightgreen")
+        ax.legend()
+
 def draw_daily_r_graph(df, ax, w):
     for key, daily_results in enumerate(df["daily_infection"]):
         r = calculate_r0_instantaneous(daily_results, w)

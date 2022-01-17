@@ -3,6 +3,7 @@ import sys
 from enum import Enum
 
 import pandas
+import scipy.stats
 import seaborn
 from matplotlib import pyplot
 
@@ -41,6 +42,34 @@ from daily_graphs import *
 from daily_data import *
 
 
+def plot_wilcoxon_ranksum_statistic(ax, data_per_strategy: pandas.DataFrame, strategies: pandas.DataFrame, title: str):
+    results = []
+    labels = []
+    for key_row, series_row in enumerate(data_per_strategy):
+        row = []
+        labels = []
+        for key_column, series_column in enumerate(data_per_strategy):
+            statistic, p_value = scipy.stats.ranksums(x=series_row, y=series_column, alternative='two-sided')
+            row.append(f'{p_value:.3f}')
+            this_label = strategies[strategies.index[key_column]]
+            labels.append(this_label)
+        results.append(row)
+
+    the_table = ax.table(cellText=results, rowLabels=labels, colLabels=labels, loc='center', cellLoc='center')
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+    ax.set_axis_off()
+    the_table.auto_set_font_size(False)
+    the_table.set_fontsize(12)
+    table_props = the_table.properties()
+    table_cells = table_props['children']
+    for cell in table_cells:
+        cell.set_width(0.2)
+        cell.set_height(0.15)
+    # the_table.scale(1.5, 1.5)
+    ax.set_title(f'Wilcoxon Rank-Sum P Value - {title}')
+
+
 def set_axis_style(ax, labels):
     ax.xaxis.set_tick_params(direction='out')
     ax.xaxis.set_ticks_position('bottom')
@@ -54,7 +83,8 @@ def set_axis_style(ax, labels):
 def prepare_seaborn_df(data, categories):
     d = pandas.DataFrame(columns=["strategy", "data"])
     for key, results in enumerate(data):
-        d = pandas.concat([d, pandas.DataFrame(data=[[categories[categories.index[key]], i] for i in results], columns=["strategy", "data"])])
+        d = pandas.concat([d, pandas.DataFrame(data=[[categories[categories.index[key]], i] for i in results],
+                                               columns=["strategy", "data"])])
     return d
 
 
@@ -72,13 +102,12 @@ def draw_violin_graph(ax, x, data):
     colors = ['hotpink', 'hotpink', 'lightskyblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
-    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, ax=ax)
+    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=2.5,  ax=ax)
     for violin, alpha in zip(ax.collections[::2], [1, 0.5, 1, 0.6]):
         violin.set_alpha(alpha)
     v.set_xlabel("Strategy", fontsize=18)
     v.set_ylabel("", fontsize=18)
     return
-
 
     parts = ax.violinplot(data, showmedians=True, showextrema=False, quantiles=[[0.25, 0.75]] * len(x))
     set_axis_style(ax, x)
@@ -164,7 +193,9 @@ if __name__ == "__main__":
 
                         "max_critical": daily.critical_max_mean,
                         "std_max_critical": daily.critical_max_stdev,
-                        "critical_max": daily.critical_max
+                        "critical_max": daily.critical_max,
+                        "r_instantaneous": daily.r_instantaneous,
+                        "r_case_reproduction_number": daily.r_case_reproduction_number
                         },
                        ignore_index=True)
 
@@ -172,11 +203,11 @@ if __name__ == "__main__":
 
     categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day", "compliance"])
 
-    fig, axs = pyplot.subplots(len(categories) * 2, 1)
+    fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
-    fig.set_figheight(len(categories) * 25)
+    fig.set_figheight(len(categories) * 30)
 
-    fig2, axs2 = pyplot.subplots(len(categories) * 3, 1)
+    fig2, axs2 = pyplot.subplots(len(categories) * 4, 1)
     fig2.set_figwidth(16)
     fig2.set_figheight(len(categories) * 20)
 
@@ -216,12 +247,24 @@ if __name__ == "__main__":
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
-        draw_daily_r_graph(df, axs2[daily_category_i], w)
+        # draw_daily_r_graph(df, axs2[daily_category_i], w)
+        draw_daily_r_graph_2(axs2[daily_category_i], df, use_r_instantaneous=True)
         axs2[daily_category_i].set_title(f"Instantaneous R ({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
+        draw_daily_r_graph_2(axs2[daily_category_i], df, use_r_instantaneous=False)
+        axs2[daily_category_i].set_title(f"Case Reproduction Number R ({title})")
+        axs2[daily_category_i].set_xlabel("Day")
+        daily_category_i += 1
+
         axs[category_i].set_title(f"Total Infected\n{title}")
+        category_i += 1
+
+        plot_wilcoxon_ranksum_statistic(ax=axs[category_i],
+                                        data_per_strategy=df["total_infected_in_the_community"],
+                                        strategies=df["immune_order"],
+                                        title='Total Infected')
         category_i += 1
 
         if selected_graph_type == GraphType.BAR:
@@ -237,6 +280,12 @@ if __name__ == "__main__":
             draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_critical_in_the_community"])
 
         axs[category_i].set_title(f"Total Critical\n{title}")
+        category_i += 1
+
+        plot_wilcoxon_ranksum_statistic(ax=axs[category_i],
+                                        data_per_strategy=df["total_critical_in_the_community"],
+                                        strategies=df["immune_order"],
+                                        title='Total Critical')
         category_i += 1
 
         # if selected_graph_type == GraphType.BAR:
