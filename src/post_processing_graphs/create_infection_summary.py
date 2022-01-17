@@ -201,13 +201,16 @@ if __name__ == "__main__":
 
     df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results.csv')
 
-    categories = df.groupby(by=["city", "intervention", "initial_infected", "immune_per_day", "compliance"])
+    # category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
+    category_items = ["intervention", "initial_infected", "immune_per_day", "compliance"]
+
+    categories = df.groupby(by=category_items)
 
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
     fig.set_figwidth(16)
     fig.set_figheight(len(categories) * 30)
 
-    fig2, axs2 = pyplot.subplots(len(categories) * 4, 1)
+    fig2, axs2 = pyplot.subplots(len(categories) * 5, 1)
     fig2.set_figwidth(16)
     fig2.set_figheight(len(categories) * 20)
 
@@ -217,7 +220,11 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     for category in categories:
-        title = f'{category[0][0]}: intervention={category[0][1]}, initial={category[0][2]}, per-day={category[0][3]}, compliance={category[0][4]}'
+        title = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
+        title += f'intervention={category[0][category_items.index("intervention")]}, ' \
+                f'initial={category[0][category_items.index("initial_infected")]}, '\
+                f'per-day={category[0][category_items.index("immune_per_day")]}, '\
+                f'compliance={category[0][category_items.index("compliance")]}'
         df = category[1]
 
         # # plot a separator line between each category
@@ -316,6 +323,9 @@ if __name__ == "__main__":
         # axs[category_i].set_title(f"Max Critical ({title})")
         #
         # category_i += 1
+
+    # draw_heatmap(axs2[daily_category_i], categories, for_total_infections=True)
+
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
