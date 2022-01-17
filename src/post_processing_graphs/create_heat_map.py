@@ -17,23 +17,26 @@ if __name__ == "__main__":
     fig.set_figwidth(16)
     fig.set_figheight(plots * 10)
 
-    # List of tuples
+    # ----------- FILL HERE THE REAL DATA ------------
+
+    # ----------- START ------------
     total_infections_hh_isolation = [
-        (10, 20, 30, 40),
-        (30, 60, 10, 80)]
+        (10, 20, 30, 40),  # Bnei Brak
+        (30, 60, 10, 80)]  # Holon
 
     total_critical_hh_isolation = [
-        (10, 20, 30, 40),
-        (30, 60, 10, 80)]
+        (10, 20, 30, 40),  # Bnei Brak
+        (30, 60, 10, 80)]  # Holon
 
     # List of tuples
     total_infections_asymptomatic_detection = [
-        (10, 20, 30, 40),
-        (30, 60, 10, 80)]
+        (10, 20, 30, 40),  # Bnei Brak
+        (30, 60, 10, 80)]  # Holon
 
     total_critical_asymptomatic_detection = [
-        (10, 20, 30, 40),
-        (30, 60, 10, 80)]
+        (10, 20, 30, 40),  # Bnei Brak
+        (30, 60, 10, 80)]  # Holon
+    # ----------- END ------------
 
     df = pd.DataFrame(total_infections_hh_isolation,
                       columns=[
