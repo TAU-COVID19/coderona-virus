@@ -1,4 +1,7 @@
 from typing import List
+
+import pandas
+import seaborn
 from functional import seq
 import numpy as np
 
@@ -37,6 +40,7 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
+            ax.set_xlim(0, len(daily_results))
             ax.legend()
     else:  # plot daily critical cases
         for key, daily_results in enumerate(df["critical_cumulative_mean"]):
@@ -50,7 +54,23 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
+            ax.set_xlim(0, len(daily_results))
             ax.legend()
+
+
+def draw_heatmap(ax, categories: pandas.DataFrame, for_total_infections: bool = True):
+    number_of_categories = categories.__len__()
+    number_of_strategies = categories.head(2)["vaccination_strategy"].count()
+    d = np.ndarray(shape=(number_of_categories, number_of_strategies), dtype=float)
+    for category in categories:
+        df = category[1]
+        data = np.array(df["total_infected_in_the_community"])[:][-1]
+        for key, r_case_reproduction_number in enumerate(df["total_infected_in_the_community"]):
+            pass
+        seaborn.set_theme()
+        x = range(len(df["vaccination_strategy"].to_list()))
+        seaborn.heatmap()
+        ax.legend()
 
 
 def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
@@ -66,12 +86,14 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
             ax.plot(x, r_instantaneous[8:], label=label,
                     color=color,
                     linestyle=line_style)
+            ax.set_xlim(min(x), max(x))
         else:
             x = range(0, len(r_case_reproduction_number))
             ax.plot(x, r_case_reproduction_number, label=label,
                     color=color,
                     linestyle=line_style)
         ax.plot(x, [1] * len(x), color="lightgreen")
+        ax.set_xlim(min(x), max(x))
         ax.legend()
 
 def draw_daily_r_graph(df, ax, w):
