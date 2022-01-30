@@ -19,6 +19,7 @@ class GraphType(Enum):
 
 
 # can draw either bars or boxplot
+including_city = False
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
 w = None
@@ -60,7 +61,7 @@ def plot_wilcoxon_ranksum_statistic(ax, data_per_strategy: pandas.DataFrame, str
     ax.get_yaxis().set_visible(False)
     ax.set_axis_off()
     the_table.auto_set_font_size(False)
-    the_table.set_fontsize(12)
+    the_table.set_fontsize(8)
     table_props = the_table.properties()
     table_cells = table_props['children']
     for cell in table_cells:
@@ -98,7 +99,7 @@ def draw_violin_graph(ax, x, data):
         return lower_adjacent_value, upper_adjacent_value
 
     ax.grid(True)
-    ax.tick_params(axis='both', which='major', labelsize=12)
+    ax.tick_params(axis='both', which='major', labelsize=8)
     colors = ['hotpink', 'hotpink', 'lightskyblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
@@ -108,25 +109,6 @@ def draw_violin_graph(ax, x, data):
     v.set_xlabel("Strategy", fontsize=18)
     v.set_ylabel("", fontsize=18)
     return
-
-    parts = ax.violinplot(data, showmedians=True, showextrema=False, quantiles=[[0.25, 0.75]] * len(x))
-    set_axis_style(ax, x)
-
-    for pc in parts['bodies']:
-        pc.set_facecolor('#EDB8C9')
-        # pc.set_edgecolor('black')
-        pc.set_alpha(1)
-
-    quartile1, medians, quartile3 = np.percentile(data.to_list(), [25, 50, 75], axis=1)
-    whiskers = np.array([
-        adjacent_values(sorted_array, q1, q3)
-        for sorted_array, q1, q3 in zip(data, quartile1, quartile3)])
-    whiskers_min, whiskers_max = whiskers[:, 0], whiskers[:, 1]
-
-    inds = np.arange(1, len(medians) + 1)
-    ax.scatter(inds, medians, marker='o', color='white', s=30, zorder=3)
-    ax.vlines(inds, quartile1, quartile3, color='k', linestyle='-', lw=5)
-    # ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
 
 
 if __name__ == "__main__":
@@ -201,13 +183,15 @@ if __name__ == "__main__":
 
     df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results.csv')
 
-    category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
-    # category_items = ["intervention", "initial_infected", "immune_per_day", "compliance"]
+    if including_city:
+        category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
+    else:
+        category_items = ["intervention", "initial_infected", "immune_per_day", "compliance"]
 
     categories = df.groupby(by=category_items)
 
     fig, axs = pyplot.subplots(len(categories) * 4, 1)
-    fig.set_figwidth(16)
+    fig.set_figwidth(25)
     fig.set_figheight(len(categories) * 30)
 
     fig2, axs2 = pyplot.subplots(len(categories) * 5, 1)
@@ -329,7 +313,7 @@ if __name__ == "__main__":
 
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
-    fig.tight_layout(pad=12.0)
+    fig.tight_layout(pad=15.0)
     fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results.svg")
 
     fig2.tight_layout(pad=7.0)

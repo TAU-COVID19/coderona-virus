@@ -1,6 +1,7 @@
 
 class Categories:
-    def __init__(self, one_run):
+    def __init__(self, one_run, including_city=False):
+        self.including_city = including_city
         parameters = one_run.split(',')
         self.city = parameters[0]
         self.intervention = parameters[1]
@@ -32,7 +33,10 @@ class Categories:
                 self.compliance = parameters[i].split('=')[1]
 
     def __str__(self):
-        return f"{self.vaccination_strategy}\n{self.order}"
+        if self.including_city:
+            return f"{self.vaccination_strategy}\n{self.order}"
+        else:
+            return f"{self.city}\n{self.vaccination_strategy}\n{self.order}"
         # return f"{self.city}\nINF={self.initial_infected}\nIMMUNE={self.immune_per_day}\n" \
         #        f"{self.vaccination_strategy}\n{self.order}\ncompliance={self.compliance}"
 
