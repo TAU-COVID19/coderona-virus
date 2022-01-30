@@ -7,7 +7,7 @@ import pandas as pd
 
 def draw_heatmap(ax, df: pd.DataFrame):
     sns.set_theme()
-    sns.heatmap(data=df, ax=ax, cmap="PuRd", annot=True, fmt='.0f')
+    sns.heatmap(data=df, ax=ax, cmap="Spectral_r", annot=True)
     # ax.legend()
 
 
@@ -28,6 +28,7 @@ if __name__ == "__main__":
         (69.8, 3.43, 17.272, 10.15),  # Bnei Brak
         (27.92, 6.5, 16.53, 12.04)]  # Holon
 
+    # List of tuples
     total_infections_asymptomatic_detection = [
         (1611.998, 1966.822, 1537.38, 1522.086),  # Bnei Brak
         (1050.884, 2070.666, 1115.59, 1346.112)]  # Holon
@@ -99,7 +100,7 @@ if __name__ == "__main__":
                       ],
                       index=['Bnei Brak', 'Holon'])
     draw_heatmap(ax[4], df)
-    ax[4].set_title(f"Total Critical")
+    ax[4].set_title(f"Total Infections")
 
     total_critical = [0, 0]
     total_critical[0] = total_critical_hh_isolation[0] + total_critical_asymptomatic_detection[0]
