@@ -18,8 +18,9 @@ class GraphType(Enum):
     VIOLIN = 3
 
 
-# can draw either bars or boxplot
+# set to True to show the different cities in different graphs. else set to False
 including_city = False
+# can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
 w = None

@@ -33,6 +33,7 @@ class Categories:
                 self.compliance = parameters[i].split('=')[1]
 
     def __str__(self):
+        # if the category includes City, then we do not want to show it in here
         if self.including_city:
             return f"{self.vaccination_strategy}\n{self.order}"
         else:

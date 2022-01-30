@@ -96,6 +96,7 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
         ax.set_xlim(min(x), max(x))
         ax.legend()
 
+
 def draw_daily_r_graph(df, ax, w):
     for key, daily_results in enumerate(df["daily_infection"]):
         r = calculate_r0_instantaneous(daily_results, w)
