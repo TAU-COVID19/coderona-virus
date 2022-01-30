@@ -201,8 +201,8 @@ if __name__ == "__main__":
 
     df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results.csv')
 
-    # category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
-    category_items = ["intervention", "initial_infected", "immune_per_day", "compliance"]
+    category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
+    # category_items = ["intervention", "initial_infected", "immune_per_day", "compliance"]
 
     categories = df.groupby(by=category_items)
 
