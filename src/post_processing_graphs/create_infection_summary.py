@@ -197,9 +197,9 @@ if __name__ == "__main__":
     fig.set_figheight(len(categories) * 30)
 
     # define the properties of the daily graphs
-    fig2, axs2 = pyplot.subplots(len(categories) * 2, 2)
-    fig2.set_figwidth(16)
-    fig2.set_figheight(len(categories) * 10)
+    fig2, axs2 = pyplot.subplots(16, 1)
+    fig2.set_figwidth(12)
+    fig2.set_figheight(len(categories) * 20)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
@@ -231,23 +231,25 @@ if __name__ == "__main__":
         else:
             draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_infected_in_the_community"])
 
-        draw_daily_graphs(df, axs2[daily_category_i][0], plot_infection_graph=True)
-        axs2[daily_category_i][0].set_title(f"Infected Cumulative Sum \n({title})")
-        axs2[daily_category_i][0].set_xlabel("Day")
+        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
+        axs2[daily_category_i].set_title(f"Infected Cumulative Sum \n({title})")
+        axs2[daily_category_i].set_xlabel("Day")
+        daily_category_i += 1
 
-        draw_daily_graphs(df, axs2[daily_category_i][1], plot_infection_graph=False)
-        axs2[daily_category_i][1].set_title(f"Critical Cumulative Sum \n({title})")
-        axs2[daily_category_i][1].set_xlabel("Day")
+        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=False)
+        axs2[daily_category_i].set_title(f"Critical Cumulative Sum \n({title})")
+        axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
         # draw_daily_r_graph(df, axs2[daily_category_i], w)
-        draw_daily_r_graph_2(axs2[daily_category_i][0], df, use_r_instantaneous=True)
-        axs2[daily_category_i][0].set_title(f"Instantaneous R \n({title})")
-        axs2[daily_category_i][0].set_xlabel("Day")
+        draw_daily_r_graph_2(axs2[daily_category_i], df, use_r_instantaneous=True)
+        axs2[daily_category_i].set_title(f"Instantaneous R \n({title})")
+        axs2[daily_category_i].set_xlabel("Day")
+        daily_category_i += 1
 
-        draw_daily_r_graph_2(axs2[daily_category_i][1], df, use_r_instantaneous=False)
-        axs2[daily_category_i][1].set_title(f"Case Reproduction Number R \n({title})")
-        axs2[daily_category_i][1].set_xlabel("Day")
+        draw_daily_r_graph_2(axs2[daily_category_i], df, use_r_instantaneous=False)
+        axs2[daily_category_i].set_title(f"Case Reproduction Number R \n({title})")
+        axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
         axs[category_i].set_title(f"Total Infected\n{title}")
