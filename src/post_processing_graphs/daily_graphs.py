@@ -41,7 +41,7 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             ax.set_xlim(0, len(daily_results))
-            ax.legend()
+            ax.legend(prop={"size": 8})
     else:  # plot daily critical cases
         for key, daily_results in enumerate(df["critical_cumulative_mean"]):
             std_err = df["critical_cumulative_stdev"].tolist()[key]
@@ -55,7 +55,7 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             ax.set_xlim(0, len(daily_results))
-            ax.legend()
+            ax.legend(prop={"size": 8})
 
 
 def draw_heatmap(ax, categories: pandas.DataFrame, for_total_infections: bool = True):
@@ -70,7 +70,7 @@ def draw_heatmap(ax, categories: pandas.DataFrame, for_total_infections: bool = 
         seaborn.set_theme()
         x = range(len(df["vaccination_strategy"].to_list()))
         seaborn.heatmap()
-        ax.legend()
+        ax.legend(prop={"size": 8})
 
 
 def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
@@ -94,7 +94,7 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
                     linestyle=line_style)
         ax.plot(x, [1] * len(x), color="lightgreen")
         ax.set_xlim(min(x), max(x))
-        ax.legend()
+        ax.legend(prop={"size": 8})
 
 
 def draw_daily_r_graph(df, ax, w):
@@ -114,7 +114,7 @@ def draw_daily_r_graph(df, ax, w):
 
         # ax.fill_between(range(8, len(r_avg)), 0.8, 1, color="#069c1d", alpha=.1)
         # ax.fill_between(range(8, len(r_avg)), 1, 1.5, color="#990800", alpha=.1)
-        ax.legend()
+        ax.legend(prop={"size": 8})
 
 
 def moving_average(x, w):
