@@ -34,17 +34,20 @@ def add_missing_dates(partial_data, all_dates, partial_dates, default_data=0):
     return result
 
 
-def calculate_r(root_path: str):
+def calculate_r(root_path: str, max_days=None):
     r_instantaneous = None
     r_case_reproduction_cases = None
+    if max_days is None:
+        max_days = 1000
     # since the r0 csv files do not cover all the dates, we have to complete them with zeros in the missing dates...
     all_dates = get_sample_line(root_path, 0, "amit_graph_daily.csv", line_name="Dates:", as_is=True)
-    for repetition in range(1000):
-        r0_dates = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv", line_name="Dates:", as_is=True)
+    for repetition in range(max_days):
+        r0_dates = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv", line_name="Dates:",
+                                   as_is=True)
         r_case_reproduction_cases_today = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv",
-                                                    line_name="smoothed base reproduction number r")
+                                                          line_name="smoothed base reproduction number r")
         r_instantaneous_today = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv",
-                                                    line_name="instantaneous r")
+                                                line_name="instantaneous r")
 
         if r_case_reproduction_cases_today is None or r_instantaneous_today is None:
             break
@@ -114,7 +117,7 @@ def cumulative_sum(data):
     return np.cumsum(data)
 
 
-def get_daily_info(root_path) -> DAILY_INFO:
+def get_daily_info(root_path, max_days=None) -> DAILY_INFO:
     infected_cumulative = []
     max_infectious_in_community = []
 
@@ -122,11 +125,18 @@ def get_daily_info(root_path) -> DAILY_INFO:
     daily_infection = None
     daily_infection_full_data = None
 
+    if max_days is None:
+        max_days = 1000
+
     for i in range(1000):
         infected_today = get_daily_column(root_path, sample=i, column_name="infected_today")
         total_infected_today = get_sample_line(root_path, i, "amit_graph_integral.csv", line_name="infected_0_99")
 
+
         if infected_today is not None and total_infected_today is not None:
+            infected_today = infected_today[0:max_days]
+            total_infected_today = total_infected_today[0:max_days]
+
             if daily_infection is None:
                 daily_infection = seq(infected_today)
                 daily_infection_full_data = np.array([infected_today])
@@ -142,6 +152,8 @@ def get_daily_info(root_path) -> DAILY_INFO:
 
     daily_infection = daily_infection.map(lambda x: x / number_of_repetitions)
     total_infected_in_community = infected_cumulative[:, -1]
+    daily_infection = daily_infection[0:max_days]
+    total_infected_in_community = total_infected_in_community[0:max_days]
 
     critical_cumulative = None
     critical_max = []
@@ -172,7 +184,15 @@ def get_daily_info(root_path) -> DAILY_INFO:
     daily_critical_cases = daily_critical_cases.map(lambda x: x / number_of_repetitions)
     total_critical_in_community = critical_cumulative[:, -1]
 
-    r_case_reproduction_cases, r_instantaneous = calculate_r(root_path)
+    daily_critical_cases = daily_critical_cases[0:max_days]
+    total_critical_in_community = total_critical_in_community[0:max_days]
+    critical_cumulative = critical_cumulative[:,0:max_days]
+    daily_critical_full_data = daily_critical_full_data[:,0:max_days]
+    critical_max = critical_max[0:max_days]
+
+    r_case_reproduction_cases, r_instantaneous = calculate_r(root_path, max_days=max_days)
+    r_case_reproduction_cases = r_case_reproduction_cases[0:max_days]
+    r_instantaneous = r_instantaneous[0:max_days]
 
     # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_cumulative, method="percentile")
     # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_cumulative, method="percentile")

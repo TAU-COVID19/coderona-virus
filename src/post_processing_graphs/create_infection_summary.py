@@ -23,6 +23,11 @@ including_city = True
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
+# max number of days to process
+max_number_of_days_to_graph = 150
+
+
+
 w = None
 
 
@@ -135,7 +140,7 @@ if __name__ == "__main__":
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
     last_number_of_samples = None
     for one_run in all_runs:
-        daily = get_daily_info(f"{root_path}/outputs/{sys.argv[1]}/{one_run}")
+        daily = get_daily_info(f"{root_path}/outputs/{sys.argv[1]}/{one_run}", max_days=max_number_of_days_to_graph)
         if last_number_of_samples is None:
             last_number_of_samples = daily.number_of_samples
         if last_number_of_samples != daily.number_of_samples:
