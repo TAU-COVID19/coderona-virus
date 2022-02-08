@@ -7,7 +7,7 @@ import pandas as pd
 
 def draw_heatmap(ax, df: pd.DataFrame):
     sns.set_theme()
-    sns.heatmap(data=df, ax=ax, cmap="Spectral_r", annot=True)
+    sns.heatmap(data=df, ax=ax, cmap="Spectral_r", annot=True, fmt=",.0f")
     # ax.legend()
 
 
