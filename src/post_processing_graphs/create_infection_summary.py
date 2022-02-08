@@ -107,7 +107,7 @@ def draw_violin_graph(ax, x, data):
     ax.grid(True)
     ax.tick_params(axis='both', which='major', labelsize=8)
     # set the min Violin Y value to show to be 0
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(bottom=0, top=max(max(data)))
     colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','hotpink', 'lightpink', 'steelblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
@@ -214,8 +214,9 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     for category in categories:
-        title = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
-        title += f'intervention={category[0][category_items.index("intervention")]}, ' \
+        city = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
+        title = city +\
+                f'intervention={category[0][category_items.index("intervention")]}, ' \
                 f'initial={category[0][category_items.index("initial_infected")]}, '\
                 f'per-day={category[0][category_items.index("immune_per_day")]}, '\
                 f'compliance={category[0][category_items.index("compliance")]}'
