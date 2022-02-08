@@ -40,7 +40,9 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
+            # set the X and Y axis limits for the infection graph
             ax.set_xlim(0, len(daily_results))
+            # ax.set_ylim(0, 2050)
             ax.legend(prop={"size": 8})
     else:  # plot daily critical cases
         for key, daily_results in enumerate(df["critical_cumulative_mean"]):
@@ -54,7 +56,9 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
+            # set the X and Y axis limits for the Critical graph
             ax.set_xlim(0, len(daily_results))
+            # ax.set_ylim(0, 12.5)
             ax.legend(prop={"size": 8})
 
 
