@@ -4,8 +4,7 @@ class Categories:
         self.including_city = including_city
         parameters = one_run.split(',')
         # patch the name of the city to make it correct. the original "wrong" name comes from our raw csv files
-        self.city = parameters[0].lower().replace("bene beraq", "Benei Brak")
-        self.city = parameters[0].lower().replace("holon", "Holon")
+        self.city = parameters[0].lower().replace("holon", "Holon").replace("bene beraq", "Benei Brak")
         self.intervention = parameters[1]
         if "ASCENDING" in one_run:
             self.order = "ASCENDING"
