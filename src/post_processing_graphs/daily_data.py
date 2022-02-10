@@ -15,9 +15,10 @@ def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
         line = [i for i in range(data.len()) if data[i][0] == line_name][0]
         # print(f'get_sample_line() of {amit_graph_type}, sample {sample}, line start with {data[line][0]}')
         if as_is:
-            return [x for x in data[line][1:]]
+            result = [x for x in data[line][1:]]
         else:
-            return [max(0.0, float(x)) for x in data[line][1:]]
+            result = [max(0.0, float(x)) for x in data[line][1:]]
+        return result
     return None
 
 
@@ -117,7 +118,7 @@ def cumulative_sum(data):
     return np.cumsum(data)
 
 
-def get_daily_info(root_path, max_days=None) -> DAILY_INFO:
+def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     infected_cumulative = []
     max_infectious_in_community = []
 
@@ -128,7 +129,10 @@ def get_daily_info(root_path, max_days=None) -> DAILY_INFO:
     if max_days is None:
         max_days = 1000
 
-    for i in range(1000):
+    if max_iterations is None:
+        max_iterations = 1000
+
+    for i in range(max_iterations):
         infected_today = get_daily_column(root_path, sample=i, column_name="infected_today")
         total_infected_today = get_sample_line(root_path, i, "amit_graph_integral.csv", line_name="infected_0_99")
 
