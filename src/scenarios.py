@@ -675,10 +675,23 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
         compliance=1,
         delay_on_enter=hi_delay
     )
+    household_intervention_of_asymptomatic = HouseholdIsolationIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(360),
+        compliance=compliance,
+        delay_on_enter=hi_delay,
+        min_age=6,
+        max_age=18,
+        entry_states=(
+            DiseaseState.LATENT,
+            DiseaseState.ASYMPTOMATICINFECTIOUS
+        )
+    )
     interventions = [
         sd_intervention,
         ci_intervention,
         household_intervention,
+        household_intervention_of_asymptomatic,
         asi_intervention
     ]
     return interventions
