@@ -457,7 +457,7 @@ class HouseholdIsolationIntervention(Intervention):
     :param is_exit_after_recovery:
         if False stays in quarantine for delay_on_exit days.
         if True stays in quarantine up to total recovery(or death)
-        and only then wait for delay_on_exit days. 
+        and only then wait for delay_on_exit days.    .
     """
     __slots__ = (
         'delay_on_enter',
