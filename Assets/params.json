@@ -1,6 +1,6 @@
 {
     "person": {
-        "base_infectiousness": 0.1,
+        "base_infectiousness": 0.09,
         "minimum_infectiousness_age": 0,
         "individual_infectiousness_gamma_shape": 0.25,
         "individual_infectiousness_gamma_scale": 4,

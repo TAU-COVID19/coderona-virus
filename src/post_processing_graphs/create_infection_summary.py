@@ -19,7 +19,7 @@ class GraphType(Enum):
 
 
 # set to True to show the different cities in different graphs. else set to False
-including_city = True
+including_city = False
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
@@ -208,8 +208,8 @@ if __name__ == "__main__":
 
     # define the properties of the daily graphs
     fig2, axs2 = pyplot.subplots(16, 1)
-    fig2.set_figwidth(12)
-    fig2.set_figheight(len(categories) * 20)
+    fig2.set_figwidth(9)
+    fig2.set_figheight(len(categories) * 22)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]

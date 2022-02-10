@@ -4,6 +4,7 @@ import pandas
 import seaborn
 from functional import seq
 import numpy as np
+import matplotlib
 
 
 def select_daily_graph_colors(vaccination_strategy, vaccination_order):
@@ -44,6 +45,8 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             ax.set_xlim(0, len(daily_results))
             # ax.set_ylim(0, 2050)
             ax.legend(prop={"size": 8})
+            for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+                label.set_fontsize(16)
     else:  # plot daily critical cases
         for key, daily_results in enumerate(df["critical_cumulative_mean"]):
             std_err = df["critical_cumulative_stdev"].tolist()[key]
@@ -58,7 +61,9 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             # set the X and Y axis limits for the Critical graph
             ax.set_xlim(0, len(daily_results))
-            # ax.set_ylim(0, 12.5)
+            ax.set_ylim(0, 12.5)
+            for label in (ax.get_xticklabels()+ax.get_yticklabels()):
+                label.set_fontsize(16)
             ax.legend(prop={"size": 8})
 
 
@@ -91,6 +96,7 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
                     color=color,
                     linestyle=line_style)
             ax.set_xlim(min(x), max(x))
+
         else:
             x = range(0, len(r_case_reproduction_number))
             ax.plot(x, r_case_reproduction_number, label=label,
@@ -98,7 +104,10 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
                     linestyle=line_style)
         ax.plot(x, [1] * len(x), color="lightgreen")
         ax.set_xlim(min(x), max(x))
+        ax.set_ylim(bottom=0, top=1.5)
         ax.legend(prop={"size": 8})
+        for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+            label.set_fontsize(16)
 
 
 def draw_daily_r_graph(df, ax, w):
@@ -119,7 +128,9 @@ def draw_daily_r_graph(df, ax, w):
         # ax.fill_between(range(8, len(r_avg)), 0.8, 1, color="#069c1d", alpha=.1)
         # ax.fill_between(range(8, len(r_avg)), 1, 1.5, color="#990800", alpha=.1)
         ax.legend(prop={"size": 8})
-
+        ax.set_ylim(bottom=0, top=1.5)
+        for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+            label.set_fontsize(16)
 
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
