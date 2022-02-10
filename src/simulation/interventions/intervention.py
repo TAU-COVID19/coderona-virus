@@ -488,6 +488,8 @@ class HouseholdIsolationIntervention(Intervention):
         self.delay_on_exit = timedelta(delay_on_exit)
         self.is_exit_after_recovery = is_exit_after_recovery
         self.entry_states = entry_states
+        self.min_age = min_age
+        self.max_age = max_age
 
     def generate_events(self, world: World):
         """

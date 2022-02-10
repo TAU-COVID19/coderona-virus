@@ -663,13 +663,7 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
             DiseaseState.ASYMPTOMATICINFECTIOUS
         )
     )
-    sd_intervention = SocialDistancingIntervention(
-        start_date=INITIAL_DATE,
-        duration=timedelta(360),
-        compliance=0.8,
-        age_range=(0, 99)
-    )
-    household_intervention = HouseholdIsolationIntervention(  
+    household_intervention = HouseholdIsolationIntervention(
         start_date=INITIAL_DATE,
         duration=timedelta(360),
         compliance=1,
@@ -686,6 +680,12 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
             DiseaseState.LATENT,
             DiseaseState.ASYMPTOMATICINFECTIOUS
         )
+    )
+    sd_intervention = SocialDistancingIntervention(
+        start_date=INITIAL_DATE,
+        duration=timedelta(360),
+        compliance=0.8,
+        age_range=(0, 99)
     )
     interventions = [
         sd_intervention,
