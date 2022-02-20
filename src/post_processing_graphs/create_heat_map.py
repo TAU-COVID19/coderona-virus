@@ -21,21 +21,21 @@ if __name__ == "__main__":
 
     # ----------- START ------------
     total_infections_hh_isolation = [
-        (20124.048, 21815.344, 21284.386, 20583.918),  # Bnei Brak
-        (3086.912, 6444.378, 3089.04, 4050.756)]  # Holon
+        (12773, 13796, 13246, 12585),  # Bnei Brak
+        (2840, 5797, 2831, 3644)]  # Holon
 
     total_critical_hh_isolation = [
-        (69.8, 3.43, 17.272, 10.15),  # Bnei Brak
-        (27.92, 6.5, 16.53, 12.04)]  # Holon
+        (43, 2, 11, 7),  # Bnei Brak
+        (26, 6, 16, 12)]  # Holon
 
     # List of tuples
     total_infections_asymptomatic_detection = [
-        (1611.998, 1966.822, 1537.38, 1522.086),  # Bnei Brak
-        (1050.884, 2070.666, 1115.59, 1346.112)]  # Holon
+        (2311, 2598, 2128, 2169),  # Bnei Brak
+        (1212, 1984, 1177, 1365)]  # Holon
 
     total_critical_asymptomatic_detection = [
-        (7.248, 0.888, 2.43, 1.944),  # Bnei Brak
-        (12.046, 4.802, 8.886, 7.37)]  # Holon
+        (10, 1, 3, 2),  # Bnei Brak
+        (13, 5, 8, 7)]  # Holon
     # ----------- END ------------
 
     df = pd.DataFrame(total_infections_hh_isolation,

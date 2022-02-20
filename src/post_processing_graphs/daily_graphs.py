@@ -61,7 +61,7 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             # set the X and Y axis limits for the Critical graph
             ax.set_xlim(0, len(daily_results))
-            ax.set_ylim(0, 12.5)
+            ax.set_ylim(0, 15.5)
             for label in (ax.get_xticklabels()+ax.get_yticklabels()):
                 label.set_fontsize(16)
             ax.legend(prop={"size": 8})
