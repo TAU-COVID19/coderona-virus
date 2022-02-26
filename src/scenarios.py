@@ -689,10 +689,10 @@ def children_asymptomatic_detection_intervention(compliance, ci_delay, hi_delay)
     )
     interventions = [
         sd_intervention,
-        #ci_intervention,
+        ci_intervention,
         household_intervention,
-        household_intervention_of_asymptomatic,
-        #asi_intervention
+        #household_intervention_of_asymptomatic,
+        asi_intervention
     ]
     return interventions
 
