@@ -8,7 +8,8 @@ import matplotlib
 
 
 def select_daily_graph_colors(vaccination_strategy, vaccination_order):
-    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
+    colors = ['darkviolet', 'darkviolet', 'darkviolet', 'darkviolet']
+    #colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     lines = [(0, (5, 0)), (0, (1, 1)), (0, (8, 8)), (0, (5, 1)), (0, (3, 1, 1, 1, 1, 1)), (0, (10, 0))]
 
     if vaccination_order == "DESCENDING":
@@ -43,7 +44,7 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
             # set the X and Y axis limits for the infection graph
             ax.set_xlim(0, len(daily_results))
-            # ax.set_ylim(0, 2050)
+            ax.set_ylim(0, 2500)
             ax.legend(prop={"size": 8})
             for label in (ax.get_xticklabels() + ax.get_yticklabels()):
                 label.set_fontsize(16)

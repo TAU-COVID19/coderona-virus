@@ -67,7 +67,7 @@ def test_CreateDeltaFileAtlit(helpers):
         citiesDataPath = ConfigData['CitiesFilePath']
         paramsDataPath = ConfigData['ParamsFilePath']
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
-    Params.loader()["person"]["state_macine_type"] = "SIR"
+    Params.loader()["person"]["state_machine_type"] = "SIR"
 
     DiseaseState.init_infectiousness_list()
     pop = population_loader.PopulationLoader(citiesDataPath)

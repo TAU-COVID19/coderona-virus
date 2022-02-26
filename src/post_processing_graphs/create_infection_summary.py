@@ -110,7 +110,8 @@ def draw_violin_graph(ax, x, data):
     ax.tick_params(axis='both', which='major', labelsize=8)
     # set the min Violin Y value to show to be 0
     ax.set_ylim(bottom=0, top=max(max(data)))
-    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','hotpink', 'lightpink', 'steelblue', 'lightskyblue']
+    colors = ['darkorchid','plum', 'darkorchid','plum']
+    #colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','hotpink', 'lightpink', 'steelblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
     v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0,  ax=ax)

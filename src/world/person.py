@@ -87,7 +87,7 @@ class Person(object):
         self.is_dead = False
         self.is_infectious = False
         self.is_infected = False
-        str_type = params['state_macine_type']
+        str_type = params['state_machine_type']
         assert str_type in ['SIRS','SIR']
         self.state_machine_type = machine_type[str_type]
         self._id = Person.num_people_so_far

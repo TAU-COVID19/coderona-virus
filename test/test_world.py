@@ -621,7 +621,7 @@ def test_count_infected_in_hood():
         ConfigData = json.load(json_data_file)
         paramsDataPath = ConfigData['ParamsFilePath']
     Params.load_from(os.path.join(os.path.dirname(__file__),"..","src", paramsDataPath), override=True)
-    Params.loader()["person"]["state_macine_type"] = "SIR"
+    Params.loader()["person"]["state_machine_type"] = "SIR"
     DiseaseState.init_infectiousness_list()
 
     #create diff enviroments
