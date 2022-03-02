@@ -130,7 +130,7 @@ def main():
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         # Empty_scenario": Empty_scenario,
         # "school_closure": children_school_closure_intervention,
-        "asymptomatic_detection": children_asymptomatic_detection_intervention,
+        #"asymptomatic_detection": children_asymptomatic_detection_intervention,
         # "only_children_asymptomatic_detection":only_children_asymptomatic_detection
         # "noHH_children_specific_interventions": children_specific_noHH_interventions,
         # "HH_adult_specific_interventions": adult_specific_HH_interventions,
@@ -160,13 +160,14 @@ def main():
 
     jobs = []
     #
-    for target_immune_percentage, immune_compliance in [(0.8, 1.0)]:  # [(0.0,1),(0.5,1)]:
-        for people_per_day in [800]:
-            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
+    for target_immune_percentage, immune_compliance in [(0.8, 0.9)]:  # [(0.0,1),(0.5,1)]:
+        for people_per_day in [700]:
+            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18), (
+            InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1), ("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [0.7]:
-                            for order in [ORDER.DESCENDING, ORDER.ASCENDING]:
+                            for order in [ORDER.ASCENDING, ORDER.DESCENDING]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
                                         # people aging less than minimum_infectioness_age will not infect others
