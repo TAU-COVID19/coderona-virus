@@ -100,6 +100,8 @@ def remove_outliers(data: List[float], method="stdev"):
 DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
                                        "daily_infection",
                                        "daily_critical_cases",
+                                       "total_hospitalized_mean",
+                                       "total_hospitalized_stderr",
                                        "total_infected_in_the_community", "total_infected_in_the_community_stderr",
                                        "total_critical_in_the_community", "total_critical_in_the_community_stderr",
                                        "infected_cumulative_mean", "infected_cumulative_stdev",
@@ -116,6 +118,11 @@ def stderr(data):
 
 def cumulative_sum(data):
     return np.cumsum(data)
+
+
+def get_hospitalization_given_symptomatic(age):
+    hospitalization_given_symptomatic_per_age = [0.0, 0.008, 0.008, 0.01, 0.019, 0.054, 0.151, 0.333, 0.618]
+    return hospitalization_given_symptomatic_per_age[int(min(age // 10, 8))]
 
 
 def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
@@ -135,7 +142,6 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     for i in range(max_iterations):
         infected_today = get_daily_column(root_path, sample=i, column_name="infected_today")
         total_infected_today = get_sample_line(root_path, i, "amit_graph_integral.csv", line_name="infected_0_99")
-
 
         if infected_today is not None and total_infected_today is not None:
             infected_today = infected_today[0:max_days]
@@ -163,11 +169,18 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     critical_max = []
     daily_critical_cases = None
     daily_critical_full_data = None
+    infected_0_19_full_data = None
+    infected_20_59_full_data = None
+    infected_60_99_full_data = None
 
     for i in range(1000):
         critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
         total_critical_today = get_sample_line(root_path, sample=i, file_name="amit_graph_integral.csv",
                                                line_name="critical_0_99")
+
+        infected_0_19 = get_sample_line(root_path, sample=i, file_name="amit_graph.csv", line_name="infected_0_19")
+        infected_20_59 = get_sample_line(root_path, sample=i, file_name="amit_graph.csv", line_name="infected_20_59")
+        infected_60_99 = get_sample_line(root_path, sample=i, file_name="amit_graph.csv", line_name="infected_60_99")
 
         if critical_today is not None and total_critical_today is not None:
             if critical_cumulative is None:
@@ -181,17 +194,28 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         if daily_critical_cases is None:
             daily_critical_cases = seq(critical_today)
             daily_critical_full_data = np.array([critical_today])
+            infected_0_19_full_data = np.array([cumulative_sum(infected_0_19[1:])])
+            infected_20_59_full_data = np.array([cumulative_sum(infected_20_59[1:])])
+            infected_60_99_full_data = np.array([cumulative_sum(infected_60_99[1:])])
         else:
             daily_critical_cases = daily_critical_cases.zip(seq(critical_today)).map(lambda x: x[0] + x[1])
             daily_critical_full_data = np.append(daily_critical_full_data, [critical_today], axis=0)
+            infected_0_19_full_data = np.append(infected_0_19_full_data, [cumulative_sum(infected_0_19[1:])], axis=0)
+            infected_20_59_full_data = np.append(infected_20_59_full_data, [cumulative_sum(infected_20_59[1:])], axis=0)
+            infected_60_99_full_data = np.append(infected_60_99_full_data, [cumulative_sum(infected_60_99[1:])], axis=0)
+
+    # calculate the amount of hospitalized based on probability for an infected person to be hospitalized
+    hospitalized_full_data = infected_0_19_full_data * get_hospitalization_given_symptomatic((0 + 19) / 2) + \
+                             infected_20_59_full_data * get_hospitalization_given_symptomatic((20 + 59) / 2) + \
+                             infected_60_99_full_data * get_hospitalization_given_symptomatic((60 + 99) / 2)
 
     daily_critical_cases = daily_critical_cases.map(lambda x: x / number_of_repetitions)
     total_critical_in_community = critical_cumulative[:, -1]
 
     daily_critical_cases = daily_critical_cases[0:max_days]
     total_critical_in_community = total_critical_in_community[0:max_days]
-    critical_cumulative = critical_cumulative[:,0:max_days]
-    daily_critical_full_data = daily_critical_full_data[:,0:max_days]
+    critical_cumulative = critical_cumulative[:, 0:max_days]
+    daily_critical_full_data = daily_critical_full_data[:, 0:max_days]
     critical_max = critical_max[0:max_days]
 
     r_case_reproduction_cases, r_instantaneous = calculate_r(root_path, max_days=max_days)
@@ -207,6 +231,10 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     return DAILY_INFO(
         number_of_samples=number_of_repetitions,
         daily_infection=daily_infection.to_list(),
+
+        total_hospitalized_mean=hospitalized_full_data.mean(axis=0).tolist(),
+        total_hospitalized_stderr=(hospitalized_full_data.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+
         daily_critical_cases=daily_critical_cases.to_list(),
 
         total_infected_in_the_community=total_infected_in_community.tolist(),
