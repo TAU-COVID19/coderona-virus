@@ -210,9 +210,9 @@ if __name__ == "__main__":
     fig.set_figheight(len(categories) * 30)
 
     # define the properties of the daily graphs
-    fig2, axs2 = pyplot.subplots(16, 1)
+    fig2, axs2 = pyplot.subplots(20, 1)
     fig2.set_figwidth(9)
-    fig2.set_figheight(len(categories) * 22)
+    fig2.set_figheight(len(categories) * 24)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
@@ -252,13 +252,18 @@ if __name__ == "__main__":
         axs[category_i].set_title(f"Total Hospitalization\n{title}")
         category_i += 1
 
-        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
+        draw_daily_graphs(df, axs2[daily_category_i], graph_type=DailyGraphType.INFECTED)
         axs2[daily_category_i].set_title(f"Infected Cumulative Sum \n({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
-        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=False)
+        draw_daily_graphs(df, axs2[daily_category_i], graph_type=DailyGraphType.CRITICAL)
         axs2[daily_category_i].set_title(f"Critical Cumulative Sum \n({title})")
+        axs2[daily_category_i].set_xlabel("Day")
+        daily_category_i += 1
+
+        draw_daily_graphs(df, axs2[daily_category_i], graph_type=DailyGraphType.HOSPITALISED)
+        axs2[daily_category_i].set_title(f"Hospitalised Cumulative Sum \n({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 

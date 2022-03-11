@@ -5,10 +5,11 @@ import seaborn
 from functional import seq
 import numpy as np
 import matplotlib
+from enum import Enum
 
 
 def select_daily_graph_colors(vaccination_strategy, vaccination_order):
-    colors = ['darkviolet', 'darkviolet', 'darkviolet', 'darkviolet']
+    colors = ['darkviolet', 'lightskyblue', 'darkviolet', 'darkviolet']
     #colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     lines = [(0, (5, 0)), (0, (1, 1)), (0, (8, 8)), (0, (5, 1)), (0, (3, 1, 1, 1, 1, 1)), (0, (10, 0))]
 
@@ -29,10 +30,17 @@ def select_daily_graph_colors(vaccination_strategy, vaccination_order):
     return line_color, line_pattern, line_label
 
 
-def draw_daily_graphs(df, ax, plot_infection_graph):
-    if plot_infection_graph:
-        for key, daily_results in enumerate(df["infected_cumulative_mean"]):
-            std_err = df["infected_cumulative_stdev"].tolist()[key]
+class DailyGraphType(Enum):
+    INFECTED = 1
+    CRITICAL = 2
+    HOSPITALISED = 3
+
+
+def draw_daily_graphs(df, ax, graph_type: DailyGraphType):
+    def draw_graph(data_mean_key: str, data_stderr_key: str):
+        max_y = max([max(x) for x in df[data_mean_key]])
+        for key, daily_results in enumerate(df[data_mean_key]):
+            std_err = df[data_stderr_key].tolist()[key]
             color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
                                                                  df["order"].to_list()[key])
             ax.plot(range(len(daily_results)), daily_results, label=label,
@@ -42,30 +50,21 @@ def draw_daily_graphs(df, ax, plot_infection_graph):
             lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
             upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
             ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
-            # set the X and Y axis limits for the infection graph
+
             ax.set_xlim(0, len(daily_results))
-            ax.set_ylim(0, 2500)
+            ax.set_ylim(0, max_y)
             ax.legend(prop={"size": 8})
             for label in (ax.get_xticklabels() + ax.get_yticklabels()):
                 label.set_fontsize(16)
-    else:  # plot daily critical cases
-        for key, daily_results in enumerate(df["critical_cumulative_mean"]):
-            std_err = df["critical_cumulative_stdev"].tolist()[key]
-            color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
-                                                                 df["order"].to_list()[key])
-            ax.plot(range(len(daily_results)), daily_results, label=label,
-                    color=color,
-                    linestyle=line_style)
-            # draw the confidence interval
-            lower_range = (np.array(daily_results) - np.array(std_err)).tolist()
-            upper_range = (np.array(daily_results) + np.array(std_err)).tolist()
-            ax.fill_between(range(len(daily_results)), lower_range, upper_range, color=color, alpha=.1)
-            # set the X and Y axis limits for the Critical graph
-            ax.set_xlim(0, len(daily_results))
-            ax.set_ylim(0, 15.5)
-            for label in (ax.get_xticklabels()+ax.get_yticklabels()):
-                label.set_fontsize(16)
-            ax.legend(prop={"size": 8})
+
+    if graph_type == DailyGraphType.INFECTED:
+        draw_graph("infected_cumulative_mean", "infected_cumulative_stdev")
+    elif graph_type == DailyGraphType.CRITICAL:  # plot daily critical cases
+        draw_graph("critical_cumulative_mean", "critical_cumulative_stdev")
+    elif graph_type == DailyGraphType.HOSPITALISED:
+        draw_graph("total_hospitalized_mean", "total_hospitalized_stderr")
+    else:
+        raise Exception("UNKNOWN DAILY GRAPH SELECTED: " + graph_type)
 
 
 def draw_heatmap(ax, categories: pandas.DataFrame, for_total_infections: bool = True):
