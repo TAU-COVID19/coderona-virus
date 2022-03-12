@@ -109,13 +109,12 @@ def draw_violin_graph(ax, x, data):
     ax.grid(True)
     ax.tick_params(axis='both', which='major', labelsize=8)
     # set the min Violin Y value to show to be 0
-    ax.set_ylim(bottom=0, top=max(max(data)))
+    ax.set_ylim(bottom=0, top=max([max(x) for x in data]))
     colors = ['darkorchid','plum', 'darkorchid','plum']
-    #colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','hotpink', 'lightpink', 'steelblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
     v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0,  ax=ax)
-    for violin, alpha in zip(ax.collections[::2], [0.8, 0.8, 0.8, 0.8,0.8, 0.8, 0.8, 0.8]):
+    for violin, alpha in zip(ax.collections[::2], [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]):
         violin.set_alpha(alpha)
     v.set_xlabel("Strategy", fontsize=18)
     v.set_ylabel("", fontsize=18)
@@ -167,6 +166,9 @@ if __name__ == "__main__":
                         "daily_infection": daily.daily_infection,
                         "daily_infection_stderr": daily.daily_infection_stderr,
 
+                        "total_hospitalized_mean": daily.total_hospitalized_mean,
+                        "total_hospitalized_stderr": daily.total_hospitalized_stderr,
+
                         "total_infected_in_the_community": daily.total_infected_in_the_community,
                         "total_infected_in_the_community_stderr": daily.total_infected_in_the_community_stderr,
 
@@ -203,14 +205,14 @@ if __name__ == "__main__":
     categories = df.groupby(by=category_items)
 
     # define the properties of the Violin graphs
-    fig, axs = pyplot.subplots(len(categories) * 4, 1)
+    fig, axs = pyplot.subplots(len(categories) * 5, 1)
     fig.set_figwidth(25)
     fig.set_figheight(len(categories) * 30)
 
     # define the properties of the daily graphs
-    fig2, axs2 = pyplot.subplots(16, 1)
+    fig2, axs2 = pyplot.subplots(20, 1)
     fig2.set_figwidth(9)
-    fig2.set_figheight(len(categories) * 22)
+    fig2.set_figheight(len(categories) * 24)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
     [ax.tick_params(axis='y', labelsize=6) for ax in axs]
@@ -243,13 +245,25 @@ if __name__ == "__main__":
         else:
             draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_infected_in_the_community"])
 
-        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=True)
+        axs[category_i].set_title(f"Total Infected\n{title}")
+        category_i += 1
+
+        draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_hospitalized_mean"])
+        axs[category_i].set_title(f"Total Hospitalization\n{title}")
+        category_i += 1
+
+        draw_daily_graphs(df, axs2[daily_category_i], graph_type=DailyGraphType.INFECTED)
         axs2[daily_category_i].set_title(f"Infected Cumulative Sum \n({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
-        draw_daily_graphs(df, axs2[daily_category_i], plot_infection_graph=False)
+        draw_daily_graphs(df, axs2[daily_category_i], graph_type=DailyGraphType.CRITICAL)
         axs2[daily_category_i].set_title(f"Critical Cumulative Sum \n({title})")
+        axs2[daily_category_i].set_xlabel("Day")
+        daily_category_i += 1
+
+        draw_daily_graphs(df, axs2[daily_category_i], graph_type=DailyGraphType.HOSPITALISED)
+        axs2[daily_category_i].set_title(f"Hospitalised Cumulative Sum \n({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
@@ -263,9 +277,6 @@ if __name__ == "__main__":
         axs2[daily_category_i].set_title(f"Case Reproduction Number R \n({title})")
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
-
-        axs[category_i].set_title(f"Total Infected\n{title}")
-        category_i += 1
 
         plot_wilcoxon_ranksum_statistic(ax=axs[category_i],
                                         data_per_strategy=df["total_infected_in_the_community"],
