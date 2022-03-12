@@ -212,6 +212,7 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     daily_critical_cases = daily_critical_cases.map(lambda x: x / number_of_repetitions)
     total_critical_in_community = critical_cumulative[:, -1]
 
+    hospitalized_full_data = hospitalized_full_data[:, 0:max_days]
     daily_critical_cases = daily_critical_cases[0:max_days]
     total_critical_in_community = total_critical_in_community[0:max_days]
     critical_cumulative = critical_cumulative[:, 0:max_days]
