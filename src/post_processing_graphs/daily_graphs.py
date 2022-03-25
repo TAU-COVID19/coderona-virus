@@ -9,8 +9,8 @@ from enum import Enum
 
 
 def select_daily_graph_colors(vaccination_strategy, vaccination_order):
-    colors = ['darkviolet', 'lightskyblue', 'darkviolet', 'darkviolet']
-    #colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
+    #colors = ['darkviolet', 'darkviolet', 'darkviolet', 'darkviolet']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     lines = [(0, (5, 0)), (0, (1, 1)), (0, (8, 8)), (0, (5, 1)), (0, (3, 1, 1, 1, 1, 1)), (0, (10, 0))]
 
     if vaccination_order == "DESCENDING":
