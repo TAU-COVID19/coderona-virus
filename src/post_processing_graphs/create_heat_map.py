@@ -7,7 +7,11 @@ import pandas as pd
 
 def draw_heatmap(ax, df: pd.DataFrame):
     sns.set_theme()
-    sns.heatmap(data=df, ax=ax, cmap="Spectral_r", annot=True, fmt=",.0f")
+    sns.set(font_scale=1.4)
+    sns.heatmap(data=df, ax=ax, cmap="Spectral_r", annot=True, fmt=",.0f", annot_kws={'fontcolor':"black"})
+
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontsize(16)
     # ax.legend()
 
 
