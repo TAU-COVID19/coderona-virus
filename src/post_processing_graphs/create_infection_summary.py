@@ -19,7 +19,7 @@ class GraphType(Enum):
 
 
 # set to True to show the different cities in different graphs. else set to False
-including_city = True
+including_city = False
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
@@ -111,9 +111,9 @@ def draw_violin_graph(ax, x, data):
     # set the min Violin Y value to show to be 0
     max_value = max([max(s) for s in data])
     # print(f'Violin ylim = {max_value}')
-    ax.set_ylim(bottom=0, top=max_value*1.2)
+    ax.set_ylim(bottom=0, top=max_value*1.3)
     #colors = ['darkorchid','plum', 'darkorchid','plum']
-    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','hotpink', 'lightpink', 'steelblue', 'lightskyblue']
+    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','darkorchid','plum','hotpink', 'lightpink', 'steelblue', 'lightskyblue','darkorchid','plum']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
     v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0,  ax=ax)
@@ -198,7 +198,7 @@ if __name__ == "__main__":
                         },
                        ignore_index=True)
 
-    df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results.csv')
+    df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results_including_city_{including_city}.csv')
 
     if including_city:
         category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
@@ -343,7 +343,7 @@ if __name__ == "__main__":
     fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
 
     fig.tight_layout(pad=15.0)
-    fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results.svg")
+    fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results_including_city_{including_city}.svg")
 
     fig2.tight_layout(pad=7.0)
-    fig2.savefig(f"{root_path}/outputs/{sys.argv[1]}/daily_results.svg")
+    fig2.savefig(f"{root_path}/outputs/{sys.argv[1]}/daily_results_including_city_{including_city}.svg")
