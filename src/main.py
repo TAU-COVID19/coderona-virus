@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import sys
+import numpy as np
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # Adding the src folder to PYTHONPATH
 
@@ -11,7 +12,7 @@ from src.simulation.initial_infection_params import NaiveInitialInfectionParams,
 from src.logs import make_age_and_state_datas_to_plot
 from src.simulation.params import Params
 from src.simulation.simulation import ORDER
-from src.run_utils import RepeatJob, SimpleJob, run
+from src.run_utils import RepeatJob, SimpleJob, run, make_base_infectiousness_to_r_job
 import src.util.seed as seed
 
 seed.set_random_seed()
@@ -130,7 +131,7 @@ def main():
         # "vaccinations_scenario_households": vaccinations_scenario_households,
         # Empty_scenario": Empty_scenario,
         # "school_closure": children_school_closure_intervention,
-        "asymptomatic_detection": children_asymptomatic_detection_intervention,
+        #"asymptomatic_detection": children_asymptomatic_detection_intervention,
         # "only_children_asymptomatic_detection":only_children_asymptomatic_detection
         # "noHH_children_specific_interventions": children_specific_noHH_interventions,
         # "HH_adult_specific_interventions": adult_specific_HH_interventions,
@@ -165,7 +166,7 @@ def main():
             for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18), (
             InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
-                    for city_name, scale in [("Bene Beraq", 1), ("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
+                    for city_name, scale in [("Bene Beraq", 0.1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [0.7]:
                             for order in [ORDER.ASCENDING, ORDER.DESCENDING]:
                                 for ci_delay in [4]:
@@ -214,14 +215,14 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=500))
+                                                                          num_repetitions=1))
 
                                         # add job to make r to base infectiousness graph:
-                                        # jobs += [make_base_infectiousness_to_r_job(
-                                        #             'r_graph_' + full_scenario_name, city_name, scale,
-                                        #             np.arange(0.05, 0.15, 0.05),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
-                                        #             interventions=intervention_scheme(compliance, ci_delay, hi_delay),
-                                        #             num_repetitions=3, initial_num_infected=initial_num_infected)]
+                                        jobs += [make_base_infectiousness_to_r_job(
+                                                    'r_graph_' + full_scenario_name, city_name, scale,
+                                                    np.arange(0.05, 0.15, 0.25),  # [0.03, 0.06, 0.1, 0.13, 0.16, 0.2],
+                                                    interventions=intervention_scheme(compliance, ci_delay, hi_delay),
+                                                    num_repetitions=3, initial_num_infected=initial_num_infected)]
     # this start the run of the jobs
     run(jobs, multi_processed=True, with_population_caching=False, verbosity=False)
 
