@@ -2,9 +2,7 @@ import json
 import sys
 from enum import Enum
 
-import pandas
 import scipy.stats
-import seaborn
 from matplotlib import pyplot
 
 from categories import Categories
@@ -23,12 +21,10 @@ including_city = False
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
-# max number of days to process
+# max number of days to process (set to 150)
 max_number_of_days_to_graph = 150
 # you can limit the number of iterations we process (for quicker testing only). set to None for normal operation
 debug_max_iterations = None
-
-
 
 w = None
 
@@ -73,10 +69,10 @@ def plot_wilcoxon_ranksum_statistic(ax, data_per_strategy: pandas.DataFrame, str
     table_props = the_table.properties()
     table_cells = table_props['children']
     for cell in table_cells:
-        cell.set_width(0.2)
+        cell.set_width(0.1)
         cell.set_height(0.15)
-    # the_table.scale(1.5, 1.5)
-    ax.set_title(f'Wilcoxon Rank-Sum P Value - {title}')
+
+    ax.set_title(f'Wilcoxon Rank-Sum P Value - {title}', y=1.2)
 
 
 def set_axis_style(ax, labels):
@@ -111,12 +107,13 @@ def draw_violin_graph(ax, x, data):
     # set the min Violin Y value to show to be 0
     max_value = max([max(s) for s in data])
     # print(f'Violin ylim = {max_value}')
-    ax.set_ylim(bottom=0, top=max_value*1.3)
-    #colors = ['darkorchid','plum', 'darkorchid','plum']
-    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','darkorchid','plum','hotpink', 'lightpink', 'steelblue', 'lightskyblue','darkorchid','plum']
+    ax.set_ylim(bottom=0, top=max_value * 1.3)
+    # colors = ['darkorchid','plum', 'darkorchid','plum']
+    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue', 'darkorchid', 'plum', 'hotpink', 'lightpink',
+              'steelblue', 'lightskyblue', 'darkorchid', 'plum']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
-    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0,  ax=ax)
+    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0, ax=ax)
     for violin, alpha in zip(ax.collections[::2], [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]):
         violin.set_alpha(alpha)
     v.set_xlabel("Strategy", fontsize=18)
@@ -147,8 +144,10 @@ if __name__ == "__main__":
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
     last_number_of_samples = None
     for one_run in all_runs:
+        print("[", end='')
         daily = get_daily_info(f"{root_path}/outputs/{sys.argv[1]}/{one_run}", max_days=max_number_of_days_to_graph,
                                max_iterations=debug_max_iterations)
+        print("]", end='')
         if last_number_of_samples is None:
             last_number_of_samples = daily.number_of_samples
         if last_number_of_samples != daily.number_of_samples:
@@ -197,8 +196,9 @@ if __name__ == "__main__":
                         "r_case_reproduction_number": daily.r_case_reproduction_number
                         },
                        ignore_index=True)
-
+    print("(", end='')
     df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results_including_city_{including_city}.csv')
+    print(")", end='')
 
     if including_city:
         category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
@@ -209,12 +209,12 @@ if __name__ == "__main__":
 
     # define the properties of the Violin graphs
     fig, axs = pyplot.subplots(len(categories) * 5, 1)
-    fig.set_figwidth(25)
+    fig.set_figwidth(20, True)
     fig.set_figheight(len(categories) * 30)
 
     # define the properties of the daily graphs
     fig2, axs2 = pyplot.subplots(20, 1)
-    fig2.set_figwidth(9)
+    fig2.set_figwidth(9, True)
     fig2.set_figheight(len(categories) * 24)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
@@ -224,10 +224,10 @@ if __name__ == "__main__":
     daily_category_i = 0
     for category in categories:
         city = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
-        title = city +\
+        title = city + \
                 f'intervention={category[0][category_items.index("intervention")]}, ' \
-                f'initial={category[0][category_items.index("initial_infected")]}, '\
-                f'per-day={category[0][category_items.index("immune_per_day")]}, '\
+                f'initial={category[0][category_items.index("initial_infected")]}, ' \
+                f'per-day={category[0][category_items.index("immune_per_day")]}, ' \
                 f'compliance={category[0][category_items.index("compliance")]}'
         df = category[1]
 
@@ -303,9 +303,9 @@ if __name__ == "__main__":
         category_i += 1
 
         plot_wilcoxon_ranksum_statistic(ax=axs[category_i],
-                                        data_per_strategy=df["total_critical_in_the_community"],
+                                        data_per_strategy=df["total_hospitalized_mean"],
                                         strategies=df["immune_order"],
-                                        title='Total Critical')
+                                        title='Total Hospitalization')
         category_i += 1
 
         # if selected_graph_type == GraphType.BAR:
@@ -339,10 +339,12 @@ if __name__ == "__main__":
 
     # draw_heatmap(axs2[daily_category_i], categories, for_total_infections=True)
 
+    # set the spacing between subplots
+    # pyplot.subplots_adjust(hspace=0.8, top=0.8)
 
-    fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
+    fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16, y=1.0)
 
-    fig.tight_layout(pad=15.0)
+    fig.tight_layout(pad=3.0)
     fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results_including_city_{including_city}.svg")
 
     fig2.tight_layout(pad=7.0)

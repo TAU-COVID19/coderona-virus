@@ -3,6 +3,7 @@ import os
 import statistics
 from collections import namedtuple
 from typing import List
+import pandas
 
 import numpy as np
 from functional import seq, pipeline
@@ -11,14 +12,24 @@ from functional import seq, pipeline
 def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
     filename = f"{root_path}/sample_{sample}/{file_name}"
     if os.path.isfile(filename):
-        data = seq.csv(filename)
-        line = [i for i in range(data.len()) if data[i][0] == line_name][0]
-        # print(f'get_sample_line() of {amit_graph_type}, sample {sample}, line start with {data[line][0]}')
+        data = pandas.read_csv(filename)
+        line = data[data[data.columns[0]] == line_name]
         if as_is:
-            result = [x for x in data[line][1:]]
+            result = line.keys().to_list()[1:]
         else:
-            result = [max(0.0, float(x)) for x in data[line][1:]]
+            line = line.to_numpy().flatten()[1:].astype('float')
+            result = np.clip(line, a_min=0.0, a_max=None)
         return result
+    return None
+
+
+def get_daily_column(root_path, sample, column_name):
+    filename = f"{root_path}/sample_{sample}/daily_delta.csv"
+    if os.path.isfile(filename):
+        data = pandas.read_csv(filename)
+        column = data[column_name].to_numpy().astype('float')
+        column = np.clip(column, a_min=0.0, a_max=None)
+        return column
     return None
 
 
@@ -67,16 +78,6 @@ def calculate_r(root_path: str, max_days=None):
     r_instantaneous_average = np.average(r_instantaneous, axis=0)
     r_case_reproduction_cases_average = np.average(r_case_reproduction_cases, axis=0)
     return r_case_reproduction_cases_average, r_instantaneous_average
-
-
-def get_daily_column(root_path, sample, column_name):
-    filename = f"{root_path}/sample_{sample}/daily_delta.csv"
-    if os.path.isfile(filename):
-        data: pipeline.Sequence = seq.csv(filename)
-        column = [i for i in range(data[0].len()) if data[0][i] == column_name][0]
-        # print(f'get_daily_column() of sample {sample}, line start with {data[0][column]}')
-        return [max(0.0, float(x[column])) for x in data[1:]]
-    return None
 
 
 def remove_outliers(data: List[float], method="stdev"):
@@ -173,7 +174,7 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     infected_20_59_full_data = None
     infected_60_99_full_data = None
 
-    for i in range(1000):
+    for i in range(max_iterations):
         critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
         total_critical_today = get_sample_line(root_path, sample=i, file_name="amit_graph_integral.csv",
                                                line_name="critical_0_99")
@@ -234,7 +235,7 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         daily_infection=daily_infection.to_list(),
 
         total_hospitalized_mean=hospitalized_full_data.mean(axis=0).tolist(),
-        total_hospitalized_stderr=(hospitalized_full_data.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        total_hospitalized_stderr=(hospitalized_full_data.astype('float').std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
 
         daily_critical_cases=daily_critical_cases.to_list(),
 
