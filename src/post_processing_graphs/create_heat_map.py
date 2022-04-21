@@ -3,6 +3,8 @@ import sys
 from matplotlib import pyplot
 import seaborn as sns
 import pandas as pd
+import numpy as np
+import os
 
 
 def draw_heatmap(ax, df: pd.DataFrame):
@@ -15,31 +17,73 @@ def draw_heatmap(ax, df: pd.DataFrame):
     # ax.legend()
 
 
+def get_total(df, is_infection, city, intervention, order, vaccination_strategy):
+    d = df[(df.city == city) & (df.intervention == intervention) & (df.order == order) & (
+            df.vaccination_strategy == vaccination_strategy)]
+    if is_infection:
+        d = d.infected_cumulative_mean
+    else:
+        d = d.total_hospitalized_mean
+    res = np.array(d.to_list()[0].replace('[', '').replace(']', '').split(',')).astype(float)[-1]
+    return res
+
+
 if __name__ == "__main__":
     plots = 8
     fig, ax = pyplot.subplots(plots, 1)
     fig.set_figwidth(22)
     fig.set_figheight(plots * 10)
 
+    root_path = os.path.join(os.path.dirname(__file__), "../../")
+    df = pd.read_csv(f"{root_path}/outputs/{sys.argv[1]}/results_including_city_True.csv")
+
     # ----------- FILL HERE THE REAL DATA ------------
 
     # ----------- START ------------
     total_infections_hh_isolation = [
-        (8138, 8743, 7586, 7579),  # Bnei Brak
-        (2226, 4424, 2063, 2726)]  # Holon
+        (get_total(df, True, "Benei Brak", "hh_isolation", "ASCENDING", "GENERAL"),
+         get_total(df, True, "Benei Brak", "hh_isolation", "DESCENDING", "GENERAL"),
+         get_total(df, True, "Benei Brak", "hh_isolation", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, True, "Benei Brak", "hh_isolation", "DESCENDING", "NEIGHBORHOOD")),  # Bnei Brak
+
+        (get_total(df, True, "Holon", "hh_isolation", "ASCENDING", "GENERAL"),
+         get_total(df, True, "Holon", "hh_isolation", "DESCENDING", "GENERAL"),
+         get_total(df, True, "Holon", "hh_isolation", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, True, "Holon", "hh_isolation", "DESCENDING", "NEIGHBORHOOD"))]  # Holon
 
     total_critical_hh_isolation = [
-        (1579, 304, 724, 481),  # Bnei Brak
-        (1134, 831, 888, 770)]  # Holon
+        (get_total(df, False, "Benei Brak", "hh_isolation", "ASCENDING", "GENERAL"),
+         get_total(df, False, "Benei Brak", "hh_isolation", "DESCENDING", "GENERAL"),
+         get_total(df, False, "Benei Brak", "hh_isolation", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, False, "Benei Brak", "hh_isolation", "DESCENDING", "NEIGHBORHOOD")),  # Bnei Brak
+
+        (get_total(df, False, "Holon", "hh_isolation", "ASCENDING", "GENERAL"),
+         get_total(df, False, "Holon", "hh_isolation", "DESCENDING", "GENERAL"),
+         get_total(df, False, "Holon", "hh_isolation", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, False, "Holon", "hh_isolation", "DESCENDING", "NEIGHBORHOOD"))]  # Holon
 
     # List of tuples
     total_infections_asymptomatic_detection = [
-        (1289, 1518, 1157, 1188),  # Bnei Brak
-        (899, 1609, 896, 1102)]  # Holon
+        (get_total(df, True, "Benei Brak", "asymptomatic_detection", "ASCENDING", "GENERAL"),
+         get_total(df, True, "Benei Brak", "asymptomatic_detection", "DESCENDING", "GENERAL"),
+         get_total(df, True, "Benei Brak", "asymptomatic_detection", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, True, "Benei Brak", "asymptomatic_detection", "DESCENDING", "NEIGHBORHOOD")),  # Bnei Brak
+
+        (get_total(df, True, "Holon", "asymptomatic_detection", "ASCENDING", "GENERAL"),
+         get_total(df, True, "Holon", "asymptomatic_detection", "DESCENDING", "GENERAL"),
+         get_total(df, True, "Holon", "asymptomatic_detection", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, True, "Holon", "asymptomatic_detection", "DESCENDING", "NEIGHBORHOOD"))]  # Holon
 
     total_critical_asymptomatic_detection = [
-        (349, 183, 231, 212),  # Bnei Brak
-        (574, 551, 537, 492)]  # Holon
+        (get_total(df, False, "Benei Brak", "asymptomatic_detection", "ASCENDING", "GENERAL"),
+         get_total(df, False, "Benei Brak", "asymptomatic_detection", "DESCENDING", "GENERAL"),
+         get_total(df, False, "Benei Brak", "asymptomatic_detection", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, False, "Benei Brak", "asymptomatic_detection", "DESCENDING", "NEIGHBORHOOD")),  # Bnei Brak
+
+        (get_total(df, False, "Holon", "asymptomatic_detection", "ASCENDING", "GENERAL"),
+         get_total(df, False, "Holon", "asymptomatic_detection", "DESCENDING", "GENERAL"),
+         get_total(df, False, "Holon", "asymptomatic_detection", "ASCENDING", "NEIGHBORHOOD"),
+         get_total(df, False, "Holon", "asymptomatic_detection", "DESCENDING", "NEIGHBORHOOD"))]  # Holon
 
     # some up the cities
     # hh combinations:

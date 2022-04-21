@@ -1,9 +1,11 @@
 from tabulate import tabulate
 import pandas as pd
 import scipy.stats
+import numpy as np
+import sys
 
 
-def plot_mixed_strategy_confidence_interval(c) -> None:
+def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
     """
     calculate the effect of applying different strategies for different cities
     :param c: a list of tuple [(strategy, DataFrame)]

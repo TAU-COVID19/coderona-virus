@@ -274,7 +274,7 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     # category == NPI (hh_isolation / asymptomatic_detection)
-    plot_mixed_strategy_confidence_interval(categories)
+    plot_mixed_strategy_confidence_interval(categories, root_path)
     for category in categories:
         city = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
         title = city + \
