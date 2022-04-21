@@ -10,6 +10,7 @@ from matplotlib import pyplot
 from categories import Categories
 from src.simulation.params import Params
 from src.w import W
+from mixed_strategy_confidence_interval import plot_mixed_strategy_confidence_interval
 
 
 class GraphType(Enum):
@@ -40,7 +41,8 @@ def short_name(a):
 
 
 def get_run_folders(root_dir):
-    folders = [x for x in os.listdir(root_dir) if x[0] != "." and "csv" not in x and "svg" not in x and "html" not in x]
+    folders = [x for x in os.listdir(root_dir) if x[0] != "."
+               and "csv" not in x and "svg" not in x and "html" not in x and "xlsx" not in x]
     folders = seq(folders).sorted(short_name).list()
     return folders
 
@@ -63,13 +65,16 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
                     ((key_column < len(data_per_strategy) / 2 and key_row < len(data_per_strategy) / 2) or
                      (key_column >= len(data_per_strategy) / 2 and key_row >= len(data_per_strategy) / 2)):
                 data = ((np.array(series_row) - np.array(series_column)).tolist(),)
-                res = scipy.stats.bootstrap(data=data, statistic=np.mean)
-                bootstrap_results = bootstrap_results.append({
-                    'Strategy 1': (strategies[strategies.index[key_row]]).replace('\n', ' '),
-                    'Strategy 2': (strategies[strategies.index[key_column]]).replace('\n', ' '),
-                    'Confidence Low': res.confidence_interval.low,
-                    'Confidence High': res.confidence_interval.high,
-                }, ignore_index=True)
+                try:
+                    res = scipy.stats.bootstrap(data=data, statistic=np.mean)
+                    bootstrap_results = bootstrap_results.append({
+                        'Strategy 1': (strategies[strategies.index[key_row]]).replace('\n', ' '),
+                        'Strategy 2': (strategies[strategies.index[key_column]]).replace('\n', ' '),
+                        'Confidence Low': res.confidence_interval.low,
+                        'Confidence High': res.confidence_interval.high,
+                    }, ignore_index=True)
+                except:
+                    pass
             row.append(f'{p_value:.3f}')
             this_label = strategies[strategies.index[key_column]]
             labels.append(this_label)
@@ -269,6 +274,7 @@ if __name__ == "__main__":
     category_i = 0
     daily_category_i = 0
     # category == NPI (hh_isolation / asymptomatic_detection)
+    plot_mixed_strategy_confidence_interval(categories)
     for category in categories:
         city = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
         title = city + \
