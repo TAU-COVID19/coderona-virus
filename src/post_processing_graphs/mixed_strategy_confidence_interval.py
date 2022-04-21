@@ -17,19 +17,26 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
     # pick specific combinations to compare
     combinations = [
         [
-            {"city": "Holon", "vaccination_strategy": "NEIGHBORHOOD", "order": "DESCENDING", "intervention": "hh_isolation"},
-            {"city": "Benei Brak", "vaccination_strategy": "GENERAL", "order": "DESCENDING", "intervention": "hh_isolation"},
+            {"city": "Holon", "vaccination_strategy": "NEIGHBORHOOD", "order": "DESCENDING",
+             "intervention": "hh_isolation"},
+            {"city": "Benei Brak", "vaccination_strategy": "GENERAL", "order": "DESCENDING",
+             "intervention": "hh_isolation"},
 
             {"city": "Holon", "vaccination_strategy": "GENERAL", "order": "DESCENDING", "intervention": "hh_isolation"},
-            {"city": "Benei Brak", "vaccination_strategy": "GENERAL", "order": "DESCENDING", "intervention": "hh_isolation"},
+            {"city": "Benei Brak", "vaccination_strategy": "GENERAL", "order": "DESCENDING",
+             "intervention": "hh_isolation"},
         ],
 
         [
-            {"city": "Holon", "vaccination_strategy": "NEIGHBORHOOD", "order": "ASCENDING", "intervention": "hh_isolation"},
-            {"city": "Benei Brak", "vaccination_strategy": "NEIGHBORHOOD", "order": "DESCENDING", "intervention": "hh_isolation"},
+            {"city": "Holon", "vaccination_strategy": "NEIGHBORHOOD", "order": "ASCENDING",
+             "intervention": "hh_isolation"},
+            {"city": "Benei Brak", "vaccination_strategy": "NEIGHBORHOOD", "order": "DESCENDING",
+             "intervention": "hh_isolation"},
 
-            {"city": "Holon", "vaccination_strategy": "NEIGHBORHOOD", "order": "ASCENDING", "intervention": "hh_isolation"},
-            {"city": "Benei Brak", "vaccination_strategy": "NEIGHBORHOOD", "order": "ASCENDING", "intervention": "hh_isolation"},
+            {"city": "Holon", "vaccination_strategy": "NEIGHBORHOOD", "order": "ASCENDING",
+             "intervention": "hh_isolation"},
+            {"city": "Benei Brak", "vaccination_strategy": "NEIGHBORHOOD", "order": "ASCENDING",
+             "intervention": "hh_isolation"},
         ],
 
         [
@@ -82,14 +89,15 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
         pair_2 = np.array(pair_2_city_1.total_hospitalized_samples.to_list()) + \
                  np.array(pair_2_city_2.total_hospitalized_samples.to_list())
         res = scipy.stats.bootstrap(data=(pair_1 - pair_2), statistic=np.mean)
-        bootstrap_results = bootstrap_results.append({
-            'Strategy 1': f'HOSPITALISATION: {combination[0]["city"]}: {combination[0]["intervention"]} - {combination[0]["vaccination_strategy"]} - {combination[0]["order"]}' + "\n" +
-                          f'{combination[1]["city"]}: {combination[1]["intervention"]} - {combination[1]["vaccination_strategy"]} - {combination[1]["order"]}',
-            'Strategy 2': f'HOSPITALISATION: {combination[2]["city"]}: {combination[2]["intervention"]} - {combination[2]["vaccination_strategy"]} - {combination[2]["order"]}' + "\n" +
-                          f'{combination[3]["city"]}: {combination[3]["intervention"]} - {combination[3]["vaccination_strategy"]} - {combination[3]["order"]}',
-            'Confidence Low': res.confidence_interval.low,
-            'Confidence High': res.confidence_interval.high,
-        }, ignore_index=True)
+        bootstrap_results = pd.concat([bootstrap_results,
+           pd.DataFrame.from_records([{
+               'Strategy 1': f'HOSPITALISATION: {combination[0]["city"]}: {combination[0]["intervention"]} - {combination[0]["vaccination_strategy"]} - {combination[0]["order"]}' + "\n" +
+                             f'{combination[1]["city"]}: {combination[1]["intervention"]} - {combination[1]["vaccination_strategy"]} - {combination[1]["order"]}',
+               'Strategy 2': f'HOSPITALISATION: {combination[2]["city"]}: {combination[2]["intervention"]} - {combination[2]["vaccination_strategy"]} - {combination[2]["order"]}' + "\n" +
+                             f'{combination[3]["city"]}: {combination[3]["intervention"]} - {combination[3]["vaccination_strategy"]} - {combination[3]["order"]}',
+               'Confidence Low': res.confidence_interval.low,
+               'Confidence High': res.confidence_interval.high,
+           }])], ignore_index=True)
 
         # do the same for Infections
         pair_1 = np.array(pair_1_city_1.total_infected_samples.to_list()) + \
@@ -97,16 +105,16 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
         pair_2 = np.array(pair_2_city_1.total_infected_samples.to_list()) + \
                  np.array(pair_2_city_2.total_infected_samples.to_list())
         res = scipy.stats.bootstrap(data=(pair_1 - pair_2), statistic=np.mean)
-        bootstrap_results = bootstrap_results.append({
+        bootstrap_results = pd.concat([bootstrap_results, pd.DataFrame.from_records([{
             'Strategy 1': f'INFECTIONS: {combination[0]["city"]}: {combination[0]["intervention"]} - {combination[0]["vaccination_strategy"]} - {combination[0]["order"]}' + "\n" +
                           f'{combination[1]["city"]}: {combination[1]["intervention"]} - {combination[1]["vaccination_strategy"]} - {combination[1]["order"]}',
             'Strategy 2': f'INFECTIONS: {combination[2]["city"]}: {combination[2]["intervention"]} - {combination[2]["vaccination_strategy"]} - {combination[2]["order"]}' + "\n" +
                           f'{combination[3]["city"]}: {combination[3]["intervention"]} - {combination[3]["vaccination_strategy"]} - {combination[3]["order"]}',
             'Confidence Low': res.confidence_interval.low,
             'Confidence High': res.confidence_interval.high,
-        }, ignore_index=True)
+        }])], ignore_index=True)
 
-    print(f"\n{combinations}")
-    print(tabulate(bootstrap_results, headers='keys', tablefmt='fancy_grid'))
+    # print(f"\n{combinations}")
+    # print(tabulate(bootstrap_results, headers='keys', tablefmt='fancy_grid'))
     bootstrap_results.to_csv(f'{root_path}/outputs/{sys.argv[1]}/bootstrap_combinations.csv')
     bootstrap_results.to_html(f'{root_path}/outputs/{sys.argv[1]}/bootstrap_combinations.html')
