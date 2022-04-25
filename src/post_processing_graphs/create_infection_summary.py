@@ -51,11 +51,17 @@ from daily_graphs import *
 from daily_data import *
 
 
+def ci_to_p_value(low, high, mean_difference, SE):
+    # SE = (high - low) / (2 * 1.96)
+    z = mean_difference / SE
+    return math.exp(-0.717 * z - 0.416 * (z ** 2))
+
+
 def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, strategies: pandas.DataFrame,
                                        title: str):
     results = []
     labels = []
-    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High', 'Mean', 'P Value'])
+    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High', 'Mean', 'P Value', 'T Test - P Value'])
     index = 0
 
     for key_row, series_row in enumerate(data_per_strategy):
@@ -72,6 +78,11 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
                 try:
                     res = scipy.stats.bootstrap(data=data, statistic=np.mean)
                     pvalue_res = scipy.stats.ttest_ind(a, b, equal_var=True)
+                    pvalue = ci_to_p_value(
+                        low=res.confidence_interval.low,
+                        high=res.confidence_interval.high,
+                        mean_difference=(a - b).mean(),
+                        SE=res.standard_error)
                     bootstrap_results = pd.concat([bootstrap_results,
                         pd.DataFrame.from_records({
                         'Strategy 1': (strategies[strategies.index[key_row]]).replace('\n', ' '),
@@ -79,7 +90,8 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
                         'Confidence Low': res.confidence_interval.low,
                         'Confidence High': res.confidence_interval.high,
                         'Mean': (a - b).mean(),
-                        'P Value': pvalue_res.pvalue,
+                        'P Value': pvalue,
+                        'T Test - P Value': pvalue_res.pvalue,
                     }, index=[index])])
                     index += 1
                 except Exception as e:
