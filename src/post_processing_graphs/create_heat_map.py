@@ -107,14 +107,12 @@ if __name__ == "__main__":
                get_total(df, True, "Holon", "hh_isolation", "DESCENDING", "NEIGHBORHOOD"),
            ]
     # normalize the numbers to be out of 100K
-    total_infection_hh_both_cities_detection = [x*100000/both_cities_population for x in total_infection_hh_both_cities_detection]
     total_infections_asymptomatic_both_cities_detection = [
         total_infections_asymptomatic_detection[0][i] + total_infections_asymptomatic_detection[1][i] for i in range(4)] + \
             [
                 get_total(df, True, "Benei Brak", "asymptomatic_detection", "DESCENDING", "GENERAL") +
                 get_total(df, True, "Holon", "asymptomatic_detection", "DESCENDING", "NEIGHBORHOOD"),
             ]
-    total_infections_asymptomatic_both_cities_detection = [x*100000/both_cities_population for x in total_infections_asymptomatic_both_cities_detection]
     total_infections_asymptomatic_both_cities_detection
 
     # hh combinations:
@@ -131,14 +129,12 @@ if __name__ == "__main__":
                       get_total(df, False, "Benei Brak", "hh_isolation", "DESCENDING", "GENERAL") +
                       get_total(df, False, "Holon", "hh_isolation", "DESCENDING", "NEIGHBORHOOD"),
                   ]
-    total_critical_hh_both_cities_detection = [x*100000/both_cities_population for x in total_critical_hh_both_cities_detection]
     total_critical_asymptomatic_both_cities_detection = [
         total_critical_asymptomatic_detection[0][i] + total_critical_asymptomatic_detection[1][i] for i in range(4)] + \
                 [
                     get_total(df, False, "Benei Brak", "asymptomatic_detection", "DESCENDING", "GENERAL") +
                     get_total(df, False, "Holon", "asymptomatic_detection", "DESCENDING", "NEIGHBORHOOD"),
                 ]
-    total_critical_asymptomatic_both_cities_detection = [x*100000/both_cities_population for x in total_critical_asymptomatic_both_cities_detection]
 
     # ----------- END ------------
 

@@ -11,7 +11,8 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
     :param c: a list of tuple [(strategy, DataFrame)]
     :return: None
     """
-    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High'])
+    index = 0
+    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High', 'Mean', 'P Value'])
     d = c.head(200)
 
     # pick specific combinations to compare
@@ -84,11 +85,12 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
                           (d.intervention == combination[3]["intervention"])]
 
         # calculate for hospitalisation
-        pair_1 = np.array(pair_1_city_1.total_hospitalized_samples.to_list()) + \
-                 np.array(pair_1_city_2.total_hospitalized_samples.to_list())
-        pair_2 = np.array(pair_2_city_1.total_hospitalized_samples.to_list()) + \
-                 np.array(pair_2_city_2.total_hospitalized_samples.to_list())
-        res = scipy.stats.bootstrap(data=(pair_1 - pair_2), statistic=np.mean)
+        pair_1 = (np.array(pair_1_city_1.total_hospitalized_samples.to_list()) +
+                  np.array(pair_1_city_2.total_hospitalized_samples.to_list())).flatten()
+        pair_2 = (np.array(pair_2_city_1.total_hospitalized_samples.to_list()) + \
+                  np.array(pair_2_city_2.total_hospitalized_samples.to_list())).flatten()
+        res = scipy.stats.bootstrap(data=[(pair_1 - pair_2)], statistic=np.mean)
+        pvalue_res = scipy.stats.ttest_ind(pair_1, pair_2, equal_var=True)
         bootstrap_results = pd.concat([bootstrap_results,
            pd.DataFrame.from_records([{
                'Strategy 1': f'HOSPITALISATION: {combination[0]["city"]}: {combination[0]["intervention"]} - {combination[0]["vaccination_strategy"]} - {combination[0]["order"]}' + "\n" +
@@ -97,14 +99,18 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
                              f'{combination[3]["city"]}: {combination[3]["intervention"]} - {combination[3]["vaccination_strategy"]} - {combination[3]["order"]}',
                'Confidence Low': res.confidence_interval.low,
                'Confidence High': res.confidence_interval.high,
-           }])], ignore_index=True)
+               'Mean': (pair_1 - pair_2).mean(),
+               'P Value': pvalue_res.pvalue,
+           }], index=[index])])
+        index += 1
 
         # do the same for Infections
-        pair_1 = np.array(pair_1_city_1.total_infected_samples.to_list()) + \
-                 np.array(pair_1_city_2.total_infected_samples.to_list())
-        pair_2 = np.array(pair_2_city_1.total_infected_samples.to_list()) + \
-                 np.array(pair_2_city_2.total_infected_samples.to_list())
-        res = scipy.stats.bootstrap(data=(pair_1 - pair_2), statistic=np.mean)
+        pair_1 = (np.array(pair_1_city_1.total_infected_samples.to_list()) +
+                  np.array(pair_1_city_2.total_infected_samples.to_list())).flatten()
+        pair_2 = (np.array(pair_2_city_1.total_infected_samples.to_list()) +
+                  np.array(pair_2_city_2.total_infected_samples.to_list())).flatten()
+        res = scipy.stats.bootstrap(data=[(pair_1 - pair_2)], statistic=np.mean)
+        pvalue_res = scipy.stats.ttest_ind(pair_1, pair_2, equal_var=True)
         bootstrap_results = pd.concat([bootstrap_results, pd.DataFrame.from_records([{
             'Strategy 1': f'INFECTIONS: {combination[0]["city"]}: {combination[0]["intervention"]} - {combination[0]["vaccination_strategy"]} - {combination[0]["order"]}' + "\n" +
                           f'{combination[1]["city"]}: {combination[1]["intervention"]} - {combination[1]["vaccination_strategy"]} - {combination[1]["order"]}',
@@ -112,7 +118,10 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
                           f'{combination[3]["city"]}: {combination[3]["intervention"]} - {combination[3]["vaccination_strategy"]} - {combination[3]["order"]}',
             'Confidence Low': res.confidence_interval.low,
             'Confidence High': res.confidence_interval.high,
-        }])], ignore_index=True)
+            'Mean': (pair_1 - pair_2).mean(),
+            'P Value': pvalue_res.pvalue,
+        }], index=[index])], ignore_index=True)
+        index += 1
 
     # print(f"\n{combinations}")
     # print(tabulate(bootstrap_results, headers='keys', tablefmt='fancy_grid'))

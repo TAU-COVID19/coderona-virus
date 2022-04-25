@@ -9,7 +9,16 @@ import numpy as np
 from functional import seq, pipeline
 
 
+def path_to_city(path):
+    if "Holon" in path:
+        return "Holon"
+    else:
+        return "Benei Brak"
+
+
 def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
+    city = path_to_city(root_path)
+    per_100_000_factor = per_100_000(city)
     filename = f"{root_path}/sample_{sample}/{file_name}"
     if os.path.isfile(filename):
         data = pandas.read_csv(filename)
@@ -19,17 +28,20 @@ def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
         else:
             line = line.to_numpy().flatten()[1:].astype('float')
             result = np.clip(line, a_min=0.0, a_max=None)
+            result = [x * per_100_000_factor for x in result]
         return result
     return None
 
 
 def get_daily_column(root_path, sample, column_name):
+    city = path_to_city(root_path)
+    per_100_000_factor = per_100_000(city)
     filename = f"{root_path}/sample_{sample}/daily_delta.csv"
     if os.path.isfile(filename):
         data = pandas.read_csv(filename)
         column = data[column_name].to_numpy().astype('float')
         column = np.clip(column, a_min=0.0, a_max=None)
-        return column
+        return [x * per_100_000_factor for x in column]
     return None
 
 
@@ -126,6 +138,19 @@ def cumulative_sum(data):
 def get_hospitalization_given_symptomatic(age):
     hospitalization_given_symptomatic_per_age = [0.0, 0.008, 0.008, 0.01, 0.019, 0.054, 0.151, 0.333, 0.618]
     return hospitalization_given_symptomatic_per_age[int(min(age // 10, 8))]
+
+
+def per_100_000(city):
+    """
+    return the factor to multiply each sample to normalize the data per 100K
+    """
+    city_population = {"Holon": 189836, "Benei Brak": 185882}
+    both_cities_population = city_population["Holon"] + city_population["Benei Brak"]
+    if city == "Holon":
+        city_size = city_population["Holon"]
+    else:
+        city_size = city_population["Benei Brak"]
+    return 100_000.0 / city_size
 
 
 def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:

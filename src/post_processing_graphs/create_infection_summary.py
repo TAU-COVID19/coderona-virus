@@ -55,7 +55,9 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
                                        title: str):
     results = []
     labels = []
-    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High'])
+    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High', 'Mean', 'P Value'])
+    index = 0
+
     for key_row, series_row in enumerate(data_per_strategy):
         row = []
         labels = []
@@ -64,18 +66,24 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
             if key_column != key_row and \
                     ((key_column < len(data_per_strategy) / 2 and key_row < len(data_per_strategy) / 2) or
                      (key_column >= len(data_per_strategy) / 2 and key_row >= len(data_per_strategy) / 2)):
-                data = ((np.array(series_row) - np.array(series_column)).tolist(),)
+                a = np.array(series_row)
+                b = np.array(series_column)
+                data = ((a - b).tolist(),)
                 try:
                     res = scipy.stats.bootstrap(data=data, statistic=np.mean)
+                    pvalue_res = scipy.stats.ttest_ind(a, b, equal_var=True)
                     bootstrap_results = pd.concat([bootstrap_results,
                         pd.DataFrame.from_records({
                         'Strategy 1': (strategies[strategies.index[key_row]]).replace('\n', ' '),
                         'Strategy 2': (strategies[strategies.index[key_column]]).replace('\n', ' '),
                         'Confidence Low': res.confidence_interval.low,
                         'Confidence High': res.confidence_interval.high,
-                    })], ignore_index=True)
-                except:
-                    pass
+                        'Mean': (a - b).mean(),
+                        'P Value': pvalue_res.pvalue,
+                    }, index=[index])])
+                    index += 1
+                except Exception as e:
+                    print(f'plot_confidence_interval_statistic() EXCEPTION! {e}')
             row.append(f'{p_value:.3f}')
             this_label = strategies[strategies.index[key_column]]
             labels.append(this_label)
@@ -102,12 +110,17 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
 
 
 def draw_scattered_graph(ax, ax_i, data):
+    """
+    return the next available subplot index ax_i to draw into
+    """
     l = len(df.scenario)
 
-    for city in df.city.unique():
-        d = data[data.city == city]
-        max_hospitalization = max([x[-1] for x in d.total_hospitalized_mean])
-        max_infection = max([x[-1] for x in d.infected_cumulative_mean])
+    for current_city in df.city.unique():
+        d = data[data.city == current_city]
+        # max_hospitalization = max([x[-1] for x in d.total_hospitalized_mean])
+        # max_infection = max([x[-1] for x in d.infected_cumulative_mean])
+        max_hospitalization = 1
+        max_infection = 1
 
         normalized_hospitalization = [x[-1] / max_hospitalization for x in d.total_hospitalized_mean]
         normalized_infection = [x[-1] / max_infection for x in d.infected_cumulative_mean]
@@ -115,14 +128,16 @@ def draw_scattered_graph(ax, ax_i, data):
         for i in range(len(d.scenario)):
             ax[ax_i].text(x=normalized_hospitalization[i] + 0.005,
                           y=normalized_infection[i] + 0.005,
-                          s=d.vaccination_strategy[d.scenario.index[i]] + '\n' + d.order[d.scenario.index[i]])
+                          s=d.vaccination_strategy[d.scenario.index[i]] + '\n' + d.order[d.scenario.index[i]],
+                          color='red')
         ax[ax_i].scatter(normalized_hospitalization, normalized_infection)
         ax[ax_i].set_xlabel(f"hospitalization")
         ax[ax_i].set_ylabel(f"infection")
-        ax[ax_i].set_xlim(0, 1)
-        ax[ax_i].set_ylim(0.4, 1)
-        ax[ax_i].set_title(city)
+        #ax[ax_i].set_xlim(0, 1)
+        #ax[ax_i].set_ylim(0.4, 1)
+        ax[ax_i].set_title(current_city)
         ax_i += 1
+    return ax_i
 
 
 def set_axis_style(ax, labels):
@@ -264,7 +279,7 @@ if __name__ == "__main__":
     categories = df.groupby(by=category_items)
 
     # define the properties of the Violin graphs
-    fig, axs = pyplot.subplots(len(categories) * 6, 1)
+    fig, axs = pyplot.subplots(len(categories) * 7, 1)
     fig.set_figwidth(15, True)
     fig.set_figheight(len(categories) * 30)
 
@@ -368,7 +383,7 @@ if __name__ == "__main__":
                                            title=f'Total Hospitalization - {category[0][category_items.index("intervention")]}')
         category_i += 1
 
-        # draw_scattered_graph(axs, category_i, df)
+        category_i = draw_scattered_graph(axs, category_i, df)
 
     # draw_heatmap(axs2[daily_category_i], categories, for_total_infections=True)
 
