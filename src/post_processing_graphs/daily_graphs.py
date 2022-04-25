@@ -90,9 +90,10 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
         color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
                                                              df["order"].to_list()[key])
 
+        starting_day = 14
         if use_r_instantaneous:
-            x = range(8, len(r_instantaneous))
-            ax.plot(x, r_instantaneous[8:], label=label,
+            x = range(starting_day, len(r_instantaneous))
+            ax.plot(x, r_instantaneous[starting_day:], label=label,
                     color=color,
                     linestyle=line_style)
             ax.set_xlim(min(x), max(x))
@@ -109,28 +110,6 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
         for label in (ax.get_xticklabels() + ax.get_yticklabels()):
             label.set_fontsize(16)
 
-
-def draw_daily_r_graph(df, ax, w):
-    for key, daily_results in enumerate(df["daily_infection"]):
-        r = calculate_r0_instantaneous(daily_results, w)
-        r_avg = moving_average(r, 7)
-        color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
-                                                             df["order"].to_list()[key])
-        # ax.plot(range(8, len(r)), r[8:], label=label,
-        #         color=color,
-        #         linestyle=line_style)
-        x = range(8, len(r_avg))
-        ax.plot(x, r_avg[8:], label=label,
-                color=color,
-                linestyle=line_style)
-        ax.plot(x, [1] * len(x), color="lightgreen")
-
-        # ax.fill_between(range(8, len(r_avg)), 0.8, 1, color="#069c1d", alpha=.1)
-        # ax.fill_between(range(8, len(r_avg)), 1, 1.5, color="#990800", alpha=.1)
-        ax.legend(prop={"size": 8})
-        ax.set_ylim(bottom=0, top=1.5)
-        for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-            label.set_fontsize(16)
 
 def moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
