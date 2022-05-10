@@ -168,7 +168,7 @@ def main():
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1), ("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [0.7]:
-                            for order in [ORDER.ASCENDING, ORDER.DESCENDING]:
+                            for order in [ORDER.ASCENDING, ORDER.DESCENDING, ORDER.NONE]:
                                 for ci_delay in [4]:
                                     for hi_delay in [4]:
                                         # people aging less than minimum_infectioness_age will not infect others
