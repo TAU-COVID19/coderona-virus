@@ -1,15 +1,16 @@
 import json
 import sys
 from enum import Enum
+from tabulate import tabulate
 
-import pandas
+import pandas as pd
 import scipy.stats
-import seaborn
 from matplotlib import pyplot
 
 from categories import Categories
 from src.simulation.params import Params
 from src.w import W
+from mixed_strategy_confidence_interval import plot_mixed_strategy_confidence_interval
 
 
 class GraphType(Enum):
@@ -23,12 +24,10 @@ including_city = False
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
-# max number of days to process
+# max number of days to process (set to 150)
 max_number_of_days_to_graph = 150
 # you can limit the number of iterations we process (for quicker testing only). set to None for normal operation
 debug_max_iterations = None
-
-
 
 w = None
 
@@ -42,7 +41,8 @@ def short_name(a):
 
 
 def get_run_folders(root_dir):
-    folders = [x for x in os.listdir(root_dir) if x[0] != "." and "csv" not in x and "svg" not in x]
+    folders = [x for x in os.listdir(root_dir) if x[0] != "."
+               and "csv" not in x and "svg" not in x and "html" not in x and "xlsx" not in x]
     folders = seq(folders).sorted(short_name).list()
     return folders
 
@@ -51,14 +51,51 @@ from daily_graphs import *
 from daily_data import *
 
 
-def plot_wilcoxon_ranksum_statistic(ax, data_per_strategy: pandas.DataFrame, strategies: pandas.DataFrame, title: str):
+def ci_to_p_value(low, high, mean_difference, SE):
+    # SE = (high - low) / (2 * 1.96)
+    z = mean_difference / SE
+    return math.exp(-0.717 * z - 0.416 * (z ** 2))
+
+
+def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, strategies: pandas.DataFrame,
+                                       title: str):
     results = []
     labels = []
+    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High', 'Mean', 'P Value', 'T Test - P Value'])
+    index = 0
+
     for key_row, series_row in enumerate(data_per_strategy):
         row = []
         labels = []
         for key_column, series_column in enumerate(data_per_strategy):
-            statistic, p_value = scipy.stats.ranksums(x=series_row, y=series_column, alternative='two-sided')
+            statistic, p_value = scipy.stats.mannwhitneyu(x=series_row, y=series_column, alternative='two-sided')
+            if key_column != key_row and \
+                    ((key_column < len(data_per_strategy) / 2 and key_row < len(data_per_strategy) / 2) or
+                     (key_column >= len(data_per_strategy) / 2 and key_row >= len(data_per_strategy) / 2)):
+                a = np.array(series_row)
+                b = np.array(series_column)
+                data = ((a - b).tolist(),)
+                try:
+                    res = scipy.stats.bootstrap(data=data, statistic=np.mean)
+                    pvalue_res = scipy.stats.ttest_ind(a, b, equal_var=True)
+                    pvalue = ci_to_p_value(
+                        low=res.confidence_interval.low,
+                        high=res.confidence_interval.high,
+                        mean_difference=(a - b).mean(),
+                        SE=res.standard_error)
+                    bootstrap_results = pd.concat([bootstrap_results,
+                        pd.DataFrame.from_records({
+                        'Strategy 1': (strategies[strategies.index[key_row]]).replace('\n', ' '),
+                        'Strategy 2': (strategies[strategies.index[key_column]]).replace('\n', ' '),
+                        'Confidence Low': res.confidence_interval.low,
+                        'Confidence High': res.confidence_interval.high,
+                        'Mean': (a - b).mean(),
+                        'P Value': pvalue,
+                        'T Test - P Value': pvalue_res.pvalue,
+                    }, index=[index])])
+                    index += 1
+                except Exception as e:
+                    print(f'plot_confidence_interval_statistic() EXCEPTION! {e}')
             row.append(f'{p_value:.3f}')
             this_label = strategies[strategies.index[key_column]]
             labels.append(this_label)
@@ -73,10 +110,46 @@ def plot_wilcoxon_ranksum_statistic(ax, data_per_strategy: pandas.DataFrame, str
     table_props = the_table.properties()
     table_cells = table_props['children']
     for cell in table_cells:
-        cell.set_width(0.2)
+        cell.set_width(0.1)
         cell.set_height(0.15)
-    # the_table.scale(1.5, 1.5)
-    ax.set_title(f'Wilcoxon Rank-Sum P Value - {title}')
+
+    ax.set_title(f'Wilcoxon Rank-Sum P Value - {title}', y=1.2)
+    # print(f"\n{title}")
+    # print(tabulate(bootstrap_results, headers='keys', tablefmt='fancy_grid'))
+    t = title.replace("\n", " ")
+    bootstrap_results.to_csv(f'{root_path}/outputs/{sys.argv[1]}/bootstrap_{t}.csv')
+    bootstrap_results.to_html(f'{root_path}/outputs/{sys.argv[1]}/bootstrap_{t}.html')
+
+
+def draw_scattered_graph(ax, ax_i, data):
+    """
+    return the next available subplot index ax_i to draw into
+    """
+    l = len(df.scenario)
+
+    for current_city in df.city.unique():
+        d = data[data.city == current_city]
+        # max_hospitalization = max([x[-1] for x in d.total_hospitalized_mean])
+        # max_infection = max([x[-1] for x in d.infected_cumulative_mean])
+        max_hospitalization = 1
+        max_infection = 1
+
+        normalized_hospitalization = [x[-1] / max_hospitalization for x in d.total_hospitalized_mean]
+        normalized_infection = [x[-1] / max_infection for x in d.infected_cumulative_mean]
+
+        for i in range(len(d.scenario)):
+            ax[ax_i].text(x=normalized_hospitalization[i] + 0.005,
+                          y=normalized_infection[i] + 0.005,
+                          s=d.vaccination_strategy[d.scenario.index[i]] + '\n' + d.order[d.scenario.index[i]],
+                          color='red')
+        ax[ax_i].scatter(normalized_hospitalization, normalized_infection)
+        ax[ax_i].set_xlabel(f"hospitalization")
+        ax[ax_i].set_ylabel(f"infection")
+        #ax[ax_i].set_xlim(0, 1)
+        #ax[ax_i].set_ylim(0.4, 1)
+        ax[ax_i].set_title(current_city)
+        ax_i += 1
+    return ax_i
 
 
 def set_axis_style(ax, labels):
@@ -94,6 +167,7 @@ def prepare_seaborn_df(data, categories):
     for key, results in enumerate(data):
         d = pandas.concat([d, pandas.DataFrame(data=[[categories[categories.index[key]], i] for i in results],
                                                columns=["strategy", "data"])])
+        d["data"] = d["data"].astype(float)
     return d
 
 
@@ -111,12 +185,12 @@ def draw_violin_graph(ax, x, data):
     # set the min Violin Y value to show to be 0
     max_value = max([max(s) for s in data])
     # print(f'Violin ylim = {max_value}')
-    ax.set_ylim(bottom=0, top=max_value*1.3)
-    #colors = ['darkorchid','plum', 'darkorchid','plum']
-    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue','darkorchid','plum','hotpink', 'lightpink', 'steelblue', 'lightskyblue','darkorchid','plum']
+    ax.set_ylim(bottom=0, top=max_value * 1.3)
+    # colors = ['darkorchid','plum', 'darkorchid','plum']
+    colors = ['hotpink', 'lightpink', 'steelblue', 'lightskyblue', 'hotpink', 'lightpink', 'steelblue', 'lightskyblue']
     seaborn.set_palette(seaborn.color_palette(colors))
     seaborn_df = prepare_seaborn_df(data, x)
-    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0,  ax=ax)
+    v = seaborn.violinplot(x="strategy", y="data", data=seaborn_df, linewidth=1.0, ax=ax, width=0.91)
     for violin, alpha in zip(ax.collections[::2], [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]):
         violin.set_alpha(alpha)
     v.set_xlabel("Strategy", fontsize=18)
@@ -146,9 +220,14 @@ if __name__ == "__main__":
                                    "critical_cumulative", "critical_cumulative_mean", 'critical_cumulative_stdev',
                                    "max_infected", "std_max_infected", "max_critical", "std_max_critical"])
     last_number_of_samples = None
+    number_of_runs = len(all_runs)
+    this_run_number = 0
     for one_run in all_runs:
+        this_run_number += 1
+        print(f"[{int(this_run_number*100/number_of_runs)}%", end='')
         daily = get_daily_info(f"{root_path}/outputs/{sys.argv[1]}/{one_run}", max_days=max_number_of_days_to_graph,
                                max_iterations=debug_max_iterations)
+        print("]", end='')
         if last_number_of_samples is None:
             last_number_of_samples = daily.number_of_samples
         if last_number_of_samples != daily.number_of_samples:
@@ -156,7 +235,8 @@ if __name__ == "__main__":
                   f"while current number of samples = {daily.number_of_samples}")
             exit(-2)
         c = Categories(one_run)
-        df = df.append({"scenario": one_run,
+        df = pd.concat([df,
+                       pd.DataFrame.from_records([{"scenario": one_run,
                         "city": c.city,
                         "intervention": c.intervention,
                         "initial_infected": c.initial_infected,
@@ -171,6 +251,7 @@ if __name__ == "__main__":
 
                         "total_hospitalized_mean": daily.total_hospitalized_mean,
                         "total_hospitalized_stderr": daily.total_hospitalized_stderr,
+                        "total_hospitalized_samples": daily.total_hospitalized_samples,
 
                         "total_infected_in_the_community": daily.total_infected_in_the_community,
                         "total_infected_in_the_community_stderr": daily.total_infected_in_the_community_stderr,
@@ -182,6 +263,7 @@ if __name__ == "__main__":
                         "daily_critical_stderr": daily.daily_critical_stderr,
                         "infected_cumulative_mean": daily.infected_cumulative_mean,
                         "infected_cumulative_stdev": daily.infected_cumulative_stdev,
+                        "total_infected_samples": daily.total_infected_samples,
 
                         "critical_cumulative_mean": daily.critical_cumulative_mean,
                         "critical_cumulative_stdev": daily.critical_cumulative_stdev,
@@ -195,10 +277,11 @@ if __name__ == "__main__":
                         "critical_max": daily.critical_max,
                         "r_instantaneous": daily.r_instantaneous,
                         "r_case_reproduction_number": daily.r_case_reproduction_number
-                        },
+                        }])],
                        ignore_index=True)
-
+    print("(", end='')
     df.to_csv(f'{root_path}/outputs/{sys.argv[1]}/results_including_city_{including_city}.csv')
+    print(")", end='')
 
     if including_city:
         category_items = ["city", "intervention", "initial_infected", "immune_per_day", "compliance"]
@@ -208,13 +291,13 @@ if __name__ == "__main__":
     categories = df.groupby(by=category_items)
 
     # define the properties of the Violin graphs
-    fig, axs = pyplot.subplots(len(categories) * 5, 1)
-    fig.set_figwidth(25)
+    fig, axs = pyplot.subplots(len(categories) * 7, 1)
+    fig.set_figwidth(15, True)
     fig.set_figheight(len(categories) * 30)
 
     # define the properties of the daily graphs
     fig2, axs2 = pyplot.subplots(20, 1)
-    fig2.set_figwidth(9)
+    fig2.set_figwidth(9, True)
     fig2.set_figheight(len(categories) * 24)
 
     [ax.tick_params(axis='x', labelsize=6) for ax in axs]
@@ -222,12 +305,14 @@ if __name__ == "__main__":
 
     category_i = 0
     daily_category_i = 0
+    # category == NPI (hh_isolation / asymptomatic_detection)
+    plot_mixed_strategy_confidence_interval(categories, root_path)
     for category in categories:
         city = f'{category[0][category_items.index("city")]}: ' if "city" in category_items else ''
-        title = city +\
+        title = city + \
                 f'intervention={category[0][category_items.index("intervention")]}, ' \
-                f'initial={category[0][category_items.index("initial_infected")]}, '\
-                f'per-day={category[0][category_items.index("immune_per_day")]}, '\
+                f'initial={category[0][category_items.index("initial_infected")]}, ' \
+                f'per-day={category[0][category_items.index("immune_per_day")]}, ' \
                 f'compliance={category[0][category_items.index("compliance")]}'
         df = category[1]
 
@@ -246,12 +331,12 @@ if __name__ == "__main__":
         elif selected_graph_type == GraphType.BOX:
             axs[category_i].boxplot(df["total_infected_in_the_community"], labels=df["immune_order"])
         else:
-            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_infected_in_the_community"])
+            draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_infected_samples"])
 
         axs[category_i].set_title(f"Total Infected\n{title}")
         category_i += 1
 
-        draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_hospitalized_mean"])
+        draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_hospitalized_samples"])
         axs[category_i].set_title(f"Total Hospitalization\n{title}")
         category_i += 1
 
@@ -281,10 +366,10 @@ if __name__ == "__main__":
         axs2[daily_category_i].set_xlabel("Day")
         daily_category_i += 1
 
-        plot_wilcoxon_ranksum_statistic(ax=axs[category_i],
-                                        data_per_strategy=df["total_infected_in_the_community"],
-                                        strategies=df["immune_order"],
-                                        title='Total Infected')
+        plot_confidence_interval_statistic(ax=axs[category_i],
+                                           data_per_strategy=df["total_infected_samples"],
+                                           strategies=df["immune_order"],
+                                           title=f'Total Infected - {category[0][category_items.index("intervention")]}')
         category_i += 1
 
         if selected_graph_type == GraphType.BAR:
@@ -297,52 +382,29 @@ if __name__ == "__main__":
         elif selected_graph_type == GraphType.BOX:
             axs[category_i].boxplot(df["total_critical_in_the_community"], labels=df["immune_order"])
         else:
+            # TODO the Dataframe should be a list of the Total critical cases for each execution of the algorithm
+            # (like in total_hospitalized_samples) and NOT the average critical cases per day as in here!!!
             draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["total_critical_in_the_community"])
 
         axs[category_i].set_title(f"Total Critical\n{title}")
         category_i += 1
 
-        plot_wilcoxon_ranksum_statistic(ax=axs[category_i],
-                                        data_per_strategy=df["total_critical_in_the_community"],
-                                        strategies=df["immune_order"],
-                                        title='Total Critical')
+        plot_confidence_interval_statistic(ax=axs[category_i],
+                                           data_per_strategy=df["total_hospitalized_samples"],
+                                           strategies=df["immune_order"],
+                                           title=f'Total Hospitalization - {category[0][category_items.index("intervention")]}')
         category_i += 1
 
-        # if selected_graph_type == GraphType.BAR:
-        #     axs[category_i].bar(df["immune_order"], df["max_infected"], color="lightsteelblue")
-        #     axs[category_i].errorbar(df["immune_order"], df["max_infected"], yerr=df["std_max_infected"], capsize=10,
-        #                              ecolor="cornflowerblue", fmt=".")
-        #     if draw_points_on_graph:
-        #         axs[category_i].plot(df["immune_order"], df["infected_max"].to_list(), "o")
-        # elif selected_graph_type == GraphType.BOX:
-        #     axs[category_i].boxplot(df["infected_max"], labels=df["immune_order"])
-        # else:
-        #     draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["infected_max"])
-        #
-        # axs[category_i].set_title(f"Max Infected ({title})")
-        # category_i += 1
-        #
-        # if selected_graph_type == GraphType.BAR:
-        #     axs[category_i].bar(df["immune_order"], df["max_critical"], color="thistle")
-        #     axs[category_i].errorbar(df["immune_order"], df["max_critical"], yerr=df["std_max_critical"], capsize=10,
-        #                              ecolor="slateblue", fmt=".")
-        #     if draw_points_on_graph:
-        #         axs[category_i].plot(df["immune_order"], df["critical_max"].to_list(), "o")
-        # elif selected_graph_type == GraphType.BOX:
-        #     axs[category_i].boxplot(df["critical_max"], labels=df["immune_order"])
-        # else:
-        #     draw_violin_graph(ax=axs[category_i], x=df["immune_order"], data=df["critical_max"])
-        #
-        # axs[category_i].set_title(f"Max Critical ({title})")
-        #
-        # category_i += 1
+        category_i = draw_scattered_graph(axs, category_i, df)
 
     # draw_heatmap(axs2[daily_category_i], categories, for_total_infections=True)
 
+    # set the spacing between subplots
+    # pyplot.subplots_adjust(hspace=0.8, top=0.8)
 
-    fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16)
+    fig.suptitle(f'Analysis of simulation {sys.argv[1]}', fontsize=16, y=1.0)
 
-    fig.tight_layout(pad=15.0)
+    fig.tight_layout(pad=3.0)
     fig.savefig(f"{root_path}/outputs/{sys.argv[1]}/results_including_city_{including_city}.svg")
 
     fig2.tight_layout(pad=7.0)

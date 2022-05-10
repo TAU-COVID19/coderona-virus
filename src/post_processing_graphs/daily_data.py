@@ -3,22 +3,45 @@ import os
 import statistics
 from collections import namedtuple
 from typing import List
+import pandas
 
 import numpy as np
 from functional import seq, pipeline
 
 
+def path_to_city(path):
+    if "Holon" in path:
+        return "Holon"
+    else:
+        return "Benei Brak"
+
+
 def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
+    city = path_to_city(root_path)
+    per_100_000_factor = per_100_000(city)
     filename = f"{root_path}/sample_{sample}/{file_name}"
     if os.path.isfile(filename):
-        data = seq.csv(filename)
-        line = [i for i in range(data.len()) if data[i][0] == line_name][0]
-        # print(f'get_sample_line() of {amit_graph_type}, sample {sample}, line start with {data[line][0]}')
+        data = pandas.read_csv(filename)
+        line = data[data[data.columns[0]] == line_name]
         if as_is:
-            result = [x for x in data[line][1:]]
+            result = line.keys().to_list()[1:]
         else:
-            result = [max(0.0, float(x)) for x in data[line][1:]]
+            line = line.to_numpy().flatten()[1:].astype('float')
+            result = np.clip(line, a_min=0.0, a_max=None)
+            result = [x * per_100_000_factor for x in result]
         return result
+    return None
+
+
+def get_daily_column(root_path, sample, column_name):
+    city = path_to_city(root_path)
+    per_100_000_factor = per_100_000(city)
+    filename = f"{root_path}/sample_{sample}/daily_delta.csv"
+    if os.path.isfile(filename):
+        data = pandas.read_csv(filename)
+        column = data[column_name].to_numpy().astype('float')
+        column = np.clip(column, a_min=0.0, a_max=None)
+        return [x * per_100_000_factor for x in column]
     return None
 
 
@@ -69,16 +92,6 @@ def calculate_r(root_path: str, max_days=None):
     return r_case_reproduction_cases_average, r_instantaneous_average
 
 
-def get_daily_column(root_path, sample, column_name):
-    filename = f"{root_path}/sample_{sample}/daily_delta.csv"
-    if os.path.isfile(filename):
-        data: pipeline.Sequence = seq.csv(filename)
-        column = [i for i in range(data[0].len()) if data[0][i] == column_name][0]
-        # print(f'get_daily_column() of sample {sample}, line start with {data[0][column]}')
-        return [max(0.0, float(x[column])) for x in data[1:]]
-    return None
-
-
 def remove_outliers(data: List[float], method="stdev"):
     if method == "stdev":
         data_mean, data_std = statistics.mean(data), statistics.stdev(data)
@@ -102,9 +115,11 @@ DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
                                        "daily_critical_cases",
                                        "total_hospitalized_mean",
                                        "total_hospitalized_stderr",
+                                       "total_hospitalized_samples",
                                        "total_infected_in_the_community", "total_infected_in_the_community_stderr",
                                        "total_critical_in_the_community", "total_critical_in_the_community_stderr",
                                        "infected_cumulative_mean", "infected_cumulative_stdev",
+                                       "total_infected_samples",
                                        "critical_cumulative_mean", "critical_cumulative_stdev",
                                        "infected_max_mean", "infected_max_stdev", "infected_max",
                                        "critical_max_mean", "critical_max_stdev", "critical_max",
@@ -125,8 +140,21 @@ def get_hospitalization_given_symptomatic(age):
     return hospitalization_given_symptomatic_per_age[int(min(age // 10, 8))]
 
 
+def per_100_000(city):
+    """
+    return the factor to multiply each sample to normalize the data per 100K
+    """
+    city_population = {"Holon": 189836, "Benei Brak": 185882}
+    both_cities_population = city_population["Holon"] + city_population["Benei Brak"]
+    if city == "Holon":
+        city_size = city_population["Holon"]
+    else:
+        city_size = city_population["Benei Brak"]
+    return 100_000.0 / city_size
+
+
 def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
-    infected_cumulative = []
+    infected_cumulative_full_data = []
     max_infectious_in_community = []
 
     number_of_repetitions = 0
@@ -150,18 +178,18 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
             if daily_infection is None:
                 daily_infection = seq(infected_today)
                 daily_infection_full_data = np.array([infected_today])
-                infected_cumulative = np.array([cumulative_sum(infected_today)])
+                infected_cumulative_full_data = np.array([cumulative_sum(infected_today)])
             else:
                 daily_infection = daily_infection.zip(seq(infected_today)).map(lambda x: x[0] + x[1])
                 daily_infection_full_data = np.append(daily_infection_full_data, [infected_today], axis=0)
-                infected_cumulative = np.append(infected_cumulative, [cumulative_sum([infected_today])], axis=0)
+                infected_cumulative_full_data = np.append(infected_cumulative_full_data, [cumulative_sum([infected_today])], axis=0)
             max_infectious_in_community.append(max(total_infected_today))
             number_of_repetitions += 1
         else:
             break
 
     daily_infection = daily_infection.map(lambda x: x / number_of_repetitions)
-    total_infected_in_community = infected_cumulative[:, -1]
+    total_infected_in_community = infected_cumulative_full_data[:, -1]
     daily_infection = daily_infection[0:max_days]
     total_infected_in_community = total_infected_in_community[0:max_days]
 
@@ -169,11 +197,11 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     critical_max = []
     daily_critical_cases = None
     daily_critical_full_data = None
-    infected_0_19_full_data = None
-    infected_20_59_full_data = None
-    infected_60_99_full_data = None
+    infected_cumulative_0_19_full_data = None
+    infected_cumulative_20_59_full_data = None
+    infected_cumulative_60_99_full_data = None
 
-    for i in range(1000):
+    for i in range(max_iterations):
         critical_today = get_daily_column(root_path, sample=i, column_name="CRITICAL")
         total_critical_today = get_sample_line(root_path, sample=i, file_name="amit_graph_integral.csv",
                                                line_name="critical_0_99")
@@ -194,25 +222,26 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         if daily_critical_cases is None:
             daily_critical_cases = seq(critical_today)
             daily_critical_full_data = np.array([critical_today])
-            infected_0_19_full_data = np.array([cumulative_sum(infected_0_19[1:])])
-            infected_20_59_full_data = np.array([cumulative_sum(infected_20_59[1:])])
-            infected_60_99_full_data = np.array([cumulative_sum(infected_60_99[1:])])
+            infected_cumulative_0_19_full_data = np.array([cumulative_sum(infected_0_19[1:])])
+            infected_cumulative_20_59_full_data = np.array([cumulative_sum(infected_20_59[1:])])
+            infected_cumulative_60_99_full_data = np.array([cumulative_sum(infected_60_99[1:])])
         else:
             daily_critical_cases = daily_critical_cases.zip(seq(critical_today)).map(lambda x: x[0] + x[1])
             daily_critical_full_data = np.append(daily_critical_full_data, [critical_today], axis=0)
-            infected_0_19_full_data = np.append(infected_0_19_full_data, [cumulative_sum(infected_0_19[1:])], axis=0)
-            infected_20_59_full_data = np.append(infected_20_59_full_data, [cumulative_sum(infected_20_59[1:])], axis=0)
-            infected_60_99_full_data = np.append(infected_60_99_full_data, [cumulative_sum(infected_60_99[1:])], axis=0)
+            infected_cumulative_0_19_full_data = np.append(infected_cumulative_0_19_full_data, [cumulative_sum(infected_0_19[1:])], axis=0)
+            infected_cumulative_20_59_full_data = np.append(infected_cumulative_20_59_full_data, [cumulative_sum(infected_20_59[1:])], axis=0)
+            infected_cumulative_60_99_full_data = np.append(infected_cumulative_60_99_full_data, [cumulative_sum(infected_60_99[1:])], axis=0)
 
     # calculate the amount of hospitalized based on probability for an infected person to be hospitalized
-    hospitalized_full_data = infected_0_19_full_data * get_hospitalization_given_symptomatic((0 + 19) / 2) + \
-                             infected_20_59_full_data * get_hospitalization_given_symptomatic((20 + 59) / 2) + \
-                             infected_60_99_full_data * get_hospitalization_given_symptomatic((60 + 99) / 2)
+    hospitalized_cumulative_full_data = \
+        infected_cumulative_0_19_full_data * get_hospitalization_given_symptomatic((0 + 19) / 2) + \
+        infected_cumulative_20_59_full_data * get_hospitalization_given_symptomatic((20 + 59) / 2) + \
+        infected_cumulative_60_99_full_data * get_hospitalization_given_symptomatic((60 + 99) / 2)
 
     daily_critical_cases = daily_critical_cases.map(lambda x: x / number_of_repetitions)
     total_critical_in_community = critical_cumulative[:, -1]
 
-    hospitalized_full_data = hospitalized_full_data[:, 0:max_days]
+    hospitalized_cumulative_full_data = hospitalized_cumulative_full_data[:, 0:max_days]
     daily_critical_cases = daily_critical_cases[0:max_days]
     total_critical_in_community = total_critical_in_community[0:max_days]
     critical_cumulative = critical_cumulative[:, 0:max_days]
@@ -223,7 +252,7 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     r_case_reproduction_cases = r_case_reproduction_cases[0:max_days]
     r_instantaneous = r_instantaneous[0:max_days]
 
-    # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_cumulative, method="percentile")
+    # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_cumulative_full_data, method="percentile")
     # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_cumulative, method="percentile")
     # infected_max_no_outliers, infected_max_outliers = remove_outliers(max_infectious_in_community,method="percentile")
     # critical_max_no_outliers, critical_max_outliers = remove_outliers(critical_max, method="percentile")
@@ -233,8 +262,10 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         number_of_samples=number_of_repetitions,
         daily_infection=daily_infection.to_list(),
 
-        total_hospitalized_mean=hospitalized_full_data.mean(axis=0).tolist(),
-        total_hospitalized_stderr=(hospitalized_full_data.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        total_hospitalized_mean=hospitalized_cumulative_full_data.mean(axis=0).tolist(),
+        total_hospitalized_stderr=(hospitalized_cumulative_full_data.astype('float').std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        # list of total-hospitalized numbers as we got in the different execution of the same scenario
+        total_hospitalized_samples=hospitalized_cumulative_full_data[:, -1].tolist(),
 
         daily_critical_cases=daily_critical_cases.to_list(),
 
@@ -246,8 +277,10 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         total_critical_in_the_community_stderr=(
                 total_critical_in_community.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
 
-        infected_cumulative_mean=infected_cumulative.mean(axis=0).tolist(),
-        infected_cumulative_stdev=(infected_cumulative.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        infected_cumulative_mean=infected_cumulative_full_data.mean(axis=0).tolist(),
+        infected_cumulative_stdev=(infected_cumulative_full_data.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        # list of total-infected numbers as we got in the different execution of the same scenario
+        total_infected_samples=infected_cumulative_full_data[:, -1].tolist(),
 
         critical_cumulative_mean=critical_cumulative.mean(axis=0).tolist(),
         critical_cumulative_stdev=(critical_cumulative.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
