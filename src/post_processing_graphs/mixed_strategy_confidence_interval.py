@@ -96,7 +96,11 @@ def plot_mixed_strategy_confidence_interval(c, root_path) -> None:
                   np.array(pair_1_city_2.total_hospitalized_samples.to_list())).flatten()
         pair_2 = (np.array(pair_2_city_1.total_hospitalized_samples.to_list()) + \
                   np.array(pair_2_city_2.total_hospitalized_samples.to_list())).flatten()
-        res = scipy.stats.bootstrap(data=[(pair_1 - pair_2)], statistic=np.mean)
+        try:
+            res = scipy.stats.bootstrap(data=[(pair_1 - pair_2)], statistic=np.mean)
+        except ValueError as e:
+            print(f"plot_mixed_strategy_confidence_interval() Exception! e={e}")
+            return
         pvalue_res = scipy.stats.ttest_ind(pair_1, pair_2, equal_var=True)
         pvalue = ci_to_p_value(
             low=res.confidence_interval.low,
