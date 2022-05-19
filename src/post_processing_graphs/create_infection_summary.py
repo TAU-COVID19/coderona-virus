@@ -20,6 +20,8 @@ class GraphType(Enum):
 
 
 # set to True to show the different cities in different graphs. else set to False
+# False: for Bootstrap and for the Violins
+# True: for the daily graphs
 including_city = False
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
