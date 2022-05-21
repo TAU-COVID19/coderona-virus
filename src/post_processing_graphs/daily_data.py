@@ -16,7 +16,7 @@ def path_to_city(path):
         return "Benei Brak"
 
 
-def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
+def get_sample_line(root_path, sample, file_name, line_name, as_is=False, factor_to_100_000=True):
     city = path_to_city(root_path)
     per_100_000_factor = per_100_000(city)
     filename = f"{root_path}/sample_{sample}/{file_name}"
@@ -28,12 +28,13 @@ def get_sample_line(root_path, sample, file_name, line_name, as_is=False):
         else:
             line = line.to_numpy().flatten()[1:].astype('float')
             result = np.clip(line, a_min=0.0, a_max=None)
-            result = [x * per_100_000_factor for x in result]
+            if factor_to_100_000:
+                result = [x * per_100_000_factor for x in result]
         return result
     return None
 
 
-def get_daily_column(root_path, sample, column_name):
+def get_daily_column(root_path, sample, column_name, factor_to_100_000=True):
     city = path_to_city(root_path)
     per_100_000_factor = per_100_000(city)
     filename = f"{root_path}/sample_{sample}/daily_delta.csv"
@@ -41,7 +42,9 @@ def get_daily_column(root_path, sample, column_name):
         data = pandas.read_csv(filename)
         column = data[column_name].to_numpy().astype('float')
         column = np.clip(column, a_min=0.0, a_max=None)
-        return [x * per_100_000_factor for x in column]
+        if factor_to_100_000:
+            column = [x * per_100_000_factor for x in column]
+        return column
     return None
 
 
@@ -54,24 +57,27 @@ def add_missing_dates(partial_data, all_dates, partial_dates, default_data=0):
             partial_index = partial_dates.index(all_dates[i])
             result[i] = partial_data[partial_index]
         else:
+            # print(f"add_missing_dates() date {all_dates[i]} is missing")
             result[i] = default_data
     return result
 
 
-def calculate_r(root_path: str, max_days=None):
+def calculate_r(root_path: str, max_iterations=None):
     r_instantaneous = None
     r_case_reproduction_cases = None
-    if max_days is None:
-        max_days = 1000
+    if max_iterations is None:
+        max_iterations = 1000
     # since the r0 csv files do not cover all the dates, we have to complete them with zeros in the missing dates...
     all_dates = get_sample_line(root_path, 0, "amit_graph_daily.csv", line_name="Dates:", as_is=True)
-    for repetition in range(max_days):
+    for repetition in range(max_iterations):
         r0_dates = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv", line_name="Dates:",
                                    as_is=True)
         r_case_reproduction_cases_today = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv",
-                                                          line_name="smoothed base reproduction number r")
+                                                          line_name="smoothed base reproduction number r",
+                                                          factor_to_100_000=False)
         r_instantaneous_today = get_sample_line(root_path, repetition, "r0_data_amit_graph_integral.csv",
-                                                line_name="instantaneous r")
+                                                line_name="instantaneous r",
+                                                factor_to_100_000=False)
 
         if r_case_reproduction_cases_today is None or r_instantaneous_today is None:
             break
@@ -248,7 +254,7 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     daily_critical_full_data = daily_critical_full_data[:, 0:max_days]
     critical_max = critical_max[0:max_days]
 
-    r_case_reproduction_cases, r_instantaneous = calculate_r(root_path, max_days=max_days)
+    r_case_reproduction_cases, r_instantaneous = calculate_r(root_path, max_iterations=max_iterations)
     r_case_reproduction_cases = r_case_reproduction_cases[0:max_days]
     r_instantaneous = r_instantaneous[0:max_days]
 
