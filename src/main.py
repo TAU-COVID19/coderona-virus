@@ -161,8 +161,8 @@ def main():
 
     jobs = []
     #
-    for target_immune_percentage, immune_compliance in [(1, 1)]:  # [(0.0,1),(0.5,1)]:
-        for people_per_day in [560]:
+    for target_immune_percentage, immune_compliance in [(0.8, 1)]:  # [(0.0,1),(0.5,1)]:
+        for people_per_day in [630]:
             for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18), (
             InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
                 for initial_num_infected in [100]:  # [25, 100, 250, 500]:
