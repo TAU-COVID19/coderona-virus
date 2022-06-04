@@ -138,7 +138,8 @@ DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
                                        "critical_max_mean", "critical_max_stdev", "critical_max",
                                        "daily_infection_stderr", "daily_critical_stderr",
                                        "r_case_reproduction_number", "r_instantaneous",
-                                       "r_case_reproduction_number_stderr", "r_instantaneous_stderr"))
+                                       "r_case_reproduction_number_stderr", "r_instantaneous_stderr",
+                                       "num_repetitions"))
 
 
 def stderr(data):
@@ -319,5 +320,6 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         r_case_reproduction_number=r_case_reproduction_cases_mean,
         r_case_reproduction_number_stderr=r_case_reproduction_cases_stderr,
         r_instantaneous=r_instantaneous_mean,
-        r_instantaneous_stderr=r_instantaneous_stderr
+        r_instantaneous_stderr=r_instantaneous_stderr,
+        num_repetitions=hospitalized_cumulative_full_data.shape[0]
     )

@@ -1,6 +1,8 @@
 import json
 import sys
 from enum import Enum
+from scipy.stats import norm
+
 from tabulate import tabulate
 
 import pandas as pd
@@ -22,7 +24,7 @@ class GraphType(Enum):
 # set to True to show the different cities in different graphs. else set to False
 # False: for Bootstrap and for the Violins
 # True: for the daily graphs
-including_city = True
+including_city = False
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
@@ -59,11 +61,22 @@ def ci_to_p_value(low, high, mean_difference, SE):
     return math.exp(-0.717 * z - 0.416 * (z ** 2))
 
 
+def calculate_ci_normal(a, b, num_repetitions):
+    """
+    calculates the Confidence Interval, assuming normal distribution
+    """
+    # (mean(res1) - mean(res2) )/ sqrt(Var(res1)/500 + Var(res2)/500)
+    low_ci = (a - b).mean() - norm.ppf(q=0.975) * (math.sqrt(a.var()/num_repetitions + b.var()/num_repetitions))
+    high_ci = (a - b).mean() + norm.ppf(q=0.975) * (math.sqrt(a.var()/num_repetitions + b.var()/num_repetitions))
+    return low_ci, high_ci
+
+
 def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, strategies: pandas.DataFrame,
-                                       title: str):
+                                       title: str, num_repetitions: int):
     results = []
     labels = []
-    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Confidence Low', 'Confidence High', 'Mean', 'P Value', 'T Test - P Value'])
+    bootstrap_results = pd.DataFrame(columns=['Strategy 1', 'Strategy 2', 'Mean', 'Bootstrap CI Low', 'Bootstrap CI High',
+                                              'CI Low', 'CI High', 'P Value', 'T Test - P Value'])
     index = 0
 
     for key_row, series_row in enumerate(data_per_strategy):
@@ -78,6 +91,7 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
                 b = np.array(series_column)
                 data = ((a - b).tolist(),)
                 try:
+                    ci_normal = calculate_ci_normal(a, b, num_repetitions)
                     res = scipy.stats.bootstrap(data=data, statistic=np.mean)
                     pvalue_res = scipy.stats.ttest_ind(a, b, equal_var=True)
                     pvalue = ci_to_p_value(
@@ -89,9 +103,11 @@ def plot_confidence_interval_statistic(ax, data_per_strategy: pandas.DataFrame, 
                         pd.DataFrame.from_records({
                         'Strategy 1': (strategies[strategies.index[key_row]]).replace('\n', ' '),
                         'Strategy 2': (strategies[strategies.index[key_column]]).replace('\n', ' '),
-                        'Confidence Low': res.confidence_interval.low,
-                        'Confidence High': res.confidence_interval.high,
                         'Mean': (a - b).mean(),
+                        'Bootstrap CI Low': res.confidence_interval.low,
+                        'Bootstrap CI High': res.confidence_interval.high,
+                        'CI Low': ci_normal[0],
+                        'CI High': ci_normal[1],
                         'P Value': pvalue,
                         'T Test - P Value': pvalue_res.pvalue,
                     }, index=[index])])
@@ -280,7 +296,8 @@ if __name__ == "__main__":
                         "r_instantaneous": daily.r_instantaneous,
                         "r_instantaneous_stderr": daily.r_instantaneous_stderr,
                         "r_case_reproduction_number": daily.r_case_reproduction_number,
-                        "r_case_reproduction_number_stderr": daily.r_case_reproduction_number_stderr
+                        "r_case_reproduction_number_stderr": daily.r_case_reproduction_number_stderr,
+                        "num_repetitions": daily.num_repetitions
                         }])],
                        ignore_index=True)
     print("(", end='')
@@ -373,7 +390,8 @@ if __name__ == "__main__":
         plot_confidence_interval_statistic(ax=axs[category_i],
                                            data_per_strategy=df["total_infected_samples"],
                                            strategies=df["immune_order"],
-                                           title=f'Total Infected - {category[0][category_items.index("intervention")]}')
+                                           title=f'Total Infected - {category[0][category_items.index("intervention")]}',
+                                           num_repetitions=df["num_repetitions"].tolist()[0])
         category_i += 1
 
         if selected_graph_type == GraphType.BAR:
@@ -396,7 +414,8 @@ if __name__ == "__main__":
         plot_confidence_interval_statistic(ax=axs[category_i],
                                            data_per_strategy=df["total_hospitalized_samples"],
                                            strategies=df["immune_order"],
-                                           title=f'Total Hospitalization - {category[0][category_items.index("intervention")]}')
+                                           title=f'Total Hospitalization - {category[0][category_items.index("intervention")]}',
+                                           num_repetitions=df["num_repetitions"].tolist()[0])
         category_i += 1
 
         category_i = draw_scattered_graph(axs, category_i, df)
