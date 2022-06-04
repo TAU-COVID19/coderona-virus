@@ -85,6 +85,8 @@ def draw_heatmap(ax, categories: pandas.DataFrame, for_total_infections: bool = 
 def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
     for key, r_case_reproduction_number in enumerate(df["r_case_reproduction_number"]):
         r_instantaneous = df["r_instantaneous"].to_list()[key]
+        r_instantaneous_stderr = df["r_instantaneous_stderr"].to_list()[key]
+        r_case_reproduction_number_stderr = df["r_case_reproduction_number_stderr"].to_list()[key]
         if r_instantaneous is None:
             return
         color, line_style, label = select_daily_graph_colors(df["vaccination_strategy"].to_list()[key],
@@ -96,13 +98,23 @@ def draw_daily_r_graph_2(ax, df, use_r_instantaneous):
             ax.plot(x, r_instantaneous[starting_day:], label=label,
                     color=color,
                     linestyle=line_style)
+            lower_range = (np.array(r_instantaneous[starting_day:]) - np.array(r_instantaneous_stderr[starting_day:])).tolist()
+            upper_range = (np.array(r_instantaneous[starting_day:]) + np.array(r_instantaneous_stderr[starting_day:])).tolist()
+            ax.fill_between(x, lower_range, upper_range, color=color, alpha=.1)
             ax.set_xlim(min(x), max(x))
 
         else:
-            x = range(0, len(r_case_reproduction_number))
-            ax.plot(x, r_case_reproduction_number, label=label,
+            x = range(starting_day, len(r_case_reproduction_number))
+            ax.plot(x, r_case_reproduction_number[starting_day:], label=label,
                     color=color,
                     linestyle=line_style)
+            lower_range = (
+                        np.array(r_case_reproduction_number[starting_day:]) -
+                        np.array(r_case_reproduction_number_stderr[starting_day:])).tolist()
+            upper_range = (
+                        np.array(r_case_reproduction_number[starting_day:]) +
+                        np.array(r_case_reproduction_number_stderr[starting_day:])).tolist()
+            ax.fill_between(x, lower_range, upper_range, color=color, alpha=.1)
         ax.plot(x, [1] * len(x), color="lightgreen")
         ax.set_xlim(min(x), max(x))
         ax.set_ylim(bottom=0, top=1.5)

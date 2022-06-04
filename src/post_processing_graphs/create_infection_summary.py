@@ -22,7 +22,7 @@ class GraphType(Enum):
 # set to True to show the different cities in different graphs. else set to False
 # False: for Bootstrap and for the Violins
 # True: for the daily graphs
-including_city = False
+including_city = True
 # can draw either bars or boxplot
 selected_graph_type: GraphType = GraphType.VIOLIN
 draw_points_on_graph = False
@@ -278,7 +278,9 @@ if __name__ == "__main__":
                         "std_max_critical": daily.critical_max_stdev,
                         "critical_max": daily.critical_max,
                         "r_instantaneous": daily.r_instantaneous,
-                        "r_case_reproduction_number": daily.r_case_reproduction_number
+                        "r_instantaneous_stderr": daily.r_instantaneous_stderr,
+                        "r_case_reproduction_number": daily.r_case_reproduction_number,
+                        "r_case_reproduction_number_stderr": daily.r_case_reproduction_number_stderr
                         }])],
                        ignore_index=True)
     print("(", end='')

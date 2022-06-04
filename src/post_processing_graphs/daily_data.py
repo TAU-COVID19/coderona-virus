@@ -93,9 +93,16 @@ def calculate_r(root_path: str, max_iterations=None):
             r_case_reproduction_cases = np.append(r_case_reproduction_cases, [r_case_reproduction_cases_today], axis=0)
     if r_case_reproduction_cases is None or r_instantaneous is None:
         return None, None
-    r_instantaneous_average = np.average(r_instantaneous, axis=0)
-    r_case_reproduction_cases_average = np.average(r_case_reproduction_cases, axis=0)
-    return r_case_reproduction_cases_average, r_instantaneous_average
+    number_of_repetitions = r_instantaneous.shape[0]
+    r_instantaneous_average = r_instantaneous.mean(axis=0)
+    r_instantaneous_stderr = (r_instantaneous.std(axis=0) / math.sqrt(number_of_repetitions)).tolist()
+    r_case_reproduction_cases_average = r_case_reproduction_cases.mean(axis=0)
+    r_case_reproduction_cases_stderr = (
+            r_case_reproduction_cases.std(axis=0) / math.sqrt(number_of_repetitions)).tolist()
+    return r_case_reproduction_cases_average, \
+           r_case_reproduction_cases_stderr, \
+           r_instantaneous_average, \
+           r_instantaneous_stderr
 
 
 def remove_outliers(data: List[float], method="stdev"):
@@ -130,7 +137,8 @@ DAILY_INFO = namedtuple("DAILY_INFO", ("number_of_samples",
                                        "infected_max_mean", "infected_max_stdev", "infected_max",
                                        "critical_max_mean", "critical_max_stdev", "critical_max",
                                        "daily_infection_stderr", "daily_critical_stderr",
-                                       "r_case_reproduction_number", "r_instantaneous"))
+                                       "r_case_reproduction_number", "r_instantaneous",
+                                       "r_case_reproduction_number_stderr", "r_instantaneous_stderr"))
 
 
 def stderr(data):
@@ -188,7 +196,8 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
             else:
                 daily_infection = daily_infection.zip(seq(infected_today)).map(lambda x: x[0] + x[1])
                 daily_infection_full_data = np.append(daily_infection_full_data, [infected_today], axis=0)
-                infected_cumulative_full_data = np.append(infected_cumulative_full_data, [cumulative_sum([infected_today])], axis=0)
+                infected_cumulative_full_data = np.append(infected_cumulative_full_data,
+                                                          [cumulative_sum([infected_today])], axis=0)
             max_infectious_in_community.append(max(total_infected_today))
             number_of_repetitions += 1
         else:
@@ -234,9 +243,12 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         else:
             daily_critical_cases = daily_critical_cases.zip(seq(critical_today)).map(lambda x: x[0] + x[1])
             daily_critical_full_data = np.append(daily_critical_full_data, [critical_today], axis=0)
-            infected_cumulative_0_19_full_data = np.append(infected_cumulative_0_19_full_data, [cumulative_sum(infected_0_19[1:])], axis=0)
-            infected_cumulative_20_59_full_data = np.append(infected_cumulative_20_59_full_data, [cumulative_sum(infected_20_59[1:])], axis=0)
-            infected_cumulative_60_99_full_data = np.append(infected_cumulative_60_99_full_data, [cumulative_sum(infected_60_99[1:])], axis=0)
+            infected_cumulative_0_19_full_data = np.append(infected_cumulative_0_19_full_data,
+                                                           [cumulative_sum(infected_0_19[1:])], axis=0)
+            infected_cumulative_20_59_full_data = np.append(infected_cumulative_20_59_full_data,
+                                                            [cumulative_sum(infected_20_59[1:])], axis=0)
+            infected_cumulative_60_99_full_data = np.append(infected_cumulative_60_99_full_data,
+                                                            [cumulative_sum(infected_60_99[1:])], axis=0)
 
     # calculate the amount of hospitalized based on probability for an infected person to be hospitalized
     hospitalized_cumulative_full_data = \
@@ -254,9 +266,12 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
     daily_critical_full_data = daily_critical_full_data[:, 0:max_days]
     critical_max = critical_max[0:max_days]
 
-    r_case_reproduction_cases, r_instantaneous = calculate_r(root_path, max_iterations=max_iterations)
-    r_case_reproduction_cases = r_case_reproduction_cases[0:max_days]
-    r_instantaneous = r_instantaneous[0:max_days]
+    r_case_reproduction_cases_mean, r_case_reproduction_cases_stderr, r_instantaneous_mean, r_instantaneous_stderr = \
+        calculate_r(root_path, max_iterations=max_iterations)
+    r_case_reproduction_cases_mean = r_case_reproduction_cases_mean[0:max_days]
+    r_case_reproduction_cases_stderr = r_case_reproduction_cases_stderr[0:max_days]
+    r_instantaneous_mean = r_instantaneous_mean[0:max_days]
+    r_instantaneous_stderr = r_instantaneous_stderr[0:max_days]
 
     # infected_sum_no_outliers, infected_sum_outliers = remove_outliers(infected_cumulative_full_data, method="percentile")
     # critical_sum_no_outliers, critical_sum_outliers = remove_outliers(critical_cumulative, method="percentile")
@@ -269,7 +284,8 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         daily_infection=daily_infection.to_list(),
 
         total_hospitalized_mean=hospitalized_cumulative_full_data.mean(axis=0).tolist(),
-        total_hospitalized_stderr=(hospitalized_cumulative_full_data.astype('float').std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        total_hospitalized_stderr=(hospitalized_cumulative_full_data.astype('float').std(axis=0) / math.sqrt(
+            number_of_repetitions)).tolist(),
         # list of total-hospitalized numbers as we got in the different execution of the same scenario
         total_hospitalized_samples=hospitalized_cumulative_full_data[:, -1].tolist(),
 
@@ -284,7 +300,8 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
                 total_critical_in_community.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
 
         infected_cumulative_mean=infected_cumulative_full_data.mean(axis=0).tolist(),
-        infected_cumulative_stdev=(infected_cumulative_full_data.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
+        infected_cumulative_stdev=(
+                infected_cumulative_full_data.std(axis=0) / math.sqrt(number_of_repetitions)).tolist(),
         # list of total-infected numbers as we got in the different execution of the same scenario
         total_infected_samples=infected_cumulative_full_data[:, -1].tolist(),
 
@@ -299,6 +316,8 @@ def get_daily_info(root_path, max_days=None, max_iterations=None) -> DAILY_INFO:
         critical_max_stdev=stderr(critical_max),
         daily_infection_stderr=np.apply_along_axis(stderr, 0, daily_infection_full_data).tolist(),
         daily_critical_stderr=np.apply_along_axis(stderr, 0, daily_critical_full_data).tolist(),
-        r_case_reproduction_number=r_case_reproduction_cases,
-        r_instantaneous=r_instantaneous
+        r_case_reproduction_number=r_case_reproduction_cases_mean,
+        r_case_reproduction_number_stderr=r_case_reproduction_cases_stderr,
+        r_instantaneous=r_instantaneous_mean,
+        r_instantaneous_stderr=r_instantaneous_stderr
     )
