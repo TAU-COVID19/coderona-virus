@@ -1,5 +1,6 @@
 from enum import Enum
 from src.simulation.params import Params
+from datetime import date
 
 
 class InfectiousnessFactors(object):
@@ -28,7 +29,7 @@ class DiseaseState(Enum):
     (meaning its objects have some predetermined list of possible values),
     describing the different possible disease states people could have.
     """
-    __slots__ = ()
+    __slots__ = ('change_date')
     # The order matters for efficiency (see the implementation of is_infected)
     INCUBATINGPOSTLATENT = 1    # Infectious pre-symptomatic
     ASYMPTOMATICINFECTIOUS = 2  # Infectious asymptomatic
@@ -38,7 +39,7 @@ class DiseaseState(Enum):
     SUSCEPTIBLE = 6             # Not infected but prone to infection
     DECEASED = 7                # No longer among the living
     IMMUNE = 8                  # Has been infected before, recovered, no longer prone to infection
-
+    change_date = None
 
     @classmethod
     def init_infectiousness_list(cls):

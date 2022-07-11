@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.ticker import MultipleLocator
 import warnings
 from numpy import sqrt, nanmean, nanstd, NaN, isnan, array, logical_or
 import csv
@@ -22,6 +23,12 @@ from src.seir import DiseaseState
 from src.world import RedactedPersonAndEnv,World
 from src.logs.r0_data import calculate_r0_data
 
+from typing import List
+from src.world import Person
+from src.simulation.interventions.intervention import Intervention, LockdownIntervention
+import datetime
+from functional import seq
+from collections import namedtuple
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -95,11 +102,10 @@ class DayStatistics(object):
     (not of complete InfectionData objects in order to save memory).
     Currently it saves single properties and pairs of properties.
     """
-    __slots__ = ('date', 'person_count', 'infection_data_projection', 'diff_infect')
+    __slots__ = ('date', 'person_count', 'infection_data_projection', 'diff_infect', 'infected_today')
 
     def __init__(self, date, changed_population):
         self.date = date
-        #how many people change to each state
         self.person_count = Counter(
             person.get_state()
             for person in changed_population
@@ -107,19 +113,17 @@ class DayStatistics(object):
         self.person_count.subtract(
             person.get_last_state()
             for person in changed_population
-        ) 
-        #for each person that change state today get dictionary of date
+        )
         infected_today_stats = list(
             person.get_infection_data().get_stats()
             for person in changed_population
             if (person.get_infection_data() is not None) and (person.get_infection_data().date == date)
         )
-        #how many got infected divided into inector_state,env_name,etc'
+        self.infected_today = len(infected_today_stats)
         self.infection_data_projection = {
             key: Counter(stat[key] for stat in infected_today_stats)
             for key in InfectionData.get_keys()
         }
-        #Creating 2 dimentiona table of the data listed above
         self.infection_data_projection.update({
             pair: Counter((stat[pair[0]], stat[pair[1]]) for stat in infected_today_stats)
             for pair in combinations(InfectionData.get_keys(), 2)
@@ -150,7 +154,7 @@ class Statistics(object):
         '_params_at_init',
         'all_environment_names',
         'full_env_name_to_short_env_name',
-        '_hood_data',
+        '_hood_data'
     )
 
     def __init__(self, output_path, world):
@@ -159,7 +163,7 @@ class Statistics(object):
             os.mkdir(output_path)
         self._days_data = []
         self._final_state = None
-        self._interventions = []
+        self._interventions: List[Intervention] = []
         self._r0_data = None
         self.num_infected = 0
         self.min_date = None
@@ -185,7 +189,7 @@ class Statistics(object):
         #Counts how many are sick in each neighborhood
         hood_data = {}
         for person in world.all_people():
-            if person.get_disease_state().is_infected():
+            if person.get_disease_state() == DiseaseState.SYMPTOMATICINFECTIOUS:
                 hoodID = person.get_neighberhood().get_neighborhood_id()
                 if hoodID not in hood_data:
                     hood_data[hoodID] = 1 
@@ -236,7 +240,7 @@ class Statistics(object):
         self.min_date = min(self.min_date, date)
         self.max_date = max(self.max_date, date)
 
-    def add_intervention(self, intervention):
+    def add_intervention(self, intervention: Intervention):
         """
         Adds an intervention to the documented list of interventions
         :param intervention: an intervention to add
@@ -244,7 +248,7 @@ class Statistics(object):
         """
         self._interventions.append(intervention)
 
-    def get_days_data(self):
+    def get_days_data(self) -> List[DayStatistics]:
         """
         Return the list of DayStatistics held on this object
         :return: self._days_data
@@ -287,7 +291,8 @@ class Statistics(object):
             os.path.join(self._output_path, image_path),
             dates,
             datas,
-            self.make_background_stripes()
+            self.make_background_stripes(),
+            y_axes_label="infections #"
         )
 
     def clip_date_to_time_frame(self, date):
@@ -316,7 +321,14 @@ class Statistics(object):
                 ))
         return ret
 
-    def calc_r0_data(self, population, max_date=None):
+    def calculate_susceptible(self, today_date: datetime.date, population: List[Person]):
+        count = 0
+        for person in population:
+            if person.is_susceptible:
+                count += 1
+        self._susceptibles[today_date] = count
+
+    def calc_r0_data(self, population: List[Person], max_date=None, min_age=0, max_age=100):
         """
         Calculate the R data of the given list of people
         (i -> the average number of people a person on day i infected)
@@ -327,7 +339,7 @@ class Statistics(object):
         """
         if max_date is None:
             max_date = self.max_date
-        self._r0_data = calculate_r0_data(population, max_date)
+        self._r0_data = calculate_r0_data(population, max_date, min_age, max_age)
 
     def plot_r0_data(self, image_path, avg_props=None, smoothed_props=None):
         """
@@ -340,17 +352,28 @@ class Statistics(object):
         if avg_props is None:
             avg_props = {}
         if 'label' not in avg_props:
-            avg_props['label'] = "avg_r0"
+            avg_props['label'] = "base reproduction number r"
 
         if smoothed_props is None:
             smoothed_props = {}
         if 'label' not in smoothed_props:
-            smoothed_props['label'] = "smoothed_avg_r0"
+            smoothed_props['label'] = "smoothed base reproduction number r"
+
+        r_effective_props = {}
+        if 'label' not in r_effective_props:
+            r_effective_props['label'] = "r effective"
+
+        instantaneous_r_props = {}
+        if 'label' not in instantaneous_r_props:
+            instantaneous_r_props['label'] = "instantaneous r"
+
         datas = [
             {'data': self._r0_data['smoothed_avg_r0'], 'props': smoothed_props},
-            {'data': self._r0_data['avg_r0'], 'props': smoothed_props}
+            {'data': self._r0_data['avg_r0'], 'props': avg_props},
+            # {'data': self._r0_data['estimated_r0'], 'props': r_effective_props},
+            {'data': self._r0_data['instantaneous_r'], 'props': instantaneous_r_props},
         ]
-        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas)
+        self.plot(os.path.join(self._output_path, image_path), self._r0_data['dates'], datas, self.make_background_stripes(), y_axes_label="r")
 
     def sum_days_data(self, property_to_count, is_integral, infection_data=None):
         """
@@ -435,7 +458,7 @@ class Statistics(object):
             lambda person: person_in_age_group(person) and
                            person.disease_state == DiseaseState.CRITICAL, True
         ))
-        
+
         ret = defaultdict(int)
         ret["Total people"] = total_people
         ret["Total deceased"] = total_deceased
@@ -486,18 +509,22 @@ class Statistics(object):
                 d = self._days_data[i].date
                 states_col = []
                 for reducted_person, count in self._days_data[i].person_count.items():
-                    for i in range(count):
-                        states_col.append(reducted_person.disease_state)
+                    for c in range(count):
+                        states_col.append(reducted_person.disease_state.name)
+                if self._days_data[i].infected_today > 0:
+                    seq(range(self._days_data[i].infected_today)).for_each(lambda x: states_col.append('infected_today'))
                 cnt = Counter(states_col)
                 tmp = (d,cnt)
             lst.append(tmp)
+
         
         #Create corresponding string 
         table = [[] for i in range(len(lst)+1)]
-        table [0] = ["Dates"] + [state.name for state in DiseaseState]
+        states = [state.name for state in DiseaseState] + ['infected_today', 'critical_today']
+        table [0] = ["Dates"] + states
         for i in range(1,len(lst)+1):
             date,data = lst[i-1]
-            tmp = [str(data[s]) if s in data else '0' for s in DiseaseState ]
+            tmp = [str(data[s]) if s in data else '0' for s in states]
             table[i] = [str(date)] + tmp
         ans = table_format.format(table)
         return ans
@@ -691,6 +718,13 @@ class Statistics(object):
         with open(outpath, 'wb') as f:
             pickle.dump(self, f)
 
+    def write_all_person_stats_to_csv(self, persons: List[Person], to_file_name: str = "persons_age_sickness.csv"):
+        if not os.path.exists(self._output_path):
+            os.makedirs(self._output_path)
+        outpath = os.path.join(self._output_path, to_file_name)
+        PERSON_STATS = namedtuple('PERSON_STATS', 'age sickness_status')
+        seq(persons).map(lambda person: PERSON_STATS(person.get_age(), person.get_disease_state())).to_csv(outpath)
+
     @staticmethod
     def load(path):
         """
@@ -715,6 +749,8 @@ class Statistics(object):
         :return: A pair (new_x, new_ys) in the format of the input, only
         without any x-values for which all y-values are nan.
         """
+        if len(x) < len(ys):
+            ys = array(ys)[range(len(x))]
         masks = [isnan(y) for y in ys]
         mask = masks[0]
         for m in masks:
@@ -731,12 +767,19 @@ class Statistics(object):
         """
         csv_filename = "{}.csv".format(clean_filename)
         svg_filename = "{}.svg".format(clean_filename)
-        assert not os.path.exists(svg_filename), "File {} already exists!".format(svg_filename)
-        assert not os.path.exists(csv_filename), "File {} already exists!".format(csv_filename)
+        #assert not os.path.exists(svg_filename), "File {} already exists!".format(svg_filename)
+        #assert not os.path.exists(csv_filename), "File {} already exists!".format(csv_filename)
         return csv_filename, svg_filename
 
     @staticmethod
-    def plot(image_path, dates, datas, background_stripes=None, is_dates=True):
+    def compute_axis_ticks(data, number_of_ticks):
+        minimum = min(data)
+        maximum = max(data)
+        step = (maximum - minimum) / number_of_ticks
+        return [(minimum+tick*step) for tick in range(number_of_ticks+1)]
+
+    @staticmethod
+    def plot(image_path, dates, datas, background_stripes=None, is_dates=True, y_axes_label=""):
         """
         plot a graph:
         dates = the x-axis range
@@ -756,6 +799,7 @@ class Statistics(object):
         assert all([yscale == yscales[0] for yscale in yscales]), "All yscales must be equal!"
         yscale = yscales[0]
         plt.clf()
+        plt.figure(figsize=(10, 10), dpi=80)
         if is_dates:
             npdates = [mdates.date2num(d) for d in dates]
         else:
@@ -768,9 +812,14 @@ class Statistics(object):
                 continue
             drew_anything = True
             new_data = new_data[0]
+            plt.rcParams["figure.figsize"] = (20, 3)
             plt.plot(new_dates, new_data, **data['props'])
+            plt.xlabel("Date" if is_dates else "????")
+            plt.ylabel(y_axes_label)
+            plt.title(os.path.basename(image_path))
+            plt.grid(color='pink', linestyle='--', linewidth=0.5)
         if not drew_anything:
-            warnings.warn("Did not draw anything! No good data!")
+            warnings.warn(f"Did not draw anything! No good data! for {os.path.basename(image_path)}")
             return
         for stripe in background_stripes:
             plt.axvspan(
@@ -785,11 +834,12 @@ class Statistics(object):
             fig.autofmt_xdate()
             fig.set_size_inches(11,8)
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
-        plt.legend()
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3, fancybox=True, shadow=True)
         plt.yscale(yscale)
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
         if len(dates) > 1:
-            plt.savefig(svg_filename)
+            plt.savefig(svg_filename, bbox_inches="tight")
+        plt.close('all')
         with open(csv_filename, 'w') as f:
             if is_dates:
                 date_strings = [d.strftime("%d/%m/%y") for d in dates]
@@ -802,7 +852,7 @@ class Statistics(object):
                 f.write(",".join([data['props']['label']] + data_strings))
 
     @staticmethod
-    def plot_with_err(image_path, dates, datas, datas_error, background_stripes=None, is_dates=True):
+    def plot_with_err(image_path, dates, datas, datas_error, background_stripes=None, is_dates=True, clear_graph=True):
         """
         same as plot, but with datas_error which is an "error" for each data and each date.
         Can be used for plotting std or confidence.
@@ -818,8 +868,9 @@ class Statistics(object):
                 yscales.append('linear')
         assert all([yscale == yscales[0] for yscale in yscales]), "All yscales must be equal!"
         yscale = yscales[0]
-        plt.clf()
-        plt.tight_layout()
+        if clear_graph:
+            plt.clf()
+            plt.figure(figsize=(10, 10), dpi=80)
         if is_dates:
             npdates = [mdates.date2num(d) for d in dates]
         else:
@@ -833,6 +884,7 @@ class Statistics(object):
             plt.plot(new_dates, upper_err_curve, **err['props'])
             plt.plot(new_dates, lower_err_curve, **err['props'])
             plt.fill_between(new_dates, lower_err_curve, upper_err_curve, alpha=0.5)
+            plt.grid(color='pink', linestyle='--', linewidth=0.5)
         for stripe in background_stripes:
             plt.axvspan(
                 mdates.date2num(stripe.start),
@@ -844,10 +896,11 @@ class Statistics(object):
         if is_dates:
             plt.gcf().autofmt_xdate()
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%y"))
-        plt.legend()
-        plt.yscale(yscale) 
+        plt.title(os.path.basename(image_path))
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=3, fancybox=True, shadow=True)
+        plt.yscale(yscale)
         csv_filename, svg_filename = Statistics.get_csv_svg_filenames_and_check_they_do_not_exist(image_path)
-        plt.savefig(svg_filename)
+        plt.savefig(svg_filename, bbox_inches="tight")
         with open(csv_filename, 'w') as f:
             if is_dates:
                 date_strings = ["Dates:"] + [d.strftime("%d/%m/%y") for d in dates]
@@ -917,7 +970,8 @@ def make_age_and_state_datas_to_plot(
         ("susceptible", (DiseaseState.SUSCEPTIBLE,)),
         ("Immune", (DiseaseState.IMMUNE,))
     ),
-    additional_props=None
+    additional_props=None,
+    is_integral=True
 ):
     """
     Make a list of 'DataToPlot' objects that define desired graphs
@@ -930,8 +984,8 @@ def make_age_and_state_datas_to_plot(
     """
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
-    lines = [(0,(1,10)), (0,(1,1)), (0,(5,10)),(0,(5,1)),(0,(3,1,1,1,1,1))]
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
+    lines = [(0,(5,10)), (0,(1,1)), (0,(5,1)),(0,(3,1,1,1,1,1)), (0,(10,0))]
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
@@ -949,7 +1003,7 @@ def make_age_and_state_datas_to_plot(
             ret.append(
                 AgeGroupDiseaseStatePlot(
                     age_group, disease_states,
-                    props, is_integral=True
+                    props, is_integral=is_integral
                 )
             )
     return ret
@@ -960,7 +1014,7 @@ def make_infections_age_datas_to_plot(
 ):
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     ret = []
     color_cycle = cycle(colors)
     for age_group in age_groups:
@@ -987,7 +1041,7 @@ def make_infections_infector_state_datas_to_plot(
 ):
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     ret = []
     color_cycle = cycle(colors)
     for label, dis_group in disease_state_groups:
@@ -1020,7 +1074,7 @@ def make_infections_environment_datas_to_plot(
     """
     if additional_props is None:
         additional_props = {}
-    colors = ['r', 'g', 'y', 'b', 'c']
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
     ret = []
     color_cycle = cycle(colors)
     for label, env_group in environments_groups:
@@ -1061,7 +1115,7 @@ def fill_in_dates(list_of_data_and_daterange, edge_values, dates=None):
     return aligned_filled_data
 
 
-def max_date_range(stats, max_num_days=None):
+def max_date_range(stats, max_num_days=None) -> List[datetime.datetime]:
     """
     Returns a list of the days between stats.min_date and stats.max_date
     If max_num_days is provided, the list is cut to be at most that long
@@ -1101,7 +1155,7 @@ def get_mean_and_confidence_from_statistics(stats_files, datas_to_plot, name, ou
             'samples': aligned_data,
             'props': data_to_plot.props
         })
-    compute_and_plot_mean_stddev_confidence(longest_date_range, list_of_samples_with_props, outdir, name)
+    compute_and_plot_mean_stddev_confidence(longest_date_range, [list_of_samples_with_props], outdir, name)
 
 
 def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
@@ -1109,23 +1163,32 @@ def get_r_mean_and_confidence_from_statistics(stats_files, name, outdir):
     takes dumps of Statistics and compute the mean and confidence for r as function of time
     the typical input is files from multiple runs of the same simulation
     """
+    colors = ['hotpink', 'lightskyblue', 'mediumpurple', 'mediumturquoise', 'darkorange']
+    color_cycle = cycle(colors)
+
     all_stats = [
         Statistics.load(file_name) for file_name in
         stats_files
     ]
     longest_date_range = max_date_range(all_stats)
-    smoothed_r0_avg_with_date_range = [
-        (s.get_r0_data()['smoothed_avg_r0'], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
-        for s in all_stats if s.get_r0_data() is not None
-    ]
-    aligned_data = fill_in_dates(smoothed_r0_avg_with_date_range, False, longest_date_range)
-    to_plot = [
-        {
-            'samples': aligned_data,
-            'props': {'label': "smoothed_avg_r0"}
-         }
-    ]
-    compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot, outdir, name + "_r_data")
+
+    to_plot_array = []
+
+    for key in ["smoothed_avg_r0", "avg_r0", "instantaneous_r"]:
+        smoothed_r0_avg_with_date_range = [
+            (s.get_r0_data()[key], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
+            for s in all_stats if s.get_r0_data() is not None
+        ]
+        aligned_data = fill_in_dates(smoothed_r0_avg_with_date_range, False, longest_date_range)
+        to_plot = [
+            {
+                'samples': aligned_data,
+                'props': {'label': key, 'color': next(color_cycle)}
+             }
+        ]
+        to_plot_array.append(to_plot)
+    compute_and_plot_mean_stddev_confidence(longest_date_range, to_plot_array, outdir, name + "_r_data_" + key,
+                                            all_stats[0].make_background_stripes())
 
 
 def get_multiple_stats_summary_file(stats_files, name, outdir, shortened=False):
@@ -1146,40 +1209,44 @@ def apply_unless_all_nans(func, arr):
         return func(arr)
 
 
-def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_props, outdir, name):
+def compute_and_plot_mean_stddev_confidence(dates, list_of_all_samples_with_props, outdir, name, background_stripes_data = None):
     """
     process the samples in list_of_all_samples_with_props to compute the mean, the stddev and the confidence and plot them
     """
     exp_data = []
     std_data = []
     confidence_data = []
-    for samples_with_props in list_of_all_samples_with_props:
-        samples = samples_with_props['samples']
-        props = samples_with_props['props']
-        std_conf_props = props.copy()
-        std_conf_props.pop('label')
-        expectation = [apply_unless_all_nans(nanmean, nums) for nums in zip(*samples)]
-        std = [apply_unless_all_nans(nanstd, nums) for nums in zip(*samples)]
-        confidence = [
-            apply_unless_all_nans(nanstd, nums) / sqrt(apply_unless_all_nans(len, nums))
-            for nums in zip(*samples)
-        ]
+    first_graph = True
+    for r_graphs in list_of_all_samples_with_props:
+        for samples_with_props in r_graphs:
+            samples = samples_with_props['samples']
+            props = samples_with_props['props']
+            std_conf_props = props.copy()
+            std_conf_props.pop('label')
+            expectation = [apply_unless_all_nans(nanmean, nums) for nums in zip(*samples)]
+            std = [apply_unless_all_nans(nanstd, nums) for nums in zip(*samples)]
+            confidence = [
+                apply_unless_all_nans(nanstd, nums) / sqrt(apply_unless_all_nans(len, nums))
+                for nums in zip(*samples)
+            ]
 
-        exp_data.append({
-            'data': expectation,
-            'props': props
-        })
-        std_data.append({
-            'data': std,
-            'props': std_conf_props
-        })
-        confidence_data.append({
-            'data': confidence,
-            'props': std_conf_props
-        })
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), dates, exp_data, std_data)
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), dates, exp_data,
-                             confidence_data)
+            exp_data.append({
+                'data': expectation,
+                'props': props
+            })
+            std_data.append({
+                'data': std,
+                'props': std_conf_props
+            })
+            confidence_data.append({
+                'data': confidence,
+                'props': std_conf_props
+            })
+        #Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), dates, exp_data, std_data,
+        #                         background_stripes_data, first_graph)
+        first_graph = False
+        Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), dates, exp_data,
+                                 confidence_data, background_stripes_data, True)
 
 
 def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir):
@@ -1195,7 +1262,7 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
         ]
 
         smoothed_r0_avg_with_date_range = [
-            (s.get_r0_data()['smoothed_avg_r0'], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
+            (s.get_r0_data()['smoothed r'], (s.get_r0_data()['dates'][0], s.get_r0_data()['dates'][-1]))
             for s in all_stats if s is not None
         ]
         longest_date_range = max_date_range(all_stats, max_num_days=max_num_days)
@@ -1212,7 +1279,7 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
     std_data = []
     confidence_data = []
     for day in range(max_num_days + 1):
-        props = {'label': str(day)}
+        props = {'label': "smoothed r"}
         exp_data.append({
             'data': [elem[0][day] for elem in data],
             'props': props
@@ -1226,5 +1293,6 @@ def compute_r_from_statistics(param_and_stats_files, max_num_days, name, outdir)
             'props': props
         })
 
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), params, exp_data, std_data, is_dates=False)
-    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), params, exp_data, confidence_data, is_dates=False)
+    #TODO NOAM: why std_data and confidence_data are all 0?
+    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_std'), params, exp_data, std_data, is_dates=True)
+    Statistics.plot_with_err(os.path.join(outdir, name + '_exp_confidence'), params, exp_data, confidence_data, is_dates=True)

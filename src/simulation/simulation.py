@@ -13,6 +13,8 @@ from src.simulation.event import DayEvent
 from src.logs import Statistics, DayStatistics
 from src.world import Person
 from src.world.environments import InitialGroup,Household
+from typing import Dict
+
 
 
 log = logging.getLogger(__name__)
@@ -21,6 +23,9 @@ class ORDER(Enum):
     NONE =0,
     ASCENDING=1,
     DESCENDING=2,
+
+    def __str__(self):
+        return self.name
 
 class Simulation(object):
     """
@@ -41,11 +46,13 @@ class Simulation(object):
         'num_r_days',
         'first_infectious_people',
         'initial_infection_doc',
-        'num_days_to_run'
+        'num_days_to_run',
+        '_extension_params'
     )
 
     def __init__(self, world, initial_date, interventions=None, stop_early=None, verbosity=False,
-                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs')):
+                 outdir=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'outputs'),
+                 extension_params=None):
         """
         :param world: The World object that this simulation will run on
         :param initial_date: The starting date for the simulation
@@ -59,6 +66,8 @@ class Simulation(object):
         :param outdir: The path of the directory output files
         should be written into
         """
+        if extension_params is None:
+            extension_params = {}
         if interventions is None:
             interventions = []
         self._verbosity = verbosity
@@ -68,6 +77,7 @@ class Simulation(object):
         self.interventions = interventions
         self._events = {}
         self.stats = Statistics(outdir, world)
+        self._extension_params = extension_params
         # It's important that we sign people up before we init interventions!
         self._world.sign_all_people_up_to_environments()
         for intervention in interventions:
@@ -187,7 +197,7 @@ class Simulation(object):
             per_to_immune = 0.0
         if city_name is not None:
             population = [p for p in self._world.all_people() \
-                if (p.get_city_name() == city_name)]
+                if (p.get_city_name() == city_name.lower())]
         else:
             population = [p for p in self._world.all_people()]
 
@@ -376,6 +386,37 @@ class Simulation(object):
                 del self._events[date]
         self._date = original_date
 
+    def print_hh_statistics(self):
+        all_households = [h for h in self._world.get_all_city_households()]
+
+        elderly_with_children = 0
+        more_than_2_parents = 0
+        more_than_2_elderly = 0
+        only_children = 0
+        city_name = ""
+        for h in all_households:
+            children = [p for p in h.get_people() if p.get_age() <= 16]
+            elderly = [p for p in h.get_people() if p.get_age() >= 60]
+            parents = [p for p in h.get_people() if 60 > p.get_age() > 18]
+            city_name = h._city.get_name()
+            if len(elderly) > 0 and len(children) > 0:
+                elderly_with_children += 1
+            if len(parents) > 3:
+                more_than_2_parents += 1
+            if len(elderly) > 2:
+                more_than_2_elderly += 1
+            if len(elderly) == 0 and len(parents) == 0 and len(children) > 0:
+                only_children += 1
+
+        print(f"print_hh_statistics() \n\t"
+              f"city={city_name}\n\t"
+              f"all_households={len(all_households)}\n\t"
+              f"elderly_with_children={elderly_with_children} ({elderly_with_children*100/len(all_households):.1f}%)\n\t"
+              f"more_than_2_parents={more_than_2_parents} ({more_than_2_parents*100/len(all_households):.1f}%)\n\t"
+              f"more_than_2_elderly={more_than_2_elderly} ({more_than_2_elderly*100/len(all_households):.1f}%)\n\t"
+              f"only_children={only_children} ({only_children*100/len(all_households):.1f}%)\n"
+              )
+
     def run_simulation(self, num_days, name, datas_to_plot=None,run_simulation = None,extensionsList = None):
         """
         This main loop of the simulation.
@@ -400,7 +441,8 @@ class Simulation(object):
                 mod  = __import__('src.extensions.' + ExtName,fromlist=[ExtName])
                 ExtensionType = getattr(mod,ExtName)
                 extensions = extensions + [ExtensionType(self)]
-            
+
+        # self.print_hh_statistics()
 
         for day in range(num_days):
             for ext in extensions:
@@ -414,10 +456,16 @@ class Simulation(object):
             if self.stats.is_static() or self.first_people_are_done():
                 if self._verbosity:
                     log.info('simulation stopping after {} days'.format(day))
-                break
+                print(f'run_simulation() simulation statistics stopped changing after {day} days')
+                # break
                 
 
         self.stats.mark_ending(self._world.all_people())
+
+        # self.stats.calc_r0_data(self._world.all_people(), self.num_r_days, min_age=19, max_age=100)
+        # if self.stats._r0_data:
+        #     self.stats.plot_r0_data('r0_data_age_19_100_' + name)
+
         self.stats.calc_r0_data(self._world.all_people(), self.num_r_days)
         self.stats.dump('statistics.pkl')
         for name, data_to_plot in datas_to_plot.items():

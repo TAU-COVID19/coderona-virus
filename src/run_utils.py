@@ -14,8 +14,9 @@ from src.logs import *
 from src.simulation.params import Params
 from src.world.population_generation import PopulationLoader
 from src.simulation.simulation import Simulation
-from src.simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams
+from src.simulation.initial_infection_params import SmartInitialInfectionParams, NaiveInitialInfectionParams, InitialImmuneType
 from src.seir import DiseaseState
+from src.simulation.simulation import ORDER
 
 INITIAL_DATE = date(year=2020, month=2, day=27)
 
@@ -198,7 +199,8 @@ class SimpleJob(RunningJob):
         ExtensionType = None
         
         sim = Simulation(world, self.initial_date, self.interventions,
-                         verbosity=verbosity, outdir=outdir, stop_early=stop_early)
+                         verbosity=verbosity, outdir=outdir, stop_early=stop_early,
+                         extension_params={"ImmuneByAgeExtension": self.infection_params})
         self.infection_params.infect_simulation(sim, outdir)
         if len(Extensionslst) > 0:
             sim.run_simulation(self.days, self.scenario_name, datas_to_plot=self.datas_to_plot,extensionsList = Extensionslst)
@@ -534,7 +536,7 @@ def run(jobs, multi_processed=True, with_population_caching=True, verbosity=True
 
 
 def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_range,
-                                      interventions=None, num_repetitions=7, num_rs=0):
+                                      interventions=None, num_repetitions=7, initial_num_infected=100, num_rs=0):
     """
     Wraps the inialization of a job that creates a graph of R as a function of base infectiousness value.
 
@@ -548,6 +550,6 @@ def make_base_infectiousness_to_r_job(scenario_name, city_name, scale, param_ran
     :return: ParamChangeRJob
     """
     simple_job = SimpleJob(scenario_name, city_name, scale, interventions=interventions,
-                           infection_params=NaiveInitialInfectionParams(20))
+                           infection_params=NaiveInitialInfectionParams(initial_num_infected, 0, 1, ORDER.NONE, city_name, InitialImmuneType.GENERAL_POPULATION))
     repeated_job = RepeatJob(simple_job, num_repetitions)
     return ParamChangeRJob(repeated_job, ("person", "base_infectiousness"), param_range, num_rs=num_rs)

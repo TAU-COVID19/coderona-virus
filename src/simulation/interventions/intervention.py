@@ -357,17 +357,26 @@ class SymptomaticIsolationIntervention(Intervention):
     As some person starts to be symptomatic, the intervention is activated and a new routine is implied.
     The API also allows to have a delay between th symptoms and the isolation.
     """
-    __slots__ = ('start_date', 'end_date', 'duration', 'delay')
+    __slots__ = ('start_date', 'end_date', 'duration', 'delay', 'min_age', 'max_age', 'entry_states')
 
     def __init__(
             self,
             compliance: float,
             start_date: date,
             duration: timedelta,
-            delay=1  # arbitrary
+            delay=1,  # arbitrary
+            min_age=0,
+            max_age=120,
+            entry_states=(
+                    DiseaseState.INCUBATINGPOSTLATENT,
+                    DiseaseState.SYMPTOMATICINFECTIOUS
+            )
     ):
         super(SymptomaticIsolationIntervention, self).__init__(compliance, start_date, duration)
         self.delay = delay
+        self.min_age = min_age
+        self.max_age = max_age
+        self.entry_states = entry_states
 
     def generate_events(self, world: World):
         """
@@ -378,16 +387,15 @@ class SymptomaticIsolationIntervention(Intervention):
         """
         ret = []
         for person in world.all_people():
-            if random.random() < self.compliance:
+            if (self.min_age <= person.get_age() <= self.max_age) and \
+                    random.random() < self.compliance:
                 add_effect = AddRoutineChangeEffect(
                     person=person,
                     routine_change_key='quarantine',
                     routine_change_val=quarantine_routine(person)
                 )
-                states = (
-                    DiseaseState.INCUBATINGPOSTLATENT,
-                    DiseaseState.SYMPTOMATICINFECTIOUS
-                )
+                states = self.entry_states
+
                 person._init_event(*states)
                 entry_moment = Event()
                 add_trigger = AndTrigger(
@@ -442,15 +450,22 @@ class HouseholdIsolationIntervention(Intervention):
 
     :param delay_on_enter: days to wait from symptoms to start quarantine.
     :param delay_on_exit: days to wait before exit from quarantine.
-    :param is_exit_after_recovery: 
+    :param entry_states: can be used to override the entry condition and isolate if one of the house members
+                         is asymptomatic for instance
+    :param min_age: the minimum age of a person that can trigger getting his house isolated
+    :param max_age: the maximum age of a person that can trigger getting his house isolated
+    :param is_exit_after_recovery:
         if False stays in quarantine for delay_on_exit days.
         if True stays in quarantine up to total recovery(or death)
-        and only then wait for delay_on_exit days. 
+        and only then wait for delay_on_exit days.    .
     """
     __slots__ = (
         'delay_on_enter',
         'delay_on_exit',
-        'is_exit_after_recovery'
+        'is_exit_after_recovery',
+        'min_age',
+        'max_age',
+        'entry_states'
     )
 
     def __init__(
@@ -460,12 +475,21 @@ class HouseholdIsolationIntervention(Intervention):
         duration: timedelta,
         delay_on_enter=1,  # arbitrary
         delay_on_exit=14,  # arbitrary
-        is_exit_after_recovery=False
+        is_exit_after_recovery=False,
+        min_age=0,
+        max_age=100,
+        entry_states=(
+            DiseaseState.INCUBATINGPOSTLATENT,
+            DiseaseState.SYMPTOMATICINFECTIOUS
+        )
     ):
         super(HouseholdIsolationIntervention, self).__init__(compliance, start_date, duration)
         self.delay_on_enter = timedelta(delay_on_enter)
         self.delay_on_exit = timedelta(delay_on_exit)
         self.is_exit_after_recovery = is_exit_after_recovery
+        self.entry_states = entry_states
+        self.min_age = min_age
+        self.max_age = max_age
 
     def generate_events(self, world: World):
         """
@@ -477,17 +501,15 @@ class HouseholdIsolationIntervention(Intervention):
         """
         ret = []
         for person in world.all_people():
-            if random.random() < self.compliance:
+            if (self.min_age <= person.get_age() <= self.max_age) and \
+                    random.random() < self.compliance:
                 household_environment = person.get_environment('household')
                 add_effect = AddRoutineChangeEnvironmentEffect(
                     environment=household_environment,
                     routine_change_key='household_isolation',
                     routine_change_generator=household_isolation_routine
                 )
-                states = (
-                    DiseaseState.INCUBATINGPOSTLATENT,
-                    DiseaseState.SYMPTOMATICINFECTIOUS
-                )
+                states = self.entry_states
                 person._init_event(*states)
                 entry_moment = Event()
                 add_trigger = AndTrigger(

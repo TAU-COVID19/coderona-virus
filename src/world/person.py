@@ -47,7 +47,8 @@ class Person(object):
         'last_state',
         '_seir_times',
         'state_machine_type',
-        '_my_neighborhood',
+        '_minimum_infectiousness_age', 
+		'_my_neighborhood',
     )
     num_people_so_far = 0
 
@@ -66,23 +67,27 @@ class Person(object):
         self._environments = {env.name: env for env in environments}
         self._current_routine = {env_name: 1 for env_name in self._environments}
         params = Params.loader()['person']
-        self._infectiousness_prob = \
-            min(params['base_infectiousness'] * \
-            _np.random.gamma(
-                params['individual_infectiousness_gamma_shape'],
-                params['individual_infectiousness_gamma_scale']
-            ), 1)
-        #if StartAsRecovered:
+        self._minimum_infectiousness_age = params['minimum_infectiousness_age']
+        if age <= self._minimum_infectiousness_age:
+            self._infectiousness_prob = 0.0
+        else:
+            self._infectiousness_prob = \
+                min(params['base_infectiousness'] * \
+                    _np.random.gamma(
+                        params['individual_infectiousness_gamma_shape'],
+                        params['individual_infectiousness_gamma_scale']
+                    ), 1)
+        # if StartAsRecovered:
         #   self._disease_state = DiseaseState.IMMUNE
         #   self.is_susceptible = False
         #   self.is_infected = True
-        #else:
+        # else:
         self._disease_state = DiseaseState.SUSCEPTIBLE
         self.is_susceptible = True
         self.is_dead = False
         self.is_infectious = False
         self.is_infected = False
-        str_type = params['state_macine_type']
+        str_type = params['state_machine_type']
         assert str_type in ['SIRS','SIR']
         self.state_machine_type = machine_type[str_type]
         self._id = Person.num_people_so_far
@@ -324,11 +329,14 @@ class Person(object):
         If this is None, it is sampled with the distribution defined in params.json.
         :return: infection events
         """
-        assert self._disease_state == DiseaseState.SUSCEPTIBLE  , "person state:" + str(self._disease_state)
+        assert self._disease_state == DiseaseState.SUSCEPTIBLE, "person state:" + str(self._disease_state)
+        if self._age <= self._minimum_infectiousness_age:
+            return []
+
         if seir_times:
             states_and_times = seir_times
         elif self._seir_times:
-            states_and_times = self._seir_times
+            states_and_times =  self._seir_times
         else:
             states_and_times = sample_seir_times(self.state_machine_type,self)
         #update self._infection_data
@@ -362,7 +370,11 @@ class Person(object):
                         second elemnt is infection events 
         """
         lastState = self._disease_state
-        assert (self._disease_state == DiseaseState.SUSCEPTIBLE) or (self._disease_state == DiseaseState.LATENT)
+        assert (self._disease_state in (DiseaseState.SUSCEPTIBLE,
+                                        DiseaseState.LATENT,
+                                        DiseaseState.ASYMPTOMATICINFECTIOUS,
+                                        DiseaseState.INCUBATINGPOSTLATENT)), \
+            f"expected SUSCEPTIBLE or LATENT by found {str(self._disease_state)}"
         self.set_disease_state(DiseaseState.LATENT)
         if seir_times:
             states_and_times = seir_times
