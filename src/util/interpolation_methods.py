@@ -3,6 +3,7 @@ from scipy.interpolate import interp1d
 import numpy as np
 from src.seir.disease_state import DiseaseState
 import datetime
+import os
 
 def symptomatic_interpolation(seir_times):
     '''
@@ -12,7 +13,8 @@ def symptomatic_interpolation(seir_times):
     '''
 
     # loading data from table
-    df = pd.read_excel(r'/mnt/c/Users/achiy/Desktop/Distribution.xlsx')
+    file_path = os.path.dirname(__file__)
+    df = pd.read_excel(f"{file_path}/Distribution.xlsx")
     x_latent = df["Days since exposure"][df["Phase"] == 'latent'].values
     x_pre = df["Days since exposure"][df["Phase"] == 'pre-symptomatic'].values
     x_symp = df["Days since exposure"][df["Phase"] == 'symptomatic'].values
@@ -45,8 +47,8 @@ def asymptomatic_interpolation(seir_times):
     input: SEIR times in the format of dictionary
     output: TP probability values for each day of the disease
     '''
-
-    df = pd.read_excel(r'/mnt/c/Users/achiy/Desktop/AsymDistribution.xlsx')
+    file_path = os.path.dirname(__file__)
+    df = pd.read_excel(f"{file_path}/AsymDistribution.xlsx")
     x_latent = df["Days since exposure"][df["Phase"] == 'LATENT'].values
     x_infection = df["Days since exposure"][df["Phase"] == 'ASYMPTOMATICINFECTIOUS'].values
 
