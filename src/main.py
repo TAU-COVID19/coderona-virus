@@ -107,7 +107,7 @@ def main():
         # "scenario_365": scenario_365_interventions,
         # "scenario_395": scenario_395_interventions,
         # "reality1" : scenario_reality1,
-        #"hh_isolation": householdisolation_sd_interventions,
+        "hh_isolation": householdisolation_sd_interventions,
         # "check" : scenario_check,
         # "reality2" : scenario_reality2,
         # "reality3": scenario_reality3,
@@ -162,9 +162,9 @@ def main():
     jobs = []
     #
     for target_immune_percentage, immune_compliance in [(0.8, 1)]:  # [(0.0,1),(0.5,1)]:
-        for people_per_day in [0]:
-            for immune_source, min_age in [(InitialImmuneType.GENERAL_POPULATION, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [500]:  # [25, 100, 250, 500]:
+        for people_per_day in [800]:
+            for immune_source, min_age in [(InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
+                for initial_num_infected in [1]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Bene Beraq", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [0.7]:
                             for order in [ORDER.ASCENDING]:
@@ -197,7 +197,7 @@ def main():
                                                                                                 minimum_infectiousness_age)
                                                     #                                    full_scenario_name = "res"
                                                     jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                    days=150,
+                                                                                    days=30,
                                                                                     city_name=city_name,
                                                                                     scale=scale,
                                                                                     infection_params=NaiveInitialInfectionParams(
@@ -214,7 +214,7 @@ def main():
                                                                                     interventions=intervention_scheme(
                                                                                         compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                          num_repetitions=500))
+                                                                          num_repetitions=2))
 
                                         # add job to make r to base infectiousness graph:
                                         # jobs += [make_base_infectiousness_to_r_job(
