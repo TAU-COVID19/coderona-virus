@@ -749,8 +749,9 @@ class Statistics(object):
         :return: A pair (new_x, new_ys) in the format of the input, only
         without any x-values for which all y-values are nan.
         """
-        if len(x) < len(ys):
-            ys = array(ys)[range(len(x))]
+        if len(x) < len(ys[0]):
+            # ys = array(ys)[range(len(x))]
+            ys = [array(y)[range(len(x))] for y in ys]
         masks = [isnan(y) for y in ys]
         mask = masks[0]
         for m in masks:
