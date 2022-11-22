@@ -112,7 +112,7 @@ def main():
         # "reality2" : scenario_reality2,
         # "reality3": scenario_reality3,
         # "reality4": scenario_reality4,
-        # "no_interventions": no_interventions,
+        "no_interventions": no_interventions,
         # "not_relaxing_interventions": not_relaxing_interventions,
         # "grant_time1" : grant_time1,
         # "grant_time2" : grant_time2,
