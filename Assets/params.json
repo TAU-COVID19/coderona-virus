@@ -16,7 +16,7 @@
     "disease_parameters": {
         "infectiousness_per_stage": {
             "incubating_post_latent" : 0.5,
-            "asymptomatic": 0.5,
+            "asymptomatic": 1.0,
             "symptomatic" : 1.0,
             "critical": 1.0
         },
