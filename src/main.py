@@ -164,7 +164,7 @@ def main():
     for target_immune_percentage, immune_compliance in [(0.8, 1)]:  # [(0.0,1),(0.5,1)]:
         for people_per_day in [0]:
             for immune_source, min_age in [(InitialImmuneType.BY_NEIGHBORHOOD, 18)]:  # the options are:GENERAL_POPULATION,HOUSEHOLDS
-                for initial_num_infected in [1]:  # [25, 100, 250, 500]:
+                for initial_num_infected in [100]:  # [25, 100, 250, 500]:
                     for city_name, scale in [("Holon", 1)]:  # [("Bene Beraq", 1), ("Holon", 1)]
                         for compliance in [0.7]:
                             for order in [ORDER.ASCENDING]:
