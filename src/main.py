@@ -1,3 +1,4 @@
+
 import logging
 import json
 import numpy as np
@@ -101,9 +102,9 @@ def main():
         # "paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
         # "noam_lockdown_scenario": noam_lockdown_scenario
-        # "vaccinations_scenario_general": vaccinations_scenario_general
+         "vaccinations_scenario_general": vaccinations_scenario_general
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        "Empty_scenario" : Empty_scenario
+        #"Empty_scenario" : Empty_scenario
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -135,7 +136,7 @@ def main():
                         for compliance in [0.8]:
                             for order in [ORDER.NONE]:
                                 for ci_delay in [4]:
-                                    for hi_delay in [4]:                                
+                                    for hi_delay in [4]:
                                         for symptomatic_probs_scale in [1]:
                                             for scenario_name, intervention_scheme in scenarios.items():
                                                 params_to_change= {
