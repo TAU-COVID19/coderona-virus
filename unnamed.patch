@@ -1,0 +1,34 @@
+Index: src/main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main.py b/src/main.py
+--- a/src/main.py	(revision 340222fbf6e63b27308c6c0c0771ec8ab1637551)
++++ b/src/main.py	(revision 8e5841c92be0bc2c1af02843506a0949350fb725)
+@@ -1,3 +1,4 @@
++
+ import logging
+ import json
+ import numpy as np
+@@ -101,9 +102,9 @@
+         # "paper_8": paper_8
+         #"paper_2_comp_9": paper_2_comp_9
+         # "noam_lockdown_scenario": noam_lockdown_scenario
+-        # "vaccinations_scenario_general": vaccinations_scenario_general
++         "vaccinations_scenario_general": vaccinations_scenario_general
+         # "vaccinations_scenario_households": vaccinations_scenario_households,
+-        "Empty_scenario" : Empty_scenario
++        #"Empty_scenario" : Empty_scenario
+     }
+ 
+     datas_to_plot = get_datas_to_plot()
+@@ -135,7 +136,7 @@
+                         for compliance in [0.8]:
+                             for order in [ORDER.NONE]:
+                                 for ci_delay in [4]:
+-                                    for hi_delay in [4]:                                
++                                    for hi_delay in [4]:
+                                         for symptomatic_probs_scale in [1]:
+                                             for scenario_name, intervention_scheme in scenarios.items():
+                                                 params_to_change= {
