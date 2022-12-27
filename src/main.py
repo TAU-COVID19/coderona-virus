@@ -1,3 +1,4 @@
+
 import logging
 import json
 import numpy as np
@@ -101,9 +102,9 @@ def main():
         # "paper_8": paper_8
         #"paper_2_comp_9": paper_2_comp_9
         # "noam_lockdown_scenario": noam_lockdown_scenario
-        # "vaccinations_scenario_general": vaccinations_scenario_general
+         "vaccinations_scenario_general": vaccinations_scenario_general
         # "vaccinations_scenario_households": vaccinations_scenario_households,
-        "Empty_scenario" : Empty_scenario
+        #"Empty_scenario" : Empty_scenario
     }
 
     datas_to_plot = get_datas_to_plot()
@@ -135,7 +136,7 @@ def main():
                         for compliance in [0.8]:
                             for order in [ORDER.NONE]:
                                 for ci_delay in [4]:
-                                    for hi_delay in [4]:                                
+                                    for hi_delay in [4]:
                                         for symptomatic_probs_scale in [1]:
                                             for scenario_name, intervention_scheme in scenarios.items():
                                                 params_to_change= {
@@ -154,7 +155,7 @@ def main():
                                                                                                 symptomatic_probs_scale)
                 #                                    full_scenario_name = "res"
                                                 jobs.append(RepeatJob(SimpleJob(full_scenario_name,
-                                                                                    days=180,
+                                                                                    days=200,
                                                                                     city_name=city_name,
                                                                                     scale=scale,
                                                                                     infection_params=NaiveInitialInfectionParams(initial_num_infected,per_to_Immune=initial_percentage_immune,\
@@ -164,7 +165,7 @@ def main():
                                                                                     params_to_change=params_to_change,
                                                                                     interventions=intervention_scheme(compliance, ci_delay, hi_delay),
                                                                                     datas_to_plot=datas_to_plot),
-                                                                        num_repetitions=50))
+                                                                        num_repetitions=60))
 
     # add job to make r to base infectiousness graph:
     # jobs += [make_base_infectiousness_to_r_job('r_graph_default', city_name, scale,
